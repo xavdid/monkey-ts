@@ -1,12 +1,27 @@
 import { Lexer } from '../src/lexer'
 import { TOKENS } from '../src/token'
 
+type lexerResults = Array<[TOKENS, string]>
+
+const validateAnswers = (testCases: lexerResults, l: Lexer) => {
+  const answers = testCases.map(([expectedType, expectedLiteral]) => ({
+    expectedType,
+    expectedLiteral
+  }))
+
+  answers.forEach(({ expectedType, expectedLiteral }) => {
+    const tok = l.nextToken()
+    expect(expectedType).toEqual(tok.type)
+    expect(expectedLiteral).toEqual(tok.literal)
+  })
+}
+
 describe('lexer', () => {
   it('should parse simple input', () => {
     const input = '=+(){},;'
     const l = new Lexer(input)
 
-    const testCases: Array<[TOKENS, string]> = [
+    const resultingTokens: lexerResults = [
       [TOKENS.ASSIGN, '='],
       [TOKENS.PLUS, '+'],
       [TOKENS.LPAREN, '('],
@@ -17,17 +32,8 @@ describe('lexer', () => {
       [TOKENS.SEMICOLON, ';'],
       [TOKENS.EOF, '']
     ]
-    const answers = testCases.map(([expectedType, expectedLiteral]) => ({
-      expectedType,
-      expectedLiteral
-    }))
 
-    answers.forEach(({ expectedType, expectedLiteral }) => {
-      const tok = l.nextToken()
-
-      expect(expectedType).toEqual(tok.type)
-      expect(expectedLiteral).toEqual(tok.literal)
-    })
+    validateAnswers(resultingTokens, l)
   })
 
   it('should parse complex input', () => {
@@ -39,10 +45,19 @@ describe('lexer', () => {
     };
 
     let result = add(five, ten);
+
+    !-/*5;
+    5 < 10 > 5;
+
+    if (5 < 10) {
+      return true;
+    } else {
+      return false;
+    }
     `
     const l = new Lexer(input)
 
-    const testCases: Array<[TOKENS, string]> = [
+    const resultingTokens: lexerResults = [
       [TOKENS.LET, 'let'],
       [TOKENS.IDENT, 'five'],
       [TOKENS.ASSIGN, '='],
@@ -79,18 +94,58 @@ describe('lexer', () => {
       [TOKENS.IDENT, 'ten'],
       [TOKENS.RPAREN, ')'],
       [TOKENS.SEMICOLON, ';'],
+      [TOKENS.BANG, '!'],
+      [TOKENS.MINUS, '-'],
+      [TOKENS.SLASH, '/'],
+      [TOKENS.ASTERISK, '*'],
+      [TOKENS.INT, '5'],
+      [TOKENS.SEMICOLON, ';'],
+      [TOKENS.INT, '5'],
+      [TOKENS.LT, '<'],
+      [TOKENS.INT, '10'],
+      [TOKENS.GT, '>'],
+      [TOKENS.INT, '5'],
+      [TOKENS.SEMICOLON, ';'],
+      [TOKENS.IF, 'if'],
+      [TOKENS.LPAREN, '('],
+      [TOKENS.INT, '5'],
+      [TOKENS.LT, '<'],
+      [TOKENS.INT, '10'],
+      [TOKENS.RPAREN, ')'],
+      [TOKENS.LBRACE, '{'],
+      [TOKENS.RETURN, 'return'],
+      [TOKENS.TRUE, 'true'],
+      [TOKENS.SEMICOLON, ';'],
+      [TOKENS.RBRACE, '}'],
+      [TOKENS.ELSE, 'else'],
+      [TOKENS.LBRACE, '{'],
+      [TOKENS.RETURN, 'return'],
+      [TOKENS.FALSE, 'false'],
+      [TOKENS.SEMICOLON, ';'],
+      [TOKENS.RBRACE, '}'],
       [TOKENS.EOF, '']
     ]
-    const answers = testCases.map(([expectedType, expectedLiteral]) => ({
-      expectedType,
-      expectedLiteral
-    }))
 
-    answers.forEach(({ expectedType, expectedLiteral }) => {
-      const tok = l.nextToken()
+    validateAnswers(resultingTokens, l)
+  })
 
-      expect(tok.type).toEqual(expectedType)
-      expect(tok.literal).toEqual(expectedLiteral)
-    })
+  it('should test multi-character operators', () => {
+    const input = `10 == 10;
+    10 != 9;`
+
+    const l = new Lexer(input)
+    const resultingTokens: lexerResults = [
+      [TOKENS.INT, '10'],
+      [TOKENS.EQ, '=='],
+      [TOKENS.INT, '10'],
+      [TOKENS.SEMICOLON, ';'],
+      [TOKENS.INT, '10'],
+      [TOKENS.NOT_EQ, '!='],
+      [TOKENS.INT, '9'],
+      [TOKENS.SEMICOLON, ';'],
+      [TOKENS.EOF, '']
+    ]
+
+    validateAnswers(resultingTokens, l)
   })
 })

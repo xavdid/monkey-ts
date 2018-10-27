@@ -16,16 +16,6 @@ export class Lexer {
     this.readChar()
   }
 
-  readChar() {
-    if (this.readPosition > this.input.length) {
-      this.ch = 0
-    } else {
-      this.ch = this.input.charCodeAt(this.readPosition)
-    }
-    this.position = this.readPosition
-    this.readPosition += 1
-  }
-
   nextToken() {
     let tok: Token
 
@@ -33,22 +23,40 @@ export class Lexer {
 
     switch (numToString(this.ch)) {
       case '=':
-        tok = this.generateToken(TOKENS.ASSIGN, this.ch)
+        tok = this.maybeReadSecondChar(TOKENS.EQ, TOKENS.ASSIGN, '=')
+        break
+      case '+':
+        tok = this.generateToken(TOKENS.PLUS, this.ch)
+        break
+      case '-':
+        tok = this.generateToken(TOKENS.MINUS, this.ch)
+        break
+      case '!':
+        tok = this.maybeReadSecondChar(TOKENS.NOT_EQ, TOKENS.BANG, '=')
+        break
+      case '/':
+        tok = this.generateToken(TOKENS.SLASH, this.ch)
+        break
+      case '*':
+        tok = this.generateToken(TOKENS.ASTERISK, this.ch)
+        break
+      case '<':
+        tok = this.generateToken(TOKENS.LT, this.ch)
+        break
+      case '>':
+        tok = this.generateToken(TOKENS.GT, this.ch)
         break
       case ';':
         tok = this.generateToken(TOKENS.SEMICOLON, this.ch)
+        break
+      case ',':
+        tok = this.generateToken(TOKENS.COMMA, this.ch)
         break
       case '(':
         tok = this.generateToken(TOKENS.LPAREN, this.ch)
         break
       case ')':
         tok = this.generateToken(TOKENS.RPAREN, this.ch)
-        break
-      case ',':
-        tok = this.generateToken(TOKENS.COMMA, this.ch)
-        break
-      case '+':
-        tok = this.generateToken(TOKENS.PLUS, this.ch)
         break
       case '{':
         tok = this.generateToken(TOKENS.LBRACE, this.ch)
@@ -79,24 +87,54 @@ export class Lexer {
   }
 
   readIdentifier() {
-    const startingPosition = this.position
-    while (isLetter(this.ch)) {
-      this.readChar()
-    }
-    return this.input.slice(startingPosition, this.position)
+    // DEVIATION: made a root function for reading
+    return this._read(isLetter)
   }
 
   readNumber() {
-    const startingPosition = this.position
-    while (isDigit(this.ch)) {
+    return this._read(isDigit)
+  }
+
+  readChar() {
+    // DEVIATION: use peekChar here instead of repeating code
+    this.ch = stringToNum(this.peekChar())
+    this.position = this.readPosition
+    this.readPosition += 1
+  }
+
+  maybeReadSecondChar(yes: TOKENS, no: TOKENS, second: string) {
+    // DEVIATION: consolidate second character behavior
+    if (this.peekChar() === second) {
+      const ch = this.ch
       this.readChar()
+      const literal = numToString(ch) + numToString(this.ch)
+      return new Token(yes, literal)
+    } else {
+      return this.generateToken(no, this.ch)
     }
-    return this.input.slice(startingPosition, this.position)
+  }
+
+  peekChar() {
+    // DEVIATION: don't read past the end of the string
+    // DEVIATION: this returns an actual character instead of a char code
+    if (this.readPosition >= this.input.length) {
+      return numToString(0)
+    } else {
+      return this.input[this.readPosition]
+    }
   }
 
   skipWhitepsace() {
     while ([' ', '\t', '\n', '\r'].includes(numToString(this.ch))) {
       this.readChar()
     }
+  }
+
+  private _read(fn: (ch: number) => boolean) {
+    const startingPosition = this.position
+    while (fn(this.ch)) {
+      this.readChar()
+    }
+    return this.input.slice(startingPosition, this.position)
   }
 }

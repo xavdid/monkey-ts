@@ -21,6 +21,15 @@ export const enum TOKENS {
   // Operators
   ASSIGN = '=',
   PLUS = '+',
+  MINUS = '-',
+  BANG = '!',
+  ASTERISK = '*',
+  SLASH = '/',
+
+  LT = '<',
+  GT = '>',
+  EQ = '==',
+  NOT_EQ = '!=',
 
   // Delimiters
   COMMA = ',',
@@ -33,12 +42,22 @@ export const enum TOKENS {
 
   // Keywords
   FUNCTION = 'FUNCTION',
-  LET = 'LET'
+  LET = 'LET',
+  TRUE = 'TRUE',
+  FALSE = 'FALSE',
+  IF = 'IF',
+  ELSE = 'ELSE',
+  RETURN = 'RETURN'
 }
 
 export const keywords: { [x: string]: TOKENS } = {
   fn: TOKENS.FUNCTION,
-  let: TOKENS.LET
+  let: TOKENS.LET,
+  true: TOKENS.TRUE,
+  false: TOKENS.FALSE,
+  if: TOKENS.IF,
+  else: TOKENS.ELSE,
+  return: TOKENS.RETURN
 }
 
 export function lookupIdent(ident: string) {

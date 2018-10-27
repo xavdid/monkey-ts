@@ -9,7 +9,7 @@
     "lint": "tslint -p .",
     "test": "jest",
     "test:watch": "jest --watch",
-    "posttest": "yarn lint",
+    "x-posttest": "yarn lint",
     "release": "npx np"
   },
   "keywords": [],
