@@ -17,7 +17,7 @@ const validateAnswers = (testCases: lexerResults, l: Lexer) => {
 }
 
 describe('lexer', () => {
-  it('should parse simple input', () => {
+  it('should lex simple input', () => {
     const input = '=+(){},;'
     const l = new Lexer(input)
 
@@ -36,7 +36,7 @@ describe('lexer', () => {
     validateAnswers(resultingTokens, l)
   })
 
-  it('should parse complex input', () => {
+  it('should lex complex input', () => {
     const input = `let five = 5;
     let ten = 10;
 
@@ -129,7 +129,7 @@ describe('lexer', () => {
     validateAnswers(resultingTokens, l)
   })
 
-  it('should test multi-character operators', () => {
+  it('should lex multi-character operators', () => {
     const input = `10 == 10;
     10 != 9;`
 
