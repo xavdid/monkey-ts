@@ -50,18 +50,18 @@ export class Parser {
     }
   }
 
+  // stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
   parseLetStatement() {
-    const stmt = new LetStatement()
+    // const stmt = new LetStatement()
     // TODO: fix constructor
-    stmt.token = this.curToken
-    if (!this.expectPeek(TOKENS.IDENT)) {
+    const letToken = this.curToken
+    if (!this.expectAndAdvance(TOKENS.IDENT)) {
       return null
     }
-    stmt.name = new Identifier(this.curToken.literal)
-    // TODO: fix constructor
-    stmt.name.token = this.curToken
 
-    if (!this.expectPeek(TOKENS.ASSIGN)) {
+    const name = new Identifier(this.curToken, this.curToken.literal)
+    if (!this.expectAndAdvance(TOKENS.ASSIGN)) {
       return null
     }
 
@@ -70,12 +70,18 @@ export class Parser {
       this.nextToken()
     }
 
+    const stmt = new LetStatement(
+      letToken,
+      name,
+      new Identifier(new Token(TOKENS.INT, '0'), '0') // TODO: remove
+    )
+
     return stmt
   }
 
   parseReturnStatement() {
-    const stmt = new ReturnStatement()
-    stmt.token = this.curToken
+    const stmt = new ReturnStatement(this.curToken)
+
     this.nextToken()
     while (!this.curTokenIs(TOKENS.SEMICOLON)) {
       this.nextToken()
@@ -91,7 +97,7 @@ export class Parser {
     return this.peekToken.type === t
   }
 
-  expectPeek(t: TOKENS) {
+  expectAndAdvance(t: TOKENS) {
     if (this.peekTokenIs(t)) {
       this.nextToken()
       return true
