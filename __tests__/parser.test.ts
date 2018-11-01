@@ -1,6 +1,6 @@
 import { Lexer } from '../src/lexer'
 import { Parser } from '../src/parser'
-import { Statement, LetStatement } from '../src/ast'
+import { Statement, LetStatement, Program, ReturnStatement } from '../src/ast'
 
 function _testLetStatement(s: LetStatement, name: string) {
   expect(s.tokenLiteral()).toEqual('let')
@@ -9,8 +9,14 @@ function _testLetStatement(s: LetStatement, name: string) {
   expect(s.name.tokenLiteral()).toEqual(name)
 }
 
+function _raiseParserErrors(p: Parser) {
+  if (p.errors.length) {
+    fail(new Error(p.errors.join('\n')))
+  }
+}
+
 describe('parser', () => {
-  it('should parse a simple file', () => {
+  it('should parse let statements', () => {
     const input = `let x = 5;
     let y = 10;
     let foobar = 838383;
@@ -20,10 +26,7 @@ describe('parser', () => {
     const p = new Parser(l)
 
     const program = p.parseProgram()
-    expect(p.errors.length).toEqual(0)
-    if (!program) {
-      fail(new Error('parseProgram returned undefined'))
-    }
+    _raiseParserErrors(p)
 
     expect(program.statements.length).toEqual(3)
 
@@ -31,6 +34,24 @@ describe('parser', () => {
     answers.forEach((answer, i) => {
       const stmt = program.statements[i] as LetStatement
       _testLetStatement(stmt, answer)
+    })
+  })
+
+  it('should parse return statements', () => {
+    const input = `return 5;
+    return 10;
+    return 993322;
+    `
+    const l = new Lexer(input)
+    const p = new Parser(l)
+
+    const program = p.parseProgram()
+    _raiseParserErrors(p)
+
+    expect(program.statements.length).toEqual(3)
+
+    program.statements.forEach((statement: ReturnStatement) => {
+      expect(statement.tokenLiteral()).toEqual('return')
     })
   })
 

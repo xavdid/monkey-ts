@@ -37,6 +37,19 @@ export class LetStatement implements Statement {
   }
 }
 
+export class ReturnStatement {
+  token!: Token
+  returnValue!: Expression
+
+  statementNode() {
+    return { tokenLiteral: () => '' }
+  }
+
+  tokenLiteral() {
+    return this.token.literal
+  }
+}
+
 export class Identifier implements Expression {
   token!: Token
   value: string
