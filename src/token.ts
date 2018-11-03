@@ -60,6 +60,6 @@ export const keywords: { [x: string]: TOKENS } = {
   return: TOKENS.RETURN
 }
 
-export function lookupIdent(ident: string) {
+export const lookupIdent = (ident: string) => {
   return keywords[ident] || TOKENS.IDENT
 }

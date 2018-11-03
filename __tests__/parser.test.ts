@@ -7,14 +7,14 @@ import {
   Identifier
 } from '../src/ast'
 
-function _testLetStatement(s: LetStatement, name: string) {
+const _testLetStatement = (s: LetStatement, name: string) => {
   expect(s.tokenLiteral()).toEqual('let')
   expect(s.statementNode()).toBeTruthy()
   expect(s.name.value).toEqual(name)
   expect(s.name.tokenLiteral()).toEqual(name)
 }
 
-function _raiseParserErrors(p: Parser) {
+const _raiseParserErrors = (p: Parser) => {
   if (p.errors.length) {
     fail(new Error(p.errors.join('\n')))
   }
@@ -73,7 +73,7 @@ describe('parser', () => {
     expect(p.errors.length).toEqual(3)
   })
 
-  it.only('should parse identifiers', () => {
+  it('should parse identifiers', () => {
     const input = 'foobar;'
     const l = new Lexer(input)
 

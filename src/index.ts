@@ -2,7 +2,7 @@
 
 import repl from './repl'
 
-function main() {
+const main = () => {
   console.log('Hello! This is the Monkey programming language')
   console.log('Feel free to type in commands')
   repl()

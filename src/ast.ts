@@ -16,7 +16,7 @@ export interface Expression extends Node {
 export class Program {
   statements: Statement[] = []
 
-  tokenLiteral() {
+  tokenLiteral = () => {
     if (this.statements.length) {
       return this.statements[0].tokenLiteral()
     } else {
@@ -24,7 +24,7 @@ export class Program {
     }
   }
 
-  toString() {
+  toString = () => {
     return this.statements.map(String).join('\n')
   }
 }
@@ -36,13 +36,13 @@ export class LetStatement implements Statement {
     public value: Expression
   ) {}
 
-  statementNode() {
+  statementNode = () => {
     return this
   }
-  tokenLiteral() {
+  tokenLiteral = () => {
     return this.token.literal
   }
-  toString() {
+  toString = () => {
     return `${this.tokenLiteral()} ${this.name} = ${
       this.value ? this.value : ''
     };`
@@ -52,15 +52,15 @@ export class LetStatement implements Statement {
 export class ReturnStatement implements Statement {
   constructor(public token: Token, public returnValue?: Expression) {}
 
-  statementNode() {
+  statementNode = () => {
     return this
   }
 
-  tokenLiteral() {
+  tokenLiteral = () => {
     return this.token.literal
   }
 
-  toString() {
+  toString = () => {
     return `${this.tokenLiteral()} ${this.returnValue || ''};`
   }
 }
@@ -68,14 +68,14 @@ export class ReturnStatement implements Statement {
 export class ExpressionStatement implements Statement {
   constructor(public token: Token, public expression?: Expression) {}
 
-  statementNode() {
+  statementNode = () => {
     return this
   }
-  tokenLiteral() {
+  tokenLiteral = () => {
     return this.token.literal
   }
 
-  toString() {
+  toString = () => {
     return String(this.expression)
   }
 }
@@ -83,14 +83,14 @@ export class ExpressionStatement implements Statement {
 export class Identifier implements Expression {
   constructor(public token: Token, public value: string) {}
 
-  expressionNode() {
+  expressionNode = () => {
     return this
   }
-  tokenLiteral() {
+  tokenLiteral = () => {
     return this.token.literal
   }
 
-  toString() {
+  toString = () => {
     return this.value
   }
 }

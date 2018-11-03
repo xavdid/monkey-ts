@@ -16,7 +16,7 @@ export class Lexer {
     this.readChar()
   }
 
-  nextToken() {
+  nextToken = () => {
     let tok: Token
 
     this.skipWhitepsace()
@@ -82,27 +82,27 @@ export class Lexer {
     return tok
   }
 
-  generateToken(type: TOKENS, char: number) {
+  generateToken = (type: TOKENS, char: number) => {
     return new Token(type, numToString(char))
   }
 
-  readIdentifier() {
+  readIdentifier = () => {
     // DEVIATION: made a root function for reading
     return this._read(isLetter)
   }
 
-  readNumber() {
+  readNumber = () => {
     return this._read(isDigit)
   }
 
-  readChar() {
+  readChar = () => {
     // DEVIATION: use peekChar here instead of repeating code
     this.ch = stringToNum(this.peekChar())
     this.position = this.readPosition
     this.readPosition += 1
   }
 
-  maybeReadSecondChar(yes: TOKENS, no: TOKENS, second: string) {
+  maybeReadSecondChar = (yes: TOKENS, no: TOKENS, second: string) => {
     // DEVIATION: consolidate second character behavior
     if (this.peekChar() === second) {
       const ch = this.ch
@@ -114,7 +114,7 @@ export class Lexer {
     }
   }
 
-  peekChar() {
+  peekChar = () => {
     // DEVIATION: don't read past the end of the string
     // DEVIATION: this returns an actual character instead of a char code
     if (this.readPosition >= this.input.length) {
@@ -124,13 +124,13 @@ export class Lexer {
     }
   }
 
-  skipWhitepsace() {
+  skipWhitepsace = () => {
     while ([' ', '\t', '\n', '\r'].includes(numToString(this.ch))) {
       this.readChar()
     }
   }
 
-  private _read(fn: (ch: number) => boolean) {
+  private _read = (fn: (ch: number) => boolean) => {
     const startingPosition = this.position
     while (fn(this.ch)) {
       this.readChar()

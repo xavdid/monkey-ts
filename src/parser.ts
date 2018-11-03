@@ -40,12 +40,12 @@ export class Parser {
     this.nextToken()
   }
 
-  nextToken() {
+  nextToken = () => {
     this.curToken = this.peekToken
     this.peekToken = this.lexer.nextToken()
   }
 
-  parseProgram() {
+  parseProgram = () => {
     const program = new Program()
     while (this.curToken.type !== TOKENS.EOF) {
       const s = this.parseStatement()
@@ -57,7 +57,7 @@ export class Parser {
     return program
   }
 
-  parseStatement() {
+  parseStatement = () => {
     switch (this.curToken.type) {
       case TOKENS.LET:
         return this.parseLetStatement()
@@ -70,7 +70,7 @@ export class Parser {
 
   // stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
-  parseLetStatement() {
+  parseLetStatement = () => {
     // const stmt = new LetStatement()
     // TODO: fix constructor
     const letToken = this.curToken
@@ -97,7 +97,7 @@ export class Parser {
     return stmt
   }
 
-  parseReturnStatement() {
+  parseReturnStatement = () => {
     const stmt = new ReturnStatement(this.curToken)
 
     this.nextToken()
@@ -107,7 +107,7 @@ export class Parser {
     return stmt
   }
 
-  parseExpressionStatement() {
+  parseExpressionStatement = () => {
     const stmt = new ExpressionStatement(
       this.curToken,
       this.parseExpression(PRECEDENCE.LOWEST)
@@ -120,7 +120,7 @@ export class Parser {
     return stmt
   }
 
-  parseExpression(p: PRECEDENCE) {
+  parseExpression = (p: PRECEDENCE) => {
     const prefix = this.prefixParseFns[this.curToken.type]
     if (!prefix) {
       return
@@ -133,15 +133,15 @@ export class Parser {
     return new Identifier(this.curToken, this.curToken.literal)
   }
 
-  curTokenIs(t: TOKENS) {
+  curTokenIs = (t: TOKENS) => {
     return this.curToken.type === t
   }
 
-  peekTokenIs(t: TOKENS) {
+  peekTokenIs = (t: TOKENS) => {
     return this.peekToken.type === t
   }
 
-  expectAndAdvance(t: TOKENS) {
+  expectAndAdvance = (t: TOKENS) => {
     if (this.peekTokenIs(t)) {
       this.nextToken()
       return true
@@ -151,7 +151,7 @@ export class Parser {
     }
   }
 
-  peekError(t: TOKENS) {
+  peekError = (t: TOKENS) => {
     this.errors.push(
       `expected next token to be ${t}, got ${this.peekToken.type} instead`
     )
