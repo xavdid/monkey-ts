@@ -1,6 +1,11 @@
 import { Lexer } from '../src/lexer'
 import { Parser } from '../src/parser'
-import { Statement, LetStatement, Program, ReturnStatement } from '../src/ast'
+import {
+  LetStatement,
+  ReturnStatement,
+  ExpressionStatement,
+  Identifier
+} from '../src/ast'
 
 function _testLetStatement(s: LetStatement, name: string) {
   expect(s.tokenLiteral()).toEqual('let')
@@ -66,5 +71,20 @@ describe('parser', () => {
 
     p.parseProgram()
     expect(p.errors.length).toEqual(3)
+  })
+
+  it.only('should parse identifiers', () => {
+    const input = 'foobar;'
+    const l = new Lexer(input)
+
+    const p = new Parser(l)
+    const program = p.parseProgram()
+    _raiseParserErrors(p)
+
+    expect(program.statements.length).toEqual(1)
+    const stmt = program.statements[0] as ExpressionStatement
+    const ident = stmt.expression as Identifier
+    expect(ident.value).toEqual('foobar')
+    expect(ident.tokenLiteral()).toEqual('foobar')
   })
 })

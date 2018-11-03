@@ -66,7 +66,7 @@ export class ReturnStatement implements Statement {
 }
 
 export class ExpressionStatement implements Statement {
-  constructor(public token: Token, public expression: Expression) {}
+  constructor(public token: Token, public expression?: Expression) {}
 
   statementNode() {
     return this
