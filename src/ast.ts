@@ -94,3 +94,18 @@ export class Identifier implements Expression {
     return this.value
   }
 }
+
+export class IntegerLiteral implements Expression {
+  constructor(public token: Token, public value: number) {}
+
+  expressionNode = () => {
+    return this
+  }
+  tokenLiteral = () => {
+    return this.token.literal
+  }
+
+  toString = () => {
+    return String(this.value)
+  }
+}

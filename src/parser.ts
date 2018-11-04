@@ -7,7 +7,8 @@ import {
   Identifier,
   ReturnStatement,
   Expression,
-  ExpressionStatement
+  ExpressionStatement,
+  IntegerLiteral
 } from './ast'
 
 type prefixParserFn = () => Expression
@@ -32,7 +33,8 @@ export class Parser {
 
   constructor(public lexer: Lexer) {
     this.prefixParseFns = {
-      [TOKENS.IDENT]: this.parseIdentifier
+      [TOKENS.IDENT]: this.parseIdentifier,
+      [TOKENS.INT]: this.parseIntegerLiteral
     }
     this.infixParseFns = {}
     // read two tokens, so cur and peek are both set
@@ -40,14 +42,17 @@ export class Parser {
     this.nextToken()
   }
 
+  // MECHANICAL //
   nextToken = () => {
     this.curToken = this.peekToken
     this.peekToken = this.lexer.nextToken()
   }
 
+  // PARSERS //
   parseProgram = () => {
     const program = new Program()
     while (this.curToken.type !== TOKENS.EOF) {
+      // TODO: might be able to clean this up
       const s = this.parseStatement()
       if (s) {
         program.statements.push(s)
@@ -67,8 +72,6 @@ export class Parser {
         return this.parseExpressionStatement()
     }
   }
-
-  // stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
   parseLetStatement = () => {
     // const stmt = new LetStatement()
@@ -133,6 +136,16 @@ export class Parser {
     return new Identifier(this.curToken, this.curToken.literal)
   }
 
+  parseIntegerLiteral = () => {
+    const value = parseInt(this.curToken.literal, 10)
+    if (isNaN(value)) {
+      this.errors.push('could not parse', this.curToken.literal, 'as integer')
+      // return
+    }
+    return new IntegerLiteral(this.curToken, value)
+  }
+
+  // HELPERS //
   curTokenIs = (t: TOKENS) => {
     return this.curToken.type === t
   }
@@ -156,12 +169,4 @@ export class Parser {
       `expected next token to be ${t}, got ${this.peekToken.type} instead`
     )
   }
-
-  // registerPrefix(tokenType: TOKENS, fn: prefixParserFn) {
-  //   this.prefixParseFns[tokenType] = fn
-  // }
-
-  // registerInfix(tokenType: TOKENS, fn: infixParseFn) {
-  //   this.infixParseFns[tokenType] = fn
-  // }
 }

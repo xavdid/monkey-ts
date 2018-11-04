@@ -4,7 +4,8 @@ import {
   LetStatement,
   ReturnStatement,
   ExpressionStatement,
-  Identifier
+  Identifier,
+  IntegerLiteral
 } from '../src/ast'
 
 const _testLetStatement = (s: LetStatement, name: string) => {
@@ -87,4 +88,20 @@ describe('parser', () => {
     expect(ident.value).toEqual('foobar')
     expect(ident.tokenLiteral()).toEqual('foobar')
   })
+
+  it('should parse integers', () => {
+    const input = '5;'
+    const l = new Lexer(input)
+
+    const p = new Parser(l)
+    const program = p.parseProgram()
+    _raiseParserErrors(p)
+
+    expect(program.statements.length).toEqual(1)
+    const stmt = program.statements[0] as ExpressionStatement
+    const ident = stmt.expression as IntegerLiteral
+    expect(ident.value).toEqual(5)
+    expect(ident.tokenLiteral()).toEqual('5')
+  })
 })
+// })ryan is great!!!!!!
