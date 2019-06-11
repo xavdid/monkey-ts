@@ -9,7 +9,8 @@ import {
   Expression,
   ExpressionStatement,
   IntegerLiteral,
-  PrefixExpression
+  PrefixExpression,
+  InfixExpression
 } from './ast'
 
 type prefixParserFn = () => Expression
@@ -19,10 +20,21 @@ const enum PRECEDENCE {
   LOWEST,
   EQUALS, // ==
   LESSGREATER, // < or >
-  SUM, // +
-  PRODUCT, // *
+  SUM, // + or -
+  PRODUCT, // * or /
   PREFIX, // -X or !X
   CALL // myFunc(X)
+}
+
+const PRECEDENCES: { [x: string]: PRECEDENCE } = {
+  [TOKENS.EQ]: PRECEDENCE.EQUALS,
+  [TOKENS.NOT_EQ]: PRECEDENCE.EQUALS,
+  [TOKENS.LT]: PRECEDENCE.LESSGREATER,
+  [TOKENS.GT]: PRECEDENCE.LESSGREATER,
+  [TOKENS.PLUS]: PRECEDENCE.SUM,
+  [TOKENS.MINUS]: PRECEDENCE.SUM,
+  [TOKENS.SLASH]: PRECEDENCE.PRODUCT,
+  [TOKENS.ASTERISK]: PRECEDENCE.PRODUCT
 }
 
 export class Parser {
@@ -41,7 +53,16 @@ export class Parser {
       [TOKENS.BANG]: this.parsePrefixExpression,
       [TOKENS.MINUS]: this.parsePrefixExpression
     }
-    this.infixParseFns = {}
+    this.infixParseFns = {
+      [TOKENS.EQ]: this.parseInfixExpression,
+      [TOKENS.NOT_EQ]: this.parseInfixExpression,
+      [TOKENS.LT]: this.parseInfixExpression,
+      [TOKENS.GT]: this.parseInfixExpression,
+      [TOKENS.PLUS]: this.parseInfixExpression,
+      [TOKENS.MINUS]: this.parseInfixExpression,
+      [TOKENS.SLASH]: this.parseInfixExpression,
+      [TOKENS.ASTERISK]: this.parseInfixExpression
+    }
     // read two tokens, so cur and peek are both set
     this.nextToken()
     this.nextToken()
@@ -51,6 +72,14 @@ export class Parser {
   nextToken = () => {
     this.curToken = this.peekToken
     this.peekToken = this.lexer.nextToken()
+  }
+
+  peekPrecedence = () => {
+    return this._getPrecedence(this.peekToken)
+  }
+
+  curPrecedence = () => {
+    return this._getPrecedence(this.curToken)
   }
 
   // PARSERS //
@@ -88,24 +117,19 @@ export class Parser {
     // TODO: fix constructor
     const letToken = this.curToken
     if (!this.expectAndAdvance(TOKENS.IDENT)) {
-      return null
+      return
     }
 
     const name = new Identifier(this.curToken, this.curToken.literal)
     if (!this.expectAndAdvance(TOKENS.ASSIGN)) {
-      return null
+      return
     }
 
-    // TODO: coming back
     while (!this.curTokenIs(TOKENS.SEMICOLON)) {
       this.nextToken()
     }
 
-    const stmt = new LetStatement(
-      letToken,
-      name,
-      new Identifier(new Token(TOKENS.INT, '0'), '0') // TODO: remove
-    )
+    const stmt = new LetStatement(letToken, name)
 
     return stmt
   }
@@ -139,7 +163,20 @@ export class Parser {
       this.noPrefixParseFnError(this.curToken.type)
       return
     }
-    return prefix() // leftExp
+    let left = prefix()
+
+    while (!this.peekTokenIs(TOKENS.SEMICOLON) && p < this.peekPrecedence()) {
+      const infix = this.infixParseFns[this.peekToken.type]
+      if (!infix) {
+        return left
+      }
+
+      this.nextToken()
+
+      left = infix(left)
+    }
+
+    return left
   }
 
   // these need to be fat arrow so they can be referenced but not called
@@ -169,6 +206,20 @@ export class Parser {
     return expression
   }
 
+  parseInfixExpression = (left: Expression) => {
+    const expression = new InfixExpression(
+      this.curToken,
+      left,
+      this.curToken.literal
+    )
+
+    const precedence = this.curPrecedence()
+    this.nextToken()
+    expression.right = this.parseExpression(precedence)
+
+    return expression
+  }
+
   // HELPERS //
   curTokenIs = (t: TOKENS) => {
     return this.curToken.type === t
@@ -178,6 +229,9 @@ export class Parser {
     return this.peekToken.type === t
   }
 
+  /**
+   * in the book it's `expectPeek`, which is a bad name
+   */
   expectAndAdvance = (t: TOKENS) => {
     if (this.peekTokenIs(t)) {
       this.nextToken()
@@ -192,5 +246,9 @@ export class Parser {
     this.errors.push(
       `expected next token to be ${t}, got ${this.peekToken.type} instead`
     )
+  }
+
+  private _getPrecedence = (t: Token) => {
+    return PRECEDENCES[t.type] || PRECEDENCE.LOWEST
   }
 }

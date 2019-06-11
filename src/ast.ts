@@ -25,7 +25,7 @@ export class Program {
   }
 
   toString = () => {
-    return this.statements.map(String).join('\n')
+    return this.statements.map(String).join('')
   }
 }
 
@@ -33,7 +33,7 @@ export class LetStatement implements Statement {
   constructor(
     public token: Token,
     public name: Identifier,
-    public value: Expression
+    public value?: Expression // optional because for now, we don't always pass a value in there
   ) {}
 
   statementNode = () => {
@@ -110,7 +110,7 @@ export class IntegerLiteral implements Expression {
   }
 }
 
-export class PrefixExpression {
+export class PrefixExpression implements Expression {
   constructor(
     public token: Token, // eg "!"
     public operator: string,
@@ -126,5 +126,25 @@ export class PrefixExpression {
 
   toString = () => {
     return `(${this.operator}${this.right})`
+  }
+}
+
+export class InfixExpression implements Expression {
+  constructor(
+    public token: Token, // eg "+"
+    public left: Expression, // this might need to be optional, which would cause me to change this signature
+    public operator: string,
+    public right?: Expression // added after initialization
+  ) {}
+
+  expressionNode = () => {
+    return this
+  }
+  tokenLiteral = () => {
+    return this.token.literal
+  }
+
+  toString = () => {
+    return `(${this.left} ${this.operator} ${this.right})`
   }
 }

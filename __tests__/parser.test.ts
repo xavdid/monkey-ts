@@ -7,7 +7,7 @@ import {
   Identifier,
   IntegerLiteral,
   PrefixExpression,
-  Expression
+  InfixExpression
 } from '../src/ast'
 
 const _testLetStatement = (s: LetStatement, name: string) => {
@@ -24,11 +24,11 @@ const _testIntegerLiteral = (il: IntegerLiteral, value: number) => {
 
 const _raiseParserErrors = (p: Parser) => {
   if (p.errors.length) {
-    fail(new Error(p.errors.join('\n')))
+    throw new Error(p.errors.join('\n'))
   }
 }
 
-describe('parser', () => {
+describe.only('parser', () => {
   it('should parse let statements', () => {
     const input = `let x = 5;
     let y = 10;
@@ -140,5 +140,91 @@ describe('parser', () => {
       _testIntegerLiteral(exp.right as IntegerLiteral, test.integerValue)
     })
   })
+
+  it('should parse infix expressions', () => {
+    const operators = ['+', '-', '*', '/', '>', '<', '==', '!=']
+    const tests = operators.map(o => ({
+      input: `5 ${o} 5;`,
+      leftValue: 5,
+      operator: o,
+      rightValue: 5
+    }))
+
+    tests.forEach(test => {
+      const l = new Lexer(test.input)
+      const p = new Parser(l)
+      const program = p.parseProgram()
+      _raiseParserErrors(p)
+
+      expect(program.statements.length).toEqual(1)
+      const stmt = program.statements[0] as ExpressionStatement
+      const exp = stmt.expression as InfixExpression
+
+      _testIntegerLiteral(exp.left as IntegerLiteral, test.leftValue)
+      expect(exp.operator).toEqual(test.operator)
+      _testIntegerLiteral(exp.right as IntegerLiteral, test.rightValue)
+    })
+  })
+
+  it.only('should test operater precedence parsing', () => {
+    const tests = [
+      {
+        input: '-a * b',
+        expected: '((-a) * b)'
+      },
+      {
+        input: '!-a',
+        expected: '(!(-a))'
+      },
+      {
+        input: 'a + b + c',
+        expected: '((a + b) + c)'
+      },
+      {
+        input: 'a + b - c',
+        expected: '((a + b) - c)'
+      },
+      {
+        input: 'a * b * c',
+        expected: '((a * b) * c)'
+      },
+      {
+        input: 'a * b / c',
+        expected: '((a * b) / c)'
+      },
+      {
+        input: 'a + b / c',
+        expected: '(a + (b / c))'
+      },
+      {
+        input: 'a + b * c + d / e - f',
+        expected: '(((a + (b * c)) + (d / e)) - f)'
+      },
+      {
+        input: '3 + 4; -5 * 5',
+        expected: '(3 + 4)((-5) * 5)'
+      },
+      {
+        input: '5 > 4 == 3 < 4',
+        expected: '((5 > 4) == (3 < 4))'
+      },
+      {
+        input: '5 < 4 != 3 > 4',
+        expected: '((5 < 4) != (3 > 4))'
+      },
+      {
+        input: '3 + 4 * 5 == 3 * 1 + 4 * 5',
+        expected: '((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))'
+      }
+    ]
+
+    tests.forEach(test => {
+      const l = new Lexer(test.input)
+      const p = new Parser(l)
+      const program = p.parseProgram()
+      _raiseParserErrors(p)
+
+      expect(program.toString()).toEqual(test.expected)
+    })
+  })
 })
-// })ryan is great!!!!!!
