@@ -109,3 +109,22 @@ export class IntegerLiteral implements Expression {
     return String(this.value)
   }
 }
+
+export class PrefixExpression {
+  constructor(
+    public token: Token, // eg "!"
+    public operator: string,
+    public right?: Expression // added after initialization
+  ) {}
+
+  expressionNode = () => {
+    return this
+  }
+  tokenLiteral = () => {
+    return this.token.literal
+  }
+
+  toString = () => {
+    return `(${this.operator}${this.right})`
+  }
+}

@@ -5,7 +5,9 @@ import {
   ReturnStatement,
   ExpressionStatement,
   Identifier,
-  IntegerLiteral
+  IntegerLiteral,
+  PrefixExpression,
+  Expression
 } from '../src/ast'
 
 const _testLetStatement = (s: LetStatement, name: string) => {
@@ -13,6 +15,11 @@ const _testLetStatement = (s: LetStatement, name: string) => {
   expect(s.statementNode()).toBeTruthy()
   expect(s.name.value).toEqual(name)
   expect(s.name.tokenLiteral()).toEqual(name)
+}
+
+const _testIntegerLiteral = (il: IntegerLiteral, value: number) => {
+  expect(il.value).toEqual(value)
+  expect(il.tokenLiteral()).toEqual(String(value))
 }
 
 const _raiseParserErrors = (p: Parser) => {
@@ -71,7 +78,7 @@ describe('parser', () => {
     const p = new Parser(l)
 
     p.parseProgram()
-    expect(p.errors.length).toEqual(3)
+    expect(p.errors.length).toEqual(4) // originally was 3, but bad parsing causes the "no function" error to be there?
   })
 
   it('should parse identifiers', () => {
@@ -102,6 +109,36 @@ describe('parser', () => {
     const ident = stmt.expression as IntegerLiteral
     expect(ident.value).toEqual(5)
     expect(ident.tokenLiteral()).toEqual('5')
+  })
+
+  it('should parse prefix expressions', () => {
+    const tests = [
+      {
+        input: '!5;',
+        operator: '!',
+        integerValue: 5
+      },
+      {
+        input: '-15;',
+        operator: '-',
+        integerValue: 15
+      }
+    ]
+
+    tests.forEach(test => {
+      const l = new Lexer(test.input)
+      const p = new Parser(l)
+      const program = p.parseProgram()
+      _raiseParserErrors(p)
+
+      expect(program.statements.length).toEqual(1)
+      const stmt = program.statements[0] as ExpressionStatement
+      const exp = stmt.expression as PrefixExpression
+
+      expect(exp.operator).toEqual(test.operator)
+
+      _testIntegerLiteral(exp.right as IntegerLiteral, test.integerValue)
+    })
   })
 })
 // })ryan is great!!!!!!

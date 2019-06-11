@@ -1,9 +1,9 @@
 export type tokenType = string
 
 export class Token {
-  type: tokenType // in the book, this is a separate type
+  type: TOKENS // in the book, this is a separate type
   literal: string
-  constructor(type: tokenType, lilteral: string) {
+  constructor(type: TOKENS, lilteral: string) {
     this.type = type
     this.literal = lilteral
   }

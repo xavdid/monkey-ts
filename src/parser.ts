@@ -8,7 +8,8 @@ import {
   ReturnStatement,
   Expression,
   ExpressionStatement,
-  IntegerLiteral
+  IntegerLiteral,
+  PrefixExpression
 } from './ast'
 
 type prefixParserFn = () => Expression
@@ -28,13 +29,17 @@ export class Parser {
   curToken!: Token
   peekToken!: Token
   errors: string[] = []
+  // [k in TOKENS]: alsmost works, but given that the rest are missing it complains
+  // partial didn't seem to do it either
   prefixParseFns: { [x: string]: prefixParserFn }
   infixParseFns: { [x: string]: infixParseFn }
 
   constructor(public lexer: Lexer) {
     this.prefixParseFns = {
       [TOKENS.IDENT]: this.parseIdentifier,
-      [TOKENS.INT]: this.parseIntegerLiteral
+      [TOKENS.INT]: this.parseIntegerLiteral,
+      [TOKENS.BANG]: this.parsePrefixExpression,
+      [TOKENS.MINUS]: this.parsePrefixExpression
     }
     this.infixParseFns = {}
     // read two tokens, so cur and peek are both set
@@ -49,6 +54,11 @@ export class Parser {
   }
 
   // PARSERS //
+  noPrefixParseFnError = (t: string) => {
+    const msg = `no prefix parse function for ${t} found`
+    this.errors.push(msg)
+  }
+
   parseProgram = () => {
     const program = new Program()
     while (this.curToken.type !== TOKENS.EOF) {
@@ -126,6 +136,7 @@ export class Parser {
   parseExpression = (p: PRECEDENCE) => {
     const prefix = this.prefixParseFns[this.curToken.type]
     if (!prefix) {
+      this.noPrefixParseFnError(this.curToken.type)
       return
     }
     return prefix() // leftExp
@@ -143,6 +154,19 @@ export class Parser {
       // return
     }
     return new IntegerLiteral(this.curToken, value)
+  }
+
+  parsePrefixExpression = () => {
+    const expression = new PrefixExpression(
+      this.curToken,
+      this.curToken.literal
+    )
+
+    this.nextToken()
+
+    expression.right = this.parseExpression(PRECEDENCE.PREFIX)
+
+    return expression
   }
 
   // HELPERS //

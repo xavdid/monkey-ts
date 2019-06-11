@@ -9,8 +9,9 @@
     "lint": "tslint -p .",
     "test": "jest",
     "test:watch": "jest --watch",
-    "x-posttest": "yarn lint",
-    "release": "npx np"
+    "validate": "yarn test && yarn lint",
+    "release": "npx np",
+    "go": "yarn build && node ."
   },
   "keywords": [],
   "files": [
@@ -24,6 +25,7 @@
   },
   "license": "ISC",
   "jest": {
+    "verbose": true,
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
