@@ -2,7 +2,6 @@ import { Token, TOKENS } from './token'
 import { Lexer } from './lexer'
 import {
   Program,
-  Statement,
   LetStatement,
   Identifier,
   ReturnStatement,
@@ -10,7 +9,8 @@ import {
   ExpressionStatement,
   IntegerLiteral,
   PrefixExpression,
-  InfixExpression
+  InfixExpression,
+  Bool
 } from './ast'
 
 type prefixParserFn = () => Expression
@@ -51,7 +51,9 @@ export class Parser {
       [TOKENS.IDENT]: this.parseIdentifier,
       [TOKENS.INT]: this.parseIntegerLiteral,
       [TOKENS.BANG]: this.parsePrefixExpression,
-      [TOKENS.MINUS]: this.parsePrefixExpression
+      [TOKENS.MINUS]: this.parsePrefixExpression,
+      [TOKENS.TRUE]: this.parseBoolean,
+      [TOKENS.FALSE]: this.parseBoolean
     }
     this.infixParseFns = {
       [TOKENS.EQ]: this.parseInfixExpression,
@@ -83,7 +85,7 @@ export class Parser {
   }
 
   // PARSERS //
-  noPrefixParseFnError = (t: string) => {
+  trhowNoPrefixParseFnError = (t: string) => {
     const msg = `no prefix parse function for ${t} found`
     this.errors.push(msg)
   }
@@ -160,7 +162,7 @@ export class Parser {
   parseExpression = (p: PRECEDENCE) => {
     const prefix = this.prefixParseFns[this.curToken.type]
     if (!prefix) {
-      this.noPrefixParseFnError(this.curToken.type)
+      this.trhowNoPrefixParseFnError(this.curToken.type)
       return
     }
     let left = prefix()
@@ -215,19 +217,18 @@ export class Parser {
 
     const precedence = this.curPrecedence()
     this.nextToken()
+    // could if on expression.operator and decrement for + to make it hug right
     expression.right = this.parseExpression(precedence)
 
     return expression
   }
 
-  // HELPERS //
-  curTokenIs = (t: TOKENS) => {
-    return this.curToken.type === t
-  }
+  parseBoolean = () => new Bool(this.curToken, this.curTokenIs(TOKENS.TRUE))
 
-  peekTokenIs = (t: TOKENS) => {
-    return this.peekToken.type === t
-  }
+  // HELPERS //
+  curTokenIs = (t: TOKENS) => this.curToken.type === t
+
+  peekTokenIs = (t: TOKENS) => this.peekToken.type === t
 
   /**
    * in the book it's `expectPeek`, which is a bad name

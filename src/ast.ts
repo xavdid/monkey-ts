@@ -1,4 +1,4 @@
-import { TOKENS, Token } from './token'
+import { Token } from './token'
 
 interface Node {
   tokenLiteral: () => string
@@ -146,5 +146,23 @@ export class InfixExpression implements Expression {
 
   toString = () => {
     return `(${this.left} ${this.operator} ${this.right})`
+  }
+}
+
+export class Bool implements Expression {
+  constructor(
+    public token: Token, // eg "+"
+    public value: boolean
+  ) {}
+
+  expressionNode = () => {
+    return this
+  }
+  tokenLiteral = () => {
+    return this.token.literal
+  }
+
+  toString = () => {
+    return this.token.literal
   }
 }

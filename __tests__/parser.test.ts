@@ -7,28 +7,75 @@ import {
   Identifier,
   IntegerLiteral,
   PrefixExpression,
-  InfixExpression
+  InfixExpression,
+  Expression,
+  Bool
 } from '../src/ast'
 
-const _testLetStatement = (s: LetStatement, name: string) => {
+const raiseParserErrors = (p: Parser) => {
+  if (p.errors.length) {
+    throw new Error(p.errors.join('\n'))
+  }
+}
+
+const testLetStatement = (s: LetStatement, name: string) => {
+  expect(s).toBeInstanceOf(LetStatement)
   expect(s.tokenLiteral()).toEqual('let')
   expect(s.statementNode()).toBeTruthy()
   expect(s.name.value).toEqual(name)
   expect(s.name.tokenLiteral()).toEqual(name)
 }
 
-const _testIntegerLiteral = (il: IntegerLiteral, value: number) => {
+const testIntegerLiteral = (il: IntegerLiteral, value: number) => {
+  expect(il).toBeInstanceOf(IntegerLiteral)
   expect(il.value).toEqual(value)
   expect(il.tokenLiteral()).toEqual(String(value))
 }
 
-const _raiseParserErrors = (p: Parser) => {
-  if (p.errors.length) {
-    throw new Error(p.errors.join('\n'))
+const testIdentifier = (e: Identifier, value: string) => {
+  expect(e).toBeInstanceOf(Identifier)
+  expect(e.value).toEqual(value)
+  expect(e.tokenLiteral()).toEqual(value)
+}
+
+const testBooleanExpression = (b: Bool, expected: boolean) => {
+  expect(b).toBeInstanceOf(Bool)
+  expect(b.value).toEqual(expected)
+  expect(b.tokenLiteral()).toEqual(String(expected))
+}
+
+const testLiteralExpression = (
+  exp: Expression,
+  expected: string | number | boolean
+) => {
+  switch (typeof expected) {
+    case 'number':
+      testIntegerLiteral(exp as IntegerLiteral, expected)
+      break
+    case 'string':
+      testIdentifier(exp as Identifier, expected)
+      break
+    case 'boolean':
+      testBooleanExpression(exp as Bool, expected)
+      break
+    default:
+      throw new Error(`type of exp not handled, got ${exp}`)
   }
 }
 
-describe.only('parser', () => {
+const testInfixExpression = (
+  exp: InfixExpression,
+  left: any,
+  operator: string,
+  right: any
+) => {
+  expect(exp).toBeInstanceOf(InfixExpression)
+  testLiteralExpression(exp.left, left)
+  expect(exp.operator).toEqual(operator)
+  testLiteralExpression(exp.right, right)
+}
+
+describe('parser', () => {
   it('should parse let statements', () => {
     const input = `let x = 5;
     let y = 10;
@@ -39,14 +86,14 @@ describe.only('parser', () => {
     const p = new Parser(l)
 
     const program = p.parseProgram()
-    _raiseParserErrors(p)
+    raiseParserErrors(p)
 
     expect(program.statements.length).toEqual(3)
 
     const answers = ['x', 'y', 'foobar']
     answers.forEach((answer, i) => {
       const stmt = program.statements[i] as LetStatement
-      _testLetStatement(stmt, answer)
+      testLetStatement(stmt, answer)
     })
   })
 
@@ -59,7 +106,7 @@ describe.only('parser', () => {
     const p = new Parser(l)
 
     const program = p.parseProgram()
-    _raiseParserErrors(p)
+    raiseParserErrors(p)
 
     expect(program.statements.length).toEqual(3)
 
@@ -87,7 +134,7 @@ describe.only('parser', () => {
 
     const p = new Parser(l)
     const program = p.parseProgram()
-    _raiseParserErrors(p)
+    raiseParserErrors(p)
 
     expect(program.statements.length).toEqual(1)
     const stmt = program.statements[0] as ExpressionStatement
@@ -102,7 +149,7 @@ describe.only('parser', () => {
 
     const p = new Parser(l)
     const program = p.parseProgram()
-    _raiseParserErrors(p)
+    raiseParserErrors(p)
 
     expect(program.statements.length).toEqual(1)
     const stmt = program.statements[0] as ExpressionStatement
@@ -129,7 +176,7 @@ describe.only('parser', () => {
       const l = new Lexer(test.input)
       const p = new Parser(l)
       const program = p.parseProgram()
-      _raiseParserErrors(p)
+      raiseParserErrors(p)
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
@@ -137,7 +184,7 @@ describe.only('parser', () => {
 
       expect(exp.operator).toEqual(test.operator)
 
-      _testIntegerLiteral(exp.right as IntegerLiteral, test.integerValue)
+      testIntegerLiteral(exp.right as IntegerLiteral, test.integerValue)
     })
   })
 
@@ -154,19 +201,19 @@ describe.only('parser', () => {
       const l = new Lexer(test.input)
       const p = new Parser(l)
       const program = p.parseProgram()
-      _raiseParserErrors(p)
+      raiseParserErrors(p)
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
       const exp = stmt.expression as InfixExpression
 
-      _testIntegerLiteral(exp.left as IntegerLiteral, test.leftValue)
+      testIntegerLiteral(exp.left as IntegerLiteral, test.leftValue)
       expect(exp.operator).toEqual(test.operator)
-      _testIntegerLiteral(exp.right as IntegerLiteral, test.rightValue)
+      testIntegerLiteral(exp.right as IntegerLiteral, test.rightValue)
     })
   })
 
-  it.only('should test operater precedence parsing', () => {
+  it('should test operater precedence parsing', () => {
     const tests = [
       {
         input: '-a * b',
@@ -222,9 +269,34 @@ describe.only('parser', () => {
       const l = new Lexer(test.input)
       const p = new Parser(l)
       const program = p.parseProgram()
-      _raiseParserErrors(p)
+      raiseParserErrors(p)
 
       expect(program.toString()).toEqual(test.expected)
+    })
+  })
+
+  it('should parse boolean expressions', () => {
+    const tests = [
+      {
+        input: 'true;',
+        expected: true
+      },
+      {
+        input: 'false;',
+        expected: false
+      }
+    ]
+
+    tests.forEach(test => {
+      const l = new Lexer(test.input)
+      const p = new Parser(l)
+      const program = p.parseProgram()
+      raiseParserErrors(p)
+
+      expect(program.statements.length).toEqual(1)
+      const stmt = program.statements[0] as ExpressionStatement
+      const exp = stmt.expression as Bool
+      testBooleanExpression(exp, test.expected)
     })
   })
 })
