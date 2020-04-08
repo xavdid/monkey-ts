@@ -125,7 +125,6 @@ describe('parser', () => {
       const p = new Parser(l)
 
       p.parseProgram()
-      console.log(p.errors)
       expect(p.errors.length).toEqual(4) // originally was 3, but bad parsing causes the "no function" error to be there?
     })
 
@@ -302,6 +301,26 @@ describe('parser', () => {
         {
           input: '3 < 5 == true',
           expected: '((3 < 5) == true)'
+        },
+        {
+          input: '1 + (2 + 3) + 4',
+          expected: '((1 + (2 + 3)) + 4)'
+        },
+        {
+          input: '(5 + 5) * 2',
+          expected: '((5 + 5) * 2)'
+        },
+        {
+          input: '2 / (5 + 5)',
+          expected: '(2 / (5 + 5))'
+        },
+        {
+          input: '-(5 + 5)',
+          expected: '(-(5 + 5))'
+        },
+        {
+          input: '!(true == true)',
+          expected: '(!(true == true))'
         }
       ]
 

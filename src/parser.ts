@@ -13,7 +13,7 @@ import {
   Bool
 } from './ast'
 
-type prefixParserFn = () => Expression
+type prefixParserFn = () => Expression | undefined
 type infixParseFn = (e: Expression) => Expression
 
 const enum PRECEDENCE {
@@ -38,6 +38,7 @@ const PRECEDENCES: { [x: string]: PRECEDENCE } = {
 }
 
 export class Parser {
+  // these are always defined, since a funciton in the constructor assigns it
   curToken!: Token
   peekToken!: Token
   errors: string[] = []
@@ -53,7 +54,8 @@ export class Parser {
       [TOKENS.BANG]: this.parsePrefixExpression,
       [TOKENS.MINUS]: this.parsePrefixExpression,
       [TOKENS.TRUE]: this.parseBoolean,
-      [TOKENS.FALSE]: this.parseBoolean
+      [TOKENS.FALSE]: this.parseBoolean,
+      [TOKENS.LPAREN]: this.parseGroupedExpression
     }
     this.infixParseFns = {
       [TOKENS.EQ]: this.parseInfixExpression,
@@ -160,25 +162,27 @@ export class Parser {
   }
 
   parseExpression = (p: PRECEDENCE) => {
-    const prefix = this.prefixParseFns[this.curToken.type]
-    if (!prefix) {
+    const prefixParserFn = this.prefixParseFns[this.curToken.type]
+    if (!prefixParserFn) {
       this.trhowNoPrefixParseFnError(this.curToken.type)
       return
     }
-    let left = prefix()
+    let leftExpression = prefixParserFn()
 
     while (!this.peekTokenIs(TOKENS.SEMICOLON) && p < this.peekPrecedence()) {
-      const infix = this.infixParseFns[this.peekToken.type]
-      if (!infix) {
-        return left
+      const infixParserFn = this.infixParseFns[this.peekToken.type]
+      if (!infixParserFn) {
+        return leftExpression
       }
 
       this.nextToken()
 
-      left = infix(left)
+      // this needs the ! because parseGroupedExpression can return undefined
+      // it only does that when parens are mismatched though, so this is safe to assert
+      leftExpression = infixParserFn(leftExpression!)
     }
 
-    return left
+    return leftExpression
   }
 
   // these need to be fat arrow so they can be referenced but not called
@@ -190,7 +194,7 @@ export class Parser {
     const value = parseInt(this.curToken.literal, 10)
     if (isNaN(value)) {
       this.errors.push('could not parse', this.curToken.literal, 'as integer')
-      // return
+      return
     }
     return new IntegerLiteral(this.curToken, value)
   }
@@ -224,6 +228,15 @@ export class Parser {
   }
 
   parseBoolean = () => new Bool(this.curToken, this.curTokenIs(TOKENS.TRUE))
+
+  parseGroupedExpression = () => {
+    this.nextToken()
+    const expression = this.parseExpression(PRECEDENCE.LOWEST)
+    if (!this.expectAndAdvance(TOKENS.RPAREN)) {
+      return
+    }
+    return expression
+  }
 
   // HELPERS //
   curTokenIs = (t: TOKENS) => this.curToken.type === t
