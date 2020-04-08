@@ -1,4 +1,4 @@
-import { isLetter, isDigit, stringToNum } from '../src/utils'
+import { isLetter, isDigit, stringToNum } from '../utils'
 
 describe('utils', () => {
   it('should identify letters', () => {

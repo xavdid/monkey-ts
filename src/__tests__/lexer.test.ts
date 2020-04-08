@@ -1,5 +1,5 @@
-import { Lexer } from '../src/lexer'
-import { TOKENS } from '../src/token'
+import { Lexer } from '../lexer'
+import { TOKENS } from '../token'
 
 type lexerResults = Array<[TOKENS, string]>
 

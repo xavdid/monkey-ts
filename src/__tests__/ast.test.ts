@@ -1,5 +1,5 @@
-import { Token, TOKENS } from '../src/token'
-import { LetStatement, Identifier, Program } from '../src/ast'
+import { Token, TOKENS } from '../token'
+import { LetStatement, Identifier, Program } from '../ast'
 
 describe('ast', () => {
   it('should print a program', () => {

@@ -1,5 +1,5 @@
-import { Lexer } from '../src/lexer'
-import { Parser } from '../src/parser'
+import { Lexer } from '../lexer'
+import { Parser } from '../parser'
 import {
   LetStatement,
   ReturnStatement,
@@ -10,7 +10,7 @@ import {
   InfixExpression,
   Expression,
   Bool
-} from '../src/ast'
+} from '../ast'
 
 const raiseParserErrors = (p: Parser) => {
   if (p.errors.length) {
