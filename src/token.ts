@@ -1,12 +1,7 @@
 export type tokenType = string
 
 export class Token {
-  type: TOKENS // in the book, this is a separate type
-  literal: string
-  constructor(type: TOKENS, lilteral: string) {
-    this.type = type
-    this.literal = lilteral
-  }
+  constructor(public type: TOKENS, public literal: string) {}
 }
 
 export const enum TOKENS {

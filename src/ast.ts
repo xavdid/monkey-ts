@@ -1,6 +1,7 @@
 import { Token } from './token'
 
 interface Node {
+  token: Token
   tokenLiteral: () => string
   toString: () => string
 }
