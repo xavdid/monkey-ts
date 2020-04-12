@@ -317,7 +317,7 @@ export class Parser {
     )
   }
 
-  private _getPrecedence = (t: Token) => {
+  private readonly _getPrecedence = (t: Token) => {
     return PRECEDENCES[t.type] || PRECEDENCE.LOWEST
   }
 }

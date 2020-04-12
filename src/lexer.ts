@@ -130,7 +130,7 @@ export class Lexer {
     }
   }
 
-  private _read = (fn: (ch: number) => boolean) => {
+  private readonly _read = (fn: (ch: number) => boolean) => {
     const startingPosition = this.position
     while (fn(this.ch)) {
       this.readChar()

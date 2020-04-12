@@ -29,7 +29,7 @@ export class Program {
 }
 
 export class LetStatement implements Statement {
-  constructor(
+  constructor (
     public token: Token,
     public name: Identifier,
     public value?: Expression // TOOD: optional because for now, we don't always pass a value in there
@@ -38,15 +38,17 @@ export class LetStatement implements Statement {
   statementNode = () => {
     return this
   }
+
   tokenLiteral = () => {
     return this.token.literal
   }
+
   toString = () =>
     `${this.tokenLiteral()} ${this.name} = ${this.value ? this.value : ''};`
 }
 
 export class ReturnStatement implements Statement {
-  constructor(public token: Token, public returnValue?: Expression) {}
+  constructor (public token: Token, public returnValue?: Expression) {}
 
   statementNode = () => {
     return this
@@ -56,15 +58,16 @@ export class ReturnStatement implements Statement {
     return this.token.literal
   }
 
-  toString = () => `${this.tokenLiteral()} ${this.returnValue || ''};`
+  toString = () => `${this.tokenLiteral()} ${this.returnValue ?? ''};`
 }
 
 export class ExpressionStatement implements Statement {
-  constructor(public token: Token, public expression?: Expression) {}
+  constructor (public token: Token, public expression?: Expression) {}
 
   statementNode = () => {
     return this
   }
+
   tokenLiteral = () => {
     return this.token.literal
   }
@@ -73,11 +76,12 @@ export class ExpressionStatement implements Statement {
 }
 
 export class Identifier implements Expression {
-  constructor(public token: Token, public value: string) {}
+  constructor (public token: Token, public value: string) {}
 
   expressionNode = () => {
     return this
   }
+
   tokenLiteral = () => {
     return this.token.literal
   }
@@ -86,11 +90,12 @@ export class Identifier implements Expression {
 }
 
 export class IntegerLiteral implements Expression {
-  constructor(public token: Token, public value: number) {}
+  constructor (public token: Token, public value: number) {}
 
   expressionNode = () => {
     return this
   }
+
   tokenLiteral = () => {
     return this.token.literal
   }
@@ -99,7 +104,7 @@ export class IntegerLiteral implements Expression {
 }
 
 export class PrefixExpression implements Expression {
-  constructor(
+  constructor (
     public token: Token, // eg "!"
     public operator: string,
     public right?: Expression // added after initialization
@@ -108,6 +113,7 @@ export class PrefixExpression implements Expression {
   expressionNode = () => {
     return this
   }
+
   tokenLiteral = () => {
     return this.token.literal
   }
@@ -116,7 +122,7 @@ export class PrefixExpression implements Expression {
 }
 
 export class InfixExpression implements Expression {
-  constructor(
+  constructor (
     public token: Token, // eg "+"
     public left: Expression, // this might need to be optional, which would cause me to change this signature
     public operator: string,
@@ -126,6 +132,7 @@ export class InfixExpression implements Expression {
   expressionNode = () => {
     return this
   }
+
   tokenLiteral = () => {
     return this.token.literal
   }
@@ -134,7 +141,7 @@ export class InfixExpression implements Expression {
 }
 
 export class BoolExpression implements Expression {
-  constructor(
+  constructor (
     public token: Token, // eg "+"
     public value: boolean
   ) {}
@@ -142,6 +149,7 @@ export class BoolExpression implements Expression {
   expressionNode = () => {
     return this
   }
+
   tokenLiteral = () => {
     return this.token.literal
   }
@@ -152,11 +160,12 @@ export class BoolExpression implements Expression {
 }
 
 export class BlockStatement implements Statement {
-  constructor(public token: Token, public statements: Statement[]) {}
+  constructor (public token: Token, public statements: Statement[]) {}
 
   statementNode = () => {
     return this
   }
+
   tokenLiteral = () => {
     return this.token.literal
   }
@@ -165,15 +174,17 @@ export class BlockStatement implements Statement {
 }
 
 export class IfExpression implements Expression {
-  constructor(
+  constructor (
     public token: Token, // "if"
     public condition: Expression,
     public consequence: BlockStatement,
     public alternative?: BlockStatement
   ) {}
+
   expressionNode = () => {
     return this
   }
+
   tokenLiteral = () => {
     return this.token.literal
   }
@@ -182,4 +193,23 @@ export class IfExpression implements Expression {
     `if ${this.condition} ${this.consequence}${
       this.alternative ? ` else ${this.alternative}` : ''
     }`
+}
+
+export class FunctionLiteral implements Expression {
+  constructor (
+    public token: Token, // "fn"
+    public parameters: Identifier[],
+    public body: BlockStatement
+  ) {}
+
+  expressionNode = () => {
+    return this
+  }
+
+  tokenLiteral = () => {
+    return this.token.literal
+  }
+
+  toString = () =>
+    `${this.tokenLiteral()}(${this.parameters.join(', ')})(${this.body})`
 }

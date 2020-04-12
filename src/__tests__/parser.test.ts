@@ -9,8 +9,15 @@ import {
   InfixExpression,
   Expression,
   BoolExpression,
-  IfExpression
+  IfExpression,
+  FunctionLiteral
 } from '../ast'
+
+// can't quite get this working
+// const castAndAssert = <T>(obj: any, type: T): T => {
+//   expect(obj).toBeInstanceOf(type)
+//   return obj as T
+// }
 
 const raiseParserErrors = (p: Parser) => {
   if (p.errors.length) {
@@ -214,6 +221,8 @@ describe('parser', () => {
           ([leftValue, rightValue]) => {
             const operator = `${leftValue === rightValue ? '=' : '!'}=`
             return {
+              // SEE: https://github.com/typescript-eslint/typescript-eslint/issues/1655
+              // eslint-disable-next-line @typescript-eslint/no-base-to-string
               input: `${leftValue} ${operator} ${rightValue}`,
               leftValue: leftValue,
               rightValue: rightValue,
@@ -389,6 +398,7 @@ describe('parser', () => {
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
+      // const exp = castAndAssert(stmt.expression, IfExpression)
       const exp = stmt.expression as IfExpression
       expect(exp).toBeInstanceOf(IfExpression)
 
@@ -404,5 +414,29 @@ describe('parser', () => {
       expect(alternative).toBeInstanceOf(ExpressionStatement)
       testIdentifier(alternative.expression as Identifier, 'y')
     })
+  })
+
+  it('should parse function literals', () => {
+    const l = new Lexer('fn(x, y) { x + y; }')
+    const p = new Parser(l)
+    const program = p.parseProgram()
+    raiseParserErrors(p)
+
+    expect(program.statements.length).toEqual(1)
+    const stmt = program.statements[0] as ExpressionStatement
+    const func = stmt.expression as FunctionLiteral
+    expect(func).toBeInstanceOf(FunctionLiteral)
+
+    expect(func.parameters.length).toEqual(2)
+
+    testLiteralExpression(func.parameters[0], 'x')
+    testLiteralExpression(func.parameters[1], 'y')
+
+    expect(func.body.statements.length).toEqual(1)
+
+    const bodyExp = func.body.statements[0] as ExpressionStatement
+    expect(bodyExp).toBeInstanceOf(ExpressionStatement)
+
+    testInfixExpression(bodyExp.expression as InfixExpression, 'x', '+', 'y')
   })
 })
