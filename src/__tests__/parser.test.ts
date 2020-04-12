@@ -10,7 +10,8 @@ import {
   Expression,
   BoolExpression,
   IfExpression,
-  FunctionLiteral
+  FunctionLiteral,
+  ReturnStatement
 } from '../ast'
 
 // can't quite get this working
@@ -97,41 +98,46 @@ describe('parser', () => {
 
   describe('statements', () => {
     it('should parse let statements', () => {
-      const input = `let x = 5;
-    let y = 10;
-    let foobar = 838383;
-    `
+      const tests = [
+        { input: 'let x = 5;', indentifier: 'x', value: 5 },
+        { input: 'let y = true;', indentifier: 'y', value: true },
+        { input: 'let foobar = y;', indentifier: 'foobar', value: 'y' }
+      ]
 
-      const l = new Lexer(input)
-      const p = new Parser(l)
+      tests.forEach(({ input, indentifier, value }) => {
+        const l = new Lexer(input)
+        const p = new Parser(l)
+        const program = p.parseProgram()
+        raiseParserErrors(p)
 
-      const program = p.parseProgram()
-      raiseParserErrors(p)
+        expect(program.statements.length).toEqual(1)
 
-      expect(program.statements.length).toEqual(3)
-
-      const answers = ['x', 'y', 'foobar']
-      answers.forEach((answer, i) => {
-        const stmt = program.statements[i] as LetStatement
-        testLetStatement(stmt, answer)
+        const statement = program.statements[0] as LetStatement
+        testLetStatement(statement, indentifier)
+        testLiteralExpression(statement.value, value)
       })
     })
 
     it('should parse return statements', () => {
-      const input = `return 5;
-    return 10;
-    return 993322;
-    `
-      const l = new Lexer(input)
-      const p = new Parser(l)
+      const tests = [
+        { input: 'return 5;', value: 5 },
+        { input: 'return true;', value: true },
+        { input: 'return foobar;', value: 'foobar' }
+        // { input: 'return', value: undefined }
+      ]
 
-      const program = p.parseProgram()
-      raiseParserErrors(p)
+      tests.forEach(({ input, value }) => {
+        const l = new Lexer(input)
+        const p = new Parser(l)
+        const program = p.parseProgram()
+        raiseParserErrors(p)
 
-      expect(program.statements.length).toEqual(3)
+        expect(program.statements.length).toEqual(1)
 
-      program.statements.forEach(statement => {
+        const statement = program.statements[0] as ReturnStatement
+        expect(statement).toBeInstanceOf(ReturnStatement)
         expect(statement.tokenLiteral()).toEqual('return')
+        testLiteralExpression(statement.returnValue!, value)
       })
     })
 
@@ -397,6 +403,7 @@ describe('parser', () => {
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
+      // this isn't working
       // const exp = castAndAssert(stmt.expression, IfExpression)
       const exp = stmt.expression as IfExpression
       expect(exp).toBeInstanceOf(IfExpression)
@@ -470,6 +477,17 @@ describe('parser', () => {
           testLiteralExpression(param, test.expected[i])
         })
       })
+    })
+
+    it('should parse call expressions', () => {
+      const l = new Lexer('add(1, 2 * 3, 4 + 5)')
+      const p = new Parser(l)
+      const program = p.parseProgram()
+      raiseParserErrors(p)
+
+      expect(program.statements.length).toEqual(1)
+      const stmt = program.statements[0] as ExpressionStatement
+      expect(stmt).toBeInstanceOf(ExpressionStatement)
     })
   })
 })

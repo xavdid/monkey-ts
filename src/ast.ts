@@ -13,7 +13,7 @@ export type Expression = Node
 
 abstract class BaseNode implements Node {
   token?: Token
-
+  abstract toString: () => string
   // TODO: use ?. once prettier supports it
   // this is always defined, but whatever
   tokenLiteral = () => (this.token ? this.token.literal : '')
@@ -37,7 +37,7 @@ export class LetStatement extends BaseNode implements Statement {
   constructor(
     public token: Token,
     public name: Identifier,
-    public value?: Expression // TOOD: optional because for now, we don't always pass a value in there
+    public value: Expression // TODO: optional because for now, we don't always pass a value in there
   ) {
     super()
   }
@@ -158,4 +158,14 @@ export class FunctionLiteral extends BaseNode implements Expression {
     `${this.tokenLiteral()}(${this.parameters.join(', ')})(${this.body})`
 }
 
-export class CallExpression extends BaseNode implements Expression {}
+export class CallExpression extends BaseNode implements Expression {
+  constructor(
+    public token: Token, // "("
+    public func: Expression,
+    public args: Expression[]
+  ) {
+    super()
+  }
+
+  toString = () => `${this.func}(${this.args.join(', ')})`
+}

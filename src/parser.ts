@@ -126,8 +126,6 @@ export class Parser {
   }
 
   parseLetStatement = () => {
-    // const stmt = new LetStatement()
-    // TODO: fix constructor
     const letToken = this.curToken
     if (!this.expectAndAdvance(TOKENS.IDENT)) {
       return
@@ -138,23 +136,29 @@ export class Parser {
       return
     }
 
-    while (!this.curTokenIs(TOKENS.SEMICOLON)) {
+    this.nextToken()
+
+    const value = this.parseExpression(PRECEDENCE.LOWEST)
+
+    if (this.peekTokenIs(TOKENS.SEMICOLON)) {
       this.nextToken()
     }
 
-    const stmt = new LetStatement(letToken, name)
-
-    return stmt
+    return new LetStatement(letToken, name, value!)
   }
 
   parseReturnStatement = () => {
-    const stmt = new ReturnStatement(this.curToken)
+    const token = this.curToken
 
     this.nextToken()
-    while (!this.curTokenIs(TOKENS.SEMICOLON)) {
+
+    const returnValue = this.parseExpression(PRECEDENCE.LOWEST)
+
+    if (this.peekTokenIs(TOKENS.SEMICOLON)) {
       this.nextToken()
     }
-    return stmt
+
+    return new ReturnStatement(token, returnValue)
   }
 
   parseExpressionStatement = () => {
