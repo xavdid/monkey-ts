@@ -83,6 +83,19 @@ const testInfixExpression = (
 }
 
 describe('parser', () => {
+  it('should have parse errors', () => {
+    const input = `let x  5;
+  let  = 10;
+  let 838383;
+  `
+
+    const l = new Lexer(input)
+    const p = new Parser(l)
+
+    p.parseProgram()
+    expect(p.errors.length).toEqual(4) // originally was 3, but bad parsing causes the "no function" error to be there?
+  })
+
   describe('statements', () => {
     it('should parse let statements', () => {
       const input = `let x = 5;
@@ -121,19 +134,6 @@ describe('parser', () => {
       program.statements.forEach(statement => {
         expect(statement.tokenLiteral()).toEqual('return')
       })
-    })
-
-    it('should have parse errors', () => {
-      const input = `let x  5;
-    let  = 10;
-    let 838383;
-    `
-
-      const l = new Lexer(input)
-      const p = new Parser(l)
-
-      p.parseProgram()
-      expect(p.errors.length).toEqual(4) // originally was 3, but bad parsing causes the "no function" error to be there?
     })
 
     it('should parse identifiers', () => {
@@ -246,7 +246,7 @@ describe('parser', () => {
       })
     })
 
-    it('should test operator precedence parsing', () => {
+    it('should parse operator precedence', () => {
       const tests = [
         {
           input: '-a * b',
@@ -414,29 +414,63 @@ describe('parser', () => {
       expect(alternative).toBeInstanceOf(ExpressionStatement)
       testIdentifier(alternative.expression as Identifier, 'y')
     })
-  })
+    it('should parse function literals', () => {
+      const l = new Lexer('fn(x, y) { x + y; }')
+      const p = new Parser(l)
+      const program = p.parseProgram()
+      raiseParserErrors(p)
 
-  it('should parse function literals', () => {
-    const l = new Lexer('fn(x, y) { x + y; }')
-    const p = new Parser(l)
-    const program = p.parseProgram()
-    raiseParserErrors(p)
+      expect(program.statements.length).toEqual(1)
+      const stmt = program.statements[0] as ExpressionStatement
+      const func = stmt.expression as FunctionLiteral
+      expect(func).toBeInstanceOf(FunctionLiteral)
 
-    expect(program.statements.length).toEqual(1)
-    const stmt = program.statements[0] as ExpressionStatement
-    const func = stmt.expression as FunctionLiteral
-    expect(func).toBeInstanceOf(FunctionLiteral)
+      expect(func.parameters.length).toEqual(2)
 
-    expect(func.parameters.length).toEqual(2)
+      testLiteralExpression(func.parameters[0], 'x')
+      testLiteralExpression(func.parameters[1], 'y')
 
-    testLiteralExpression(func.parameters[0], 'x')
-    testLiteralExpression(func.parameters[1], 'y')
+      expect(func.body.statements.length).toEqual(1)
 
-    expect(func.body.statements.length).toEqual(1)
+      const bodyExp = func.body.statements[0] as ExpressionStatement
+      expect(bodyExp).toBeInstanceOf(ExpressionStatement)
 
-    const bodyExp = func.body.statements[0] as ExpressionStatement
-    expect(bodyExp).toBeInstanceOf(ExpressionStatement)
+      testInfixExpression(bodyExp.expression as InfixExpression, 'x', '+', 'y')
+    })
 
-    testInfixExpression(bodyExp.expression as InfixExpression, 'x', '+', 'y')
+    it('should parse function parameters', () => {
+      const tests = [
+        {
+          input: 'fn() {};',
+          expected: []
+        },
+        {
+          input: 'fn(x) {};',
+          expected: ['x']
+        },
+        {
+          input: 'fn(x, y, z) {};',
+          expected: ['x', 'y', 'z']
+        }
+      ]
+
+      tests.forEach(test => {
+        const l = new Lexer(test.input)
+        const p = new Parser(l)
+        const program = p.parseProgram()
+        raiseParserErrors(p)
+
+        const stmt = program.statements[0] as ExpressionStatement
+        expect(stmt).toBeInstanceOf(ExpressionStatement)
+
+        const func = stmt.expression as FunctionLiteral
+        expect(func).toBeInstanceOf(FunctionLiteral)
+
+        expect(func.parameters.length).toEqual(test.expected.length)
+        func.parameters.forEach((param, i) => {
+          testLiteralExpression(param, test.expected[i])
+        })
+      })
+    })
   })
 })

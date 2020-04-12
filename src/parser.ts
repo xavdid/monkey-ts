@@ -13,7 +13,8 @@ import {
   BoolExpression,
   IfExpression,
   BlockStatement,
-  Statement
+  Statement,
+  FunctionLiteral
 } from './ast'
 
 type prefixParserFn = () => Expression | undefined
@@ -59,7 +60,8 @@ export class Parser {
       [TOKENS.TRUE]: this.parseBoolean,
       [TOKENS.FALSE]: this.parseBoolean,
       [TOKENS.LPAREN]: this.parseGroupedExpression,
-      [TOKENS.IF]: this.parseIfExpression
+      [TOKENS.IF]: this.parseIfExpression,
+      [TOKENS.FUNCTION]: this.parseFunctionLiteral
     }
     this.infixParseFns = {
       [TOKENS.EQ]: this.parseInfixExpression,
@@ -291,6 +293,51 @@ export class Parser {
       this.nextToken()
     }
     return new BlockStatement(token, statements)
+  }
+
+  parseFunctionLiteral = () => {
+    const token = this.curToken
+
+    if (!this.expectAndAdvance(TOKENS.LPAREN)) {
+      return
+    }
+
+    const parameters = this.parseFunctionParameters()
+
+    if (!this.expectAndAdvance(TOKENS.LBRACE)) {
+      return
+    }
+
+    const body = this.parseBlockStatement()
+
+    return new FunctionLiteral(token, parameters!, body)
+  }
+
+  parseFunctionParameters = () => {
+    const identifers: Identifier[] = []
+
+    // no params
+    if (this.peekTokenIs(TOKENS.RPAREN)) {
+      this.nextToken()
+      return identifers
+    }
+
+    this.nextToken()
+
+    identifers.push(new Identifier(this.curToken, this.curToken.literal))
+
+    // TODO: this is probably a do-while?
+    while (this.peekTokenIs(TOKENS.COMMA)) {
+      this.nextToken()
+      this.nextToken()
+      identifers.push(new Identifier(this.curToken, this.curToken.literal))
+    }
+
+    if (!this.expectAndAdvance(TOKENS.RPAREN)) {
+      return
+    }
+
+    return identifers
   }
 
   // HELPERS //
