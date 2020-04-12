@@ -10,7 +10,10 @@ import {
   IntegerLiteral,
   PrefixExpression,
   InfixExpression,
-  Bool
+  BoolExpression,
+  IfExpression,
+  BlockStatement,
+  Statement
 } from './ast'
 
 type prefixParserFn = () => Expression | undefined
@@ -55,7 +58,8 @@ export class Parser {
       [TOKENS.MINUS]: this.parsePrefixExpression,
       [TOKENS.TRUE]: this.parseBoolean,
       [TOKENS.FALSE]: this.parseBoolean,
-      [TOKENS.LPAREN]: this.parseGroupedExpression
+      [TOKENS.LPAREN]: this.parseGroupedExpression,
+      [TOKENS.IF]: this.parseIfExpression
     }
     this.infixParseFns = {
       [TOKENS.EQ]: this.parseInfixExpression,
@@ -73,6 +77,9 @@ export class Parser {
   }
 
   // MECHANICAL //
+  /**
+   * advance the pointer
+   */
   nextToken = () => {
     this.curToken = this.peekToken
     this.peekToken = this.lexer.nextToken()
@@ -161,7 +168,7 @@ export class Parser {
     return stmt
   }
 
-  parseExpression = (p: PRECEDENCE) => {
+  parseExpression = (p: PRECEDENCE): Expression | undefined => {
     const prefixParserFn = this.prefixParseFns[this.curToken.type]
     if (!prefixParserFn) {
       this.trhowNoPrefixParseFnError(this.curToken.type)
@@ -227,7 +234,8 @@ export class Parser {
     return expression
   }
 
-  parseBoolean = () => new Bool(this.curToken, this.curTokenIs(TOKENS.TRUE))
+  parseBoolean = () =>
+    new BoolExpression(this.curToken, this.curTokenIs(TOKENS.TRUE))
 
   parseGroupedExpression = () => {
     this.nextToken()
@@ -236,6 +244,53 @@ export class Parser {
       return
     }
     return expression
+  }
+
+  parseIfExpression = () => {
+    // build an expression
+    const token = this.curToken
+    if (!this.expectAndAdvance(TOKENS.LPAREN)) {
+      return
+    }
+    this.nextToken()
+    const condition = this.parseExpression(PRECEDENCE.LOWEST)
+
+    if (!this.expectAndAdvance(TOKENS.RPAREN)) {
+      return
+    }
+
+    if (!this.expectAndAdvance(TOKENS.LBRACE)) {
+      return
+    }
+
+    const consequence = this.parseBlockStatement()
+    let alternative: BlockStatement | undefined
+
+    if (this.peekTokenIs(TOKENS.ELSE)) {
+      this.nextToken()
+      if (!this.expectAndAdvance(TOKENS.LBRACE)) {
+        return
+      }
+
+      alternative = this.parseBlockStatement()
+    }
+
+    return new IfExpression(token, condition!, consequence, alternative)
+  }
+
+  parseBlockStatement = () => {
+    const token = this.curToken
+    const statements: Statement[] = []
+
+    this.nextToken()
+    while (!this.curTokenIs(TOKENS.RBRACE) && !this.curTokenIs(TOKENS.EOF)) {
+      const statement = this.parseStatement()
+      if (statement) {
+        statements.push(statement)
+      }
+      this.nextToken()
+    }
+    return new BlockStatement(token, statements)
   }
 
   // HELPERS //

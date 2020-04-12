@@ -8,7 +8,8 @@ import {
   PrefixExpression,
   InfixExpression,
   Expression,
-  Bool
+  BoolExpression,
+  IfExpression
 } from '../ast'
 
 const raiseParserErrors = (p: Parser) => {
@@ -37,8 +38,8 @@ const testIdentifier = (e: Identifier, value: string) => {
   expect(e.tokenLiteral()).toEqual(value)
 }
 
-const testBooleanLiteral = (b: Bool, expected: boolean) => {
-  expect(b).toBeInstanceOf(Bool)
+const testBooleanLiteral = (b: BoolExpression, expected: boolean) => {
+  expect(b).toBeInstanceOf(BoolExpression)
   expect(b.value).toEqual(expected)
   expect(b.tokenLiteral()).toEqual(String(expected))
 }
@@ -55,7 +56,7 @@ const testLiteralExpression = (
       testIdentifier(exp as Identifier, expected)
       break
     case 'boolean':
-      testBooleanLiteral(exp as Bool, expected)
+      testBooleanLiteral(exp as BoolExpression, expected)
       break
     default:
       throw new Error(`type of exp not handled, got ${exp}`)
@@ -354,9 +355,54 @@ describe('parser', () => {
 
         expect(program.statements.length).toEqual(1)
         const stmt = program.statements[0] as ExpressionStatement
-        const exp = stmt.expression as Bool
+        const exp = stmt.expression as BoolExpression
         testBooleanLiteral(exp, test.expected)
       })
+    })
+
+    it('should parse if expressions', () => {
+      const l = new Lexer('if (x < y) { x }')
+      const p = new Parser(l)
+      const program = p.parseProgram()
+      raiseParserErrors(p)
+
+      expect(program.statements.length).toEqual(1)
+      const stmt = program.statements[0] as ExpressionStatement
+      const exp = stmt.expression as IfExpression
+      expect(exp).toBeInstanceOf(IfExpression)
+
+      testInfixExpression(exp.condition as InfixExpression, 'x', '<', 'y')
+      expect(exp.consequence.statements.length).toEqual(1)
+
+      const consequence = exp.consequence.statements[0] as ExpressionStatement
+      expect(consequence).toBeInstanceOf(ExpressionStatement)
+
+      testIdentifier(consequence.expression as Identifier, 'x')
+      expect(exp.alternative).toBeUndefined()
+    })
+
+    it('should parse if-else expressions', () => {
+      const l = new Lexer('if (x < y) { x } else { y }')
+      const p = new Parser(l)
+      const program = p.parseProgram()
+      raiseParserErrors(p)
+
+      expect(program.statements.length).toEqual(1)
+      const stmt = program.statements[0] as ExpressionStatement
+      const exp = stmt.expression as IfExpression
+      expect(exp).toBeInstanceOf(IfExpression)
+
+      testInfixExpression(exp.condition as InfixExpression, 'x', '<', 'y')
+
+      expect(exp.consequence.statements.length).toEqual(1)
+      const consequence = exp.consequence.statements[0] as ExpressionStatement
+      expect(consequence).toBeInstanceOf(ExpressionStatement)
+      testIdentifier(consequence.expression as Identifier, 'x')
+
+      expect(exp.alternative).toBeDefined()
+      const alternative = exp.alternative!.statements[0] as ExpressionStatement
+      expect(alternative).toBeInstanceOf(ExpressionStatement)
+      testIdentifier(alternative.expression as Identifier, 'y')
     })
   })
 })
