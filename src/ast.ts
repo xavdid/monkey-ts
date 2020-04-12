@@ -1,17 +1,22 @@
 import { Token } from './token'
 
 interface Node {
-  token: Token
-  tokenLiteral: () => string
+  token?: Token
+  tokenLiteral: () => string | undefined
   toString: () => string
 }
 
-export interface Statement extends Node {
-  statementNode: () => Node // for testing so we know we have the correct node
-}
+// not sure I even need these since they're the same
+export type Statement = Node
 
-export interface Expression extends Node {
-  expressionNode: () => Node // for testing so we know we have the correct node
+export type Expression = Node
+
+abstract class BaseNode implements Node {
+  token?: Token
+
+  // TODO: use ?. once prettier supports it
+  // this is always defined, but whatever
+  tokenLiteral = () => (this.token ? this.token.literal : '')
 }
 
 export class Program {
@@ -28,130 +33,83 @@ export class Program {
   toString = () => this.statements.map(String).join('')
 }
 
-export class LetStatement implements Statement {
-  constructor (
+export class LetStatement extends BaseNode implements Statement {
+  constructor(
     public token: Token,
     public name: Identifier,
     public value?: Expression // TOOD: optional because for now, we don't always pass a value in there
-  ) {}
-
-  statementNode = () => {
-    return this
-  }
-
-  tokenLiteral = () => {
-    return this.token.literal
+  ) {
+    super()
   }
 
   toString = () =>
     `${this.tokenLiteral()} ${this.name} = ${this.value ? this.value : ''};`
 }
 
-export class ReturnStatement implements Statement {
-  constructor (public token: Token, public returnValue?: Expression) {}
-
-  statementNode = () => {
-    return this
+export class ReturnStatement extends BaseNode implements Statement {
+  constructor(public token: Token, public returnValue?: Expression) {
+    super()
   }
 
-  tokenLiteral = () => {
-    return this.token.literal
-  }
-
-  toString = () => `${this.tokenLiteral()} ${this.returnValue ?? ''};`
+  toString = () =>
+    `${this.tokenLiteral()} ${this.returnValue ? this.returnValue : ''};`
 }
 
-export class ExpressionStatement implements Statement {
-  constructor (public token: Token, public expression?: Expression) {}
-
-  statementNode = () => {
-    return this
-  }
-
-  tokenLiteral = () => {
-    return this.token.literal
+export class ExpressionStatement extends BaseNode implements Statement {
+  constructor(public token: Token, public expression?: Expression) {
+    super()
   }
 
   toString = () => String(this.expression)
 }
 
-export class Identifier implements Expression {
-  constructor (public token: Token, public value: string) {}
-
-  expressionNode = () => {
-    return this
-  }
-
-  tokenLiteral = () => {
-    return this.token.literal
+export class Identifier extends BaseNode implements Expression {
+  constructor(public token: Token, public value: string) {
+    super()
   }
 
   toString = () => this.value
 }
 
-export class IntegerLiteral implements Expression {
-  constructor (public token: Token, public value: number) {}
-
-  expressionNode = () => {
-    return this
-  }
-
-  tokenLiteral = () => {
-    return this.token.literal
+export class IntegerLiteral extends BaseNode implements Expression {
+  constructor(public token: Token, public value: number) {
+    super()
   }
 
   toString = () => String(this.value)
 }
 
-export class PrefixExpression implements Expression {
-  constructor (
+export class PrefixExpression extends BaseNode implements Expression {
+  constructor(
     public token: Token, // eg "!"
     public operator: string,
     public right?: Expression // added after initialization
-  ) {}
-
-  expressionNode = () => {
-    return this
-  }
-
-  tokenLiteral = () => {
-    return this.token.literal
+  ) {
+    super()
   }
 
   toString = () => `(${this.operator}${this.right})`
 }
 
-export class InfixExpression implements Expression {
-  constructor (
+export class InfixExpression extends BaseNode implements Expression {
+  constructor(
     public token: Token, // eg "+"
     public left: Expression, // this might need to be optional, which would cause me to change this signature
     public operator: string,
     public right?: Expression // added after initialization
-  ) {}
-
-  expressionNode = () => {
-    return this
-  }
-
-  tokenLiteral = () => {
-    return this.token.literal
+  ) {
+    super()
   }
 
   toString = () => `(${this.left} ${this.operator} ${this.right})`
 }
 
-export class BoolExpression implements Expression {
-  constructor (
+export class BoolExpression extends BaseNode implements Expression {
+  constructor(
     public token: Token, // eg "+"
     public value: boolean
-  ) {}
-
-  expressionNode = () => {
-    return this
-  }
-
-  tokenLiteral = () => {
-    return this.token.literal
+  ) {
+    super()
   }
 
   toString = () => {
@@ -159,11 +117,9 @@ export class BoolExpression implements Expression {
   }
 }
 
-export class BlockStatement implements Statement {
-  constructor (public token: Token, public statements: Statement[]) {}
-
-  statementNode = () => {
-    return this
+export class BlockStatement extends BaseNode implements Statement {
+  constructor(public token: Token, public statements: Statement[]) {
+    super()
   }
 
   tokenLiteral = () => {
@@ -173,20 +129,14 @@ export class BlockStatement implements Statement {
   toString = () => this.statements.map(String).join('')
 }
 
-export class IfExpression implements Expression {
-  constructor (
+export class IfExpression extends BaseNode implements Expression {
+  constructor(
     public token: Token, // "if"
     public condition: Expression,
     public consequence: BlockStatement,
     public alternative?: BlockStatement
-  ) {}
-
-  expressionNode = () => {
-    return this
-  }
-
-  tokenLiteral = () => {
-    return this.token.literal
+  ) {
+    super()
   }
 
   toString = () =>
@@ -195,21 +145,17 @@ export class IfExpression implements Expression {
     }`
 }
 
-export class FunctionLiteral implements Expression {
-  constructor (
+export class FunctionLiteral extends BaseNode implements Expression {
+  constructor(
     public token: Token, // "fn"
     public parameters: Identifier[],
     public body: BlockStatement
-  ) {}
-
-  expressionNode = () => {
-    return this
-  }
-
-  tokenLiteral = () => {
-    return this.token.literal
+  ) {
+    super()
   }
 
   toString = () =>
     `${this.tokenLiteral()}(${this.parameters.join(', ')})(${this.body})`
 }
+
+export class CallExpression extends BaseNode implements Expression {}

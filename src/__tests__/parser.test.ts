@@ -28,7 +28,6 @@ const raiseParserErrors = (p: Parser) => {
 const testLetStatement = (s: LetStatement, name: string) => {
   expect(s).toBeInstanceOf(LetStatement)
   expect(s.tokenLiteral()).toEqual('let')
-  expect(s.statementNode()).toBeTruthy()
   expect(s.name.value).toEqual(name)
   expect(s.name.tokenLiteral()).toEqual(name)
 }
