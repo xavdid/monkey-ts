@@ -2,9 +2,9 @@ module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint', 'jest'],
-  extends: ['standard-with-typescript', 'prettier'],
+  extends: ['standard-with-typescript', 'plugin:jest/recommended', 'prettier'],
   parserOptions: {
-    project: './tsconfig.json'
+    project: './tsconfig.json',
   },
   rules: {
     // there are a lot of these and I don't want to define them all right now. probably should fix though
@@ -16,6 +16,6 @@ module.exports = {
     // this is annoying for variables that are X | undefined
     '@typescript-eslint/strict-boolean-expressions': 0,
     // this is helpful sometimes, though I could probably change the way parsing errors are handled and remove it
-    '@typescript-eslint/no-non-null-assertion': 0
-  }
+    '@typescript-eslint/no-non-null-assertion': 0,
+  },
 }

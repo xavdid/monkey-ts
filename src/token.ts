@@ -42,7 +42,7 @@ export const enum TOKENS {
   FALSE = 'FALSE',
   IF = 'IF',
   ELSE = 'ELSE',
-  RETURN = 'RETURN'
+  RETURN = 'RETURN',
 }
 
 export const keywords: { [x: string]: TOKENS } = {
@@ -52,7 +52,7 @@ export const keywords: { [x: string]: TOKENS } = {
   false: TOKENS.FALSE,
   if: TOKENS.IF,
   else: TOKENS.ELSE,
-  return: TOKENS.RETURN
+  return: TOKENS.RETURN,
 }
 
 export const lookupIdent = (ident: string) => {

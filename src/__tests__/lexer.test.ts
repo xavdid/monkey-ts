@@ -1,3 +1,5 @@
+/* eslint-disable jest/expect-expect */
+
 import { Lexer } from '../lexer'
 import { TOKENS } from '../token'
 
@@ -6,7 +8,7 @@ type lexerResults = Array<[TOKENS, string]>
 const validateAnswers = (testCases: lexerResults, l: Lexer) => {
   const answers = testCases.map(([expectedType, expectedLiteral]) => ({
     expectedType,
-    expectedLiteral
+    expectedLiteral,
   }))
 
   answers.forEach(({ expectedType, expectedLiteral }) => {
@@ -30,7 +32,7 @@ describe('lexer', () => {
       [TOKENS.RBRACE, '}'],
       [TOKENS.COMMA, ','],
       [TOKENS.SEMICOLON, ';'],
-      [TOKENS.EOF, '']
+      [TOKENS.EOF, ''],
     ]
 
     validateAnswers(resultingTokens, l)
@@ -123,7 +125,7 @@ describe('lexer', () => {
       [TOKENS.FALSE, 'false'],
       [TOKENS.SEMICOLON, ';'],
       [TOKENS.RBRACE, '}'],
-      [TOKENS.EOF, '']
+      [TOKENS.EOF, ''],
     ]
 
     validateAnswers(resultingTokens, l)
@@ -143,7 +145,7 @@ describe('lexer', () => {
       [TOKENS.NOT_EQ, '!='],
       [TOKENS.INT, '9'],
       [TOKENS.SEMICOLON, ';'],
-      [TOKENS.EOF, '']
+      [TOKENS.EOF, ''],
     ]
 
     validateAnswers(resultingTokens, l)

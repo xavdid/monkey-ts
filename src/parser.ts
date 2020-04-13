@@ -14,7 +14,7 @@ import {
   IfExpression,
   BlockStatement,
   Statement,
-  FunctionLiteral
+  FunctionLiteral,
 } from './ast'
 
 type prefixParserFn = () => Expression | undefined
@@ -27,7 +27,7 @@ const enum PRECEDENCE {
   SUM, // + or -
   PRODUCT, // * or /
   PREFIX, // -X or !X
-  CALL // myFunc(X)
+  CALL, // myFunc(X)
 }
 
 const PRECEDENCES: { [x: string]: PRECEDENCE } = {
@@ -38,7 +38,7 @@ const PRECEDENCES: { [x: string]: PRECEDENCE } = {
   [TOKENS.PLUS]: PRECEDENCE.SUM,
   [TOKENS.MINUS]: PRECEDENCE.SUM,
   [TOKENS.SLASH]: PRECEDENCE.PRODUCT,
-  [TOKENS.ASTERISK]: PRECEDENCE.PRODUCT
+  [TOKENS.ASTERISK]: PRECEDENCE.PRODUCT,
 }
 
 export class Parser {
@@ -61,7 +61,7 @@ export class Parser {
       [TOKENS.FALSE]: this.parseBoolean,
       [TOKENS.LPAREN]: this.parseGroupedExpression,
       [TOKENS.IF]: this.parseIfExpression,
-      [TOKENS.FUNCTION]: this.parseFunctionLiteral
+      [TOKENS.FUNCTION]: this.parseFunctionLiteral,
     }
     this.infixParseFns = {
       [TOKENS.EQ]: this.parseInfixExpression,
@@ -71,7 +71,7 @@ export class Parser {
       [TOKENS.PLUS]: this.parseInfixExpression,
       [TOKENS.MINUS]: this.parseInfixExpression,
       [TOKENS.SLASH]: this.parseInfixExpression,
-      [TOKENS.ASTERISK]: this.parseInfixExpression
+      [TOKENS.ASTERISK]: this.parseInfixExpression,
     }
     // read two tokens, so cur and peek are both set
     this.nextToken()

@@ -11,7 +11,7 @@ import {
   BoolExpression,
   IfExpression,
   FunctionLiteral,
-  ReturnStatement
+  ReturnStatement,
 } from '../ast'
 
 // can't quite get this working
@@ -53,7 +53,7 @@ const testBooleanLiteral = (b: BoolExpression, expected: boolean) => {
 
 const testLiteralExpression = (
   exp: Expression,
-  expected: string | number | boolean
+  expected: string | number | boolean | undefined
 ) => {
   switch (typeof expected) {
     case 'number':
@@ -64,6 +64,9 @@ const testLiteralExpression = (
       break
     case 'boolean':
       testBooleanLiteral(exp as BoolExpression, expected)
+      break
+    case 'undefined':
+      expect(expected).toBeUndefined()
       break
     default:
       throw new Error(`type of exp not handled, got ${exp}`)
@@ -101,7 +104,7 @@ describe('parser', () => {
       const tests = [
         { input: 'let x = 5;', indentifier: 'x', value: 5 },
         { input: 'let y = true;', indentifier: 'y', value: true },
-        { input: 'let foobar = y;', indentifier: 'foobar', value: 'y' }
+        { input: 'let foobar = y;', indentifier: 'foobar', value: 'y' },
       ]
 
       tests.forEach(({ input, indentifier, value }) => {
@@ -122,8 +125,8 @@ describe('parser', () => {
       const tests = [
         { input: 'return 5;', value: 5 },
         { input: 'return true;', value: true },
-        { input: 'return foobar;', value: 'foobar' }
-        // { input: 'return', value: undefined }
+        { input: 'return foobar;', value: 'foobar' },
+        // { input: 'return;', value: undefined },
       ]
 
       tests.forEach(({ input, value }) => {
@@ -178,26 +181,26 @@ describe('parser', () => {
         {
           input: '!5;',
           operator: '!',
-          value: 5
+          value: 5,
         },
         {
           input: '-15;',
           operator: '-',
-          value: 15
+          value: 15,
         },
         {
           input: '!true;',
           operator: '!',
-          value: true
+          value: true,
         },
         {
           input: '!false;',
           operator: '!',
-          value: false
-        }
+          value: false,
+        },
       ]
 
-      tests.forEach(test => {
+      tests.forEach((test) => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()
@@ -216,28 +219,30 @@ describe('parser', () => {
     it('should parse infix expressions', () => {
       const operators = ['+', '-', '*', '/', '>', '<', '==', '!=']
       const tests = [
-        ...operators.map(o => ({
+        ...operators.map((o) => ({
           input: `5 ${o} 5;`,
           leftValue: 5,
           operator: o,
-          rightValue: 5
+          rightValue: 5,
         })),
-        ...[[true, true], [true, false], [false, false]].map(
-          ([leftValue, rightValue]) => {
-            const operator = `${leftValue === rightValue ? '=' : '!'}=`
-            return {
-              // SEE: https://github.com/typescript-eslint/typescript-eslint/issues/1655
-              // eslint-disable-next-line @typescript-eslint/no-base-to-string
-              input: `${leftValue} ${operator} ${rightValue}`,
-              leftValue: leftValue,
-              rightValue: rightValue,
-              operator
-            }
+        ...[
+          [true, true],
+          [true, false],
+          [false, false],
+        ].map(([leftValue, rightValue]) => {
+          const operator = `${leftValue === rightValue ? '=' : '!'}=`
+          return {
+            // SEE: https://github.com/typescript-eslint/typescript-eslint/issues/1655
+            // eslint-disable-next-line @typescript-eslint/no-base-to-string
+            input: `${leftValue} ${operator} ${rightValue}`,
+            leftValue: leftValue,
+            rightValue: rightValue,
+            operator,
           }
-        )
+        }),
       ]
 
-      tests.forEach(test => {
+      tests.forEach((test) => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()
@@ -255,91 +260,91 @@ describe('parser', () => {
       const tests = [
         {
           input: '-a * b',
-          expected: '((-a) * b)'
+          expected: '((-a) * b)',
         },
         {
           input: '!-a',
-          expected: '(!(-a))'
+          expected: '(!(-a))',
         },
         {
           input: 'a + b + c',
-          expected: '((a + b) + c)'
+          expected: '((a + b) + c)',
         },
         {
           input: 'a + b - c',
-          expected: '((a + b) - c)'
+          expected: '((a + b) - c)',
         },
         {
           input: 'a * b * c',
-          expected: '((a * b) * c)'
+          expected: '((a * b) * c)',
         },
         {
           input: 'a * b / c',
-          expected: '((a * b) / c)'
+          expected: '((a * b) / c)',
         },
         {
           input: 'a + b / c',
-          expected: '(a + (b / c))'
+          expected: '(a + (b / c))',
         },
         {
           input: 'a + b * c + d / e - f',
-          expected: '(((a + (b * c)) + (d / e)) - f)'
+          expected: '(((a + (b * c)) + (d / e)) - f)',
         },
         {
           input: '3 + 4; -5 * 5',
-          expected: '(3 + 4)((-5) * 5)'
+          expected: '(3 + 4)((-5) * 5)',
         },
         {
           input: '5 > 4 == 3 < 4',
-          expected: '((5 > 4) == (3 < 4))'
+          expected: '((5 > 4) == (3 < 4))',
         },
         {
           input: '5 < 4 != 3 > 4',
-          expected: '((5 < 4) != (3 > 4))'
+          expected: '((5 < 4) != (3 > 4))',
         },
         {
           input: '3 + 4 * 5 == 3 * 1 + 4 * 5',
-          expected: '((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))'
+          expected: '((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))',
         },
         {
           input: 'true',
-          expected: 'true'
+          expected: 'true',
         },
         {
           input: 'false',
-          expected: 'false'
+          expected: 'false',
         },
         {
           input: '3 > 5 == false',
-          expected: '((3 > 5) == false)'
+          expected: '((3 > 5) == false)',
         },
         {
           input: '3 < 5 == true',
-          expected: '((3 < 5) == true)'
+          expected: '((3 < 5) == true)',
         },
         {
           input: '1 + (2 + 3) + 4',
-          expected: '((1 + (2 + 3)) + 4)'
+          expected: '((1 + (2 + 3)) + 4)',
         },
         {
           input: '(5 + 5) * 2',
-          expected: '((5 + 5) * 2)'
+          expected: '((5 + 5) * 2)',
         },
         {
           input: '2 / (5 + 5)',
-          expected: '(2 / (5 + 5))'
+          expected: '(2 / (5 + 5))',
         },
         {
           input: '-(5 + 5)',
-          expected: '(-(5 + 5))'
+          expected: '(-(5 + 5))',
         },
         {
           input: '!(true == true)',
-          expected: '(!(true == true))'
-        }
+          expected: '(!(true == true))',
+        },
       ]
 
-      tests.forEach(test => {
+      tests.forEach((test) => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()
@@ -353,15 +358,15 @@ describe('parser', () => {
       const tests = [
         {
           input: 'true;',
-          expected: true
+          expected: true,
         },
         {
           input: 'false;',
-          expected: false
-        }
+          expected: false,
+        },
       ]
 
-      tests.forEach(test => {
+      tests.forEach((test) => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()
@@ -448,19 +453,19 @@ describe('parser', () => {
       const tests = [
         {
           input: 'fn() {};',
-          expected: []
+          expected: [],
         },
         {
           input: 'fn(x) {};',
-          expected: ['x']
+          expected: ['x'],
         },
         {
           input: 'fn(x, y, z) {};',
-          expected: ['x', 'y', 'z']
-        }
+          expected: ['x', 'y', 'z'],
+        },
       ]
 
-      tests.forEach(test => {
+      tests.forEach((test) => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()

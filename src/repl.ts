@@ -18,6 +18,6 @@ const lineToTokens = (
 export default () => {
   repl.start({
     prompt: '>> ',
-    eval: lineToTokens
+    eval: lineToTokens,
   })
 }

@@ -14,9 +14,8 @@ export type Expression = Node
 abstract class BaseNode implements Node {
   token?: Token
   abstract toString: () => string
-  // TODO: use ?. once prettier supports it
   // this is always defined, but whatever
-  tokenLiteral = () => (this.token ? this.token.literal : '')
+  tokenLiteral = () => this.token?.literal ?? ''
 }
 
 export class Program {
