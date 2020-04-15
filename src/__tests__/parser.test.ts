@@ -12,6 +12,7 @@ import {
   IfExpression,
   FunctionLiteral,
   ReturnStatement,
+  CallExpression,
 } from '../ast'
 
 // can't quite get this working
@@ -64,9 +65,6 @@ const testLiteralExpression = (
       break
     case 'boolean':
       testBooleanLiteral(exp as BoolExpression, expected)
-      break
-    case 'undefined':
-      expect(expected).toBeUndefined()
       break
     default:
       throw new Error(`type of exp not handled, got ${exp}`)
@@ -342,6 +340,18 @@ describe('parser', () => {
           input: '!(true == true)',
           expected: '(!(true == true))',
         },
+        {
+          input: 'a + add(b * c) + d',
+          expected: '((a + add((b * c))) + d)',
+        },
+        {
+          input: 'add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))',
+          expected: 'add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))',
+        },
+        {
+          input: 'add(a + b + c * d / f + g)',
+          expected: 'add((((a + b) + ((c * d) / f)) + g))',
+        },
       ]
 
       tests.forEach((test) => {
@@ -485,7 +495,7 @@ describe('parser', () => {
     })
 
     it('should parse call expressions', () => {
-      const l = new Lexer('add(1, 2 * 3, 4 + 5)')
+      const l = new Lexer('add(1, 2 * 3, 4 + 5);')
       const p = new Parser(l)
       const program = p.parseProgram()
       raiseParserErrors(p)
@@ -493,6 +503,52 @@ describe('parser', () => {
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
       expect(stmt).toBeInstanceOf(ExpressionStatement)
+
+      const exp = stmt.expression as CallExpression
+      testIdentifier(exp.func as Identifier, 'add')
+
+      expect(exp.args.length).toEqual(3)
+      testLiteralExpression(exp.args[0], 1)
+      testInfixExpression(exp.args[1] as InfixExpression, 2, '*', 3)
+      testInfixExpression(exp.args[2] as InfixExpression, 4, '+', 5)
+    })
+
+    it('should parse call expression parameters', () => {
+      const tests = [
+        {
+          input: 'add();',
+          ident: 'add',
+          params: [],
+        },
+        {
+          input: 'add(1);',
+          ident: 'add',
+          params: ['1'],
+        },
+        {
+          input: 'add(1, 2 * 3, 4 + 5);',
+          ident: 'add',
+          params: ['1', '(2 * 3)', '(4 + 5)'],
+        },
+      ]
+
+      tests.forEach(({ input, ident, params }) => {
+        const l = new Lexer(input)
+        const p = new Parser(l)
+        const program = p.parseProgram()
+        raiseParserErrors(p)
+
+        const stmt = program.statements[0] as ExpressionStatement
+        expect(stmt).toBeInstanceOf(ExpressionStatement)
+
+        const exp = stmt.expression as CallExpression
+        testIdentifier(exp.func as Identifier, ident)
+
+        expect(exp.args.length).toEqual(params.length)
+        exp.args.forEach((arg, i) => {
+          expect(arg.toString()).toEqual(params[i])
+        })
+      })
     })
   })
 })

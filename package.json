@@ -35,7 +35,8 @@
     ],
     "transform": {
       "^.+\\.(ts|tsx)$": "ts-jest"
-    }
+    },
+    "testEnvironment": "node"
   },
   "prettier": {
     "semi": false,

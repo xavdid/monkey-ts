@@ -93,7 +93,7 @@ export class PrefixExpression extends BaseNode implements Expression {
 export class InfixExpression extends BaseNode implements Expression {
   constructor(
     public token: Token, // eg "+"
-    public left: Expression, // this might need to be optional, which would cause me to change this signature
+    public left: Expression,
     public operator: string,
     public right?: Expression // added after initialization
   ) {

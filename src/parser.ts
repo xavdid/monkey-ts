@@ -15,12 +15,13 @@ import {
   BlockStatement,
   Statement,
   FunctionLiteral,
+  CallExpression,
 } from './ast'
 
 type prefixParserFn = () => Expression | undefined
 type infixParseFn = (e: Expression) => Expression
 
-const enum PRECEDENCE {
+const enum PRECEDENCE_LEVELS {
   LOWEST,
   EQUALS, // ==
   LESSGREATER, // < or >
@@ -30,15 +31,16 @@ const enum PRECEDENCE {
   CALL, // myFunc(X)
 }
 
-const PRECEDENCES: { [x: string]: PRECEDENCE } = {
-  [TOKENS.EQ]: PRECEDENCE.EQUALS,
-  [TOKENS.NOT_EQ]: PRECEDENCE.EQUALS,
-  [TOKENS.LT]: PRECEDENCE.LESSGREATER,
-  [TOKENS.GT]: PRECEDENCE.LESSGREATER,
-  [TOKENS.PLUS]: PRECEDENCE.SUM,
-  [TOKENS.MINUS]: PRECEDENCE.SUM,
-  [TOKENS.SLASH]: PRECEDENCE.PRODUCT,
-  [TOKENS.ASTERISK]: PRECEDENCE.PRODUCT,
+const OPERATOR_PRECEDENCE: { [k in TOKENS]?: PRECEDENCE_LEVELS } = {
+  [TOKENS.LPAREN]: PRECEDENCE_LEVELS.CALL,
+  [TOKENS.EQ]: PRECEDENCE_LEVELS.EQUALS,
+  [TOKENS.NOT_EQ]: PRECEDENCE_LEVELS.EQUALS,
+  [TOKENS.LT]: PRECEDENCE_LEVELS.LESSGREATER,
+  [TOKENS.GT]: PRECEDENCE_LEVELS.LESSGREATER,
+  [TOKENS.PLUS]: PRECEDENCE_LEVELS.SUM,
+  [TOKENS.MINUS]: PRECEDENCE_LEVELS.SUM,
+  [TOKENS.SLASH]: PRECEDENCE_LEVELS.PRODUCT,
+  [TOKENS.ASTERISK]: PRECEDENCE_LEVELS.PRODUCT,
 }
 
 export class Parser {
@@ -72,6 +74,7 @@ export class Parser {
       [TOKENS.MINUS]: this.parseInfixExpression,
       [TOKENS.SLASH]: this.parseInfixExpression,
       [TOKENS.ASTERISK]: this.parseInfixExpression,
+      [TOKENS.LPAREN]: this.parseCallExpression,
     }
     // read two tokens, so cur and peek are both set
     this.nextToken()
@@ -87,13 +90,9 @@ export class Parser {
     this.peekToken = this.lexer.nextToken()
   }
 
-  peekPrecedence = () => {
-    return this._getPrecedence(this.peekToken)
-  }
+  peekPrecedence = () => this._getPrecedence(this.peekToken)
 
-  curPrecedence = () => {
-    return this._getPrecedence(this.curToken)
-  }
+  curPrecedence = () => this._getPrecedence(this.curToken)
 
   // PARSERS //
   trhowNoPrefixParseFnError = (t: string) => {
@@ -103,6 +102,7 @@ export class Parser {
 
   parseProgram = () => {
     const program = new Program()
+
     while (this.curToken.type !== TOKENS.EOF) {
       // TODO: might be able to clean this up
       const s = this.parseStatement()
@@ -138,7 +138,7 @@ export class Parser {
 
     this.nextToken()
 
-    const value = this.parseExpression(PRECEDENCE.LOWEST)
+    const value = this.parseExpression(PRECEDENCE_LEVELS.LOWEST)
 
     if (this.peekTokenIs(TOKENS.SEMICOLON)) {
       this.nextToken()
@@ -152,7 +152,7 @@ export class Parser {
 
     this.nextToken()
 
-    const returnValue = this.parseExpression(PRECEDENCE.LOWEST)
+    const returnValue = this.parseExpression(PRECEDENCE_LEVELS.LOWEST)
 
     if (this.peekTokenIs(TOKENS.SEMICOLON)) {
       this.nextToken()
@@ -164,7 +164,7 @@ export class Parser {
   parseExpressionStatement = () => {
     const stmt = new ExpressionStatement(
       this.curToken,
-      this.parseExpression(PRECEDENCE.LOWEST)
+      this.parseExpression(PRECEDENCE_LEVELS.LOWEST)
     )
 
     if (this.peekTokenIs(TOKENS.SEMICOLON)) {
@@ -174,7 +174,7 @@ export class Parser {
     return stmt
   }
 
-  parseExpression = (p: PRECEDENCE): Expression | undefined => {
+  parseExpression = (precedence: PRECEDENCE_LEVELS): Expression | undefined => {
     const prefixParserFn = this.prefixParseFns[this.curToken.type]
     if (!prefixParserFn) {
       this.trhowNoPrefixParseFnError(this.curToken.type)
@@ -182,7 +182,10 @@ export class Parser {
     }
     let leftExpression = prefixParserFn()
 
-    while (!this.peekTokenIs(TOKENS.SEMICOLON) && p < this.peekPrecedence()) {
+    while (
+      !this.peekTokenIs(TOKENS.SEMICOLON) &&
+      precedence < this.peekPrecedence()
+    ) {
       const infixParserFn = this.infixParseFns[this.peekToken.type]
       if (!infixParserFn) {
         return leftExpression
@@ -220,7 +223,7 @@ export class Parser {
 
     this.nextToken()
 
-    expression.right = this.parseExpression(PRECEDENCE.PREFIX)
+    expression.right = this.parseExpression(PRECEDENCE_LEVELS.PREFIX)
 
     return expression
   }
@@ -245,7 +248,7 @@ export class Parser {
 
   parseGroupedExpression = () => {
     this.nextToken()
-    const expression = this.parseExpression(PRECEDENCE.LOWEST)
+    const expression = this.parseExpression(PRECEDENCE_LEVELS.LOWEST)
     if (!this.expectAndAdvance(TOKENS.RPAREN)) {
       return
     }
@@ -259,7 +262,7 @@ export class Parser {
       return
     }
     this.nextToken()
-    const condition = this.parseExpression(PRECEDENCE.LOWEST)
+    const condition = this.parseExpression(PRECEDENCE_LEVELS.LOWEST)
 
     if (!this.expectAndAdvance(TOKENS.RPAREN)) {
       return
@@ -344,6 +347,38 @@ export class Parser {
     return identifers
   }
 
+  parseCallExpression = (func: Expression) => {
+    const token = this.curToken
+    const args = this.parseCallArguments()
+    return new CallExpression(token, func, args!)
+  }
+
+  parseCallArguments = () => {
+    const args: Expression[] = []
+
+    if (this.peekTokenIs(TOKENS.RPAREN)) {
+      this.nextToken()
+      return args
+    }
+
+    this.nextToken()
+
+    args.push(this.parseExpression(PRECEDENCE_LEVELS.LOWEST)!)
+
+    while (this.peekTokenIs(TOKENS.COMMA)) {
+      this.nextToken()
+      this.nextToken()
+
+      args.push(this.parseExpression(PRECEDENCE_LEVELS.LOWEST)!)
+    }
+
+    if (!this.expectAndAdvance(TOKENS.RPAREN)) {
+      return
+    }
+
+    return args
+  }
+
   // HELPERS //
   curTokenIs = (t: TOKENS) => this.curToken.type === t
 
@@ -369,6 +404,6 @@ export class Parser {
   }
 
   private readonly _getPrecedence = (t: Token) => {
-    return PRECEDENCES[t.type] || PRECEDENCE.LOWEST
+    return OPERATOR_PRECEDENCE[t.type] ?? PRECEDENCE_LEVELS.LOWEST
   }
 }
