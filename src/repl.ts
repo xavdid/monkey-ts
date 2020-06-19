@@ -1,6 +1,6 @@
 import { start } from 'repl' // native node module
 import { Lexer } from './lexer'
-import { TOKENS } from './token'
+import { Parser } from './parser'
 
 const lineToTokens = (
   line: string,
@@ -9,9 +9,13 @@ const lineToTokens = (
   callback: (err: Error | null, content?: any) => void
 ) => {
   const l = new Lexer(line)
-  for (let tok = l.nextToken(); tok.type !== TOKENS.EOF; tok = l.nextToken()) {
-    console.log(tok)
-  }
+  const p = new Parser(l)
+
+  const program = p.parseProgram()
+  p.raiseParserErrors()
+
+  console.log(program.toString(), '\n')
+
   callback(null)
 }
 

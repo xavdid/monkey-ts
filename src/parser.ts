@@ -45,15 +45,16 @@ const OPERATOR_PRECEDENCE: { [k in TOKENS]?: PRECEDENCE_LEVELS } = {
 
 export class Parser {
   // these are always defined, since a funciton in the constructor assigns it
-  curToken!: Token
-  peekToken!: Token
+  private curToken!: Token
+  private peekToken!: Token
   errors: string[] = []
   // [k in TOKENS]: alsmost works, but given that the rest are missing it complains
   // partial didn't seem to do it either
-  prefixParseFns: { [x: string]: prefixParserFn }
-  infixParseFns: { [x: string]: infixParseFn }
+  private readonly prefixParseFns: { [x: string]: prefixParserFn }
+  private readonly infixParseFns: { [x: string]: infixParseFn }
+  private parsed = false
 
-  constructor(public lexer: Lexer) {
+  constructor(private readonly lexer: Lexer) {
     this.prefixParseFns = {
       [TOKENS.IDENT]: this.parseIdentifier,
       [TOKENS.INT]: this.parseIntegerLiteral,
@@ -85,17 +86,17 @@ export class Parser {
   /**
    * advance the pointer
    */
-  nextToken = () => {
+  private readonly nextToken = () => {
     this.curToken = this.peekToken
     this.peekToken = this.lexer.nextToken()
   }
 
-  peekPrecedence = () => this._getPrecedence(this.peekToken)
+  private readonly peekPrecedence = () => this._getPrecedence(this.peekToken)
 
-  curPrecedence = () => this._getPrecedence(this.curToken)
+  private readonly curPrecedence = () => this._getPrecedence(this.curToken)
 
   // PARSERS //
-  trhowNoPrefixParseFnError = (t: string) => {
+  private readonly throwNoPrefixParseFnError = (t: string) => {
     const msg = `no prefix parse function for ${t} found`
     this.errors.push(msg)
   }
@@ -111,10 +112,21 @@ export class Parser {
       }
       this.nextToken()
     }
+    this.parsed = true
     return program
   }
 
-  parseStatement = () => {
+  raiseParserErrors = () => {
+    if (!this.parsed) {
+      return
+    }
+
+    if (this.errors.length) {
+      throw new Error(this.errors.join('\n'))
+    }
+  }
+
+  private readonly parseStatement = () => {
     switch (this.curToken.type) {
       case TOKENS.LET:
         return this.parseLetStatement()
@@ -125,7 +137,7 @@ export class Parser {
     }
   }
 
-  parseLetStatement = () => {
+  private readonly parseLetStatement = () => {
     const letToken = this.curToken
     if (!this.expectAndAdvance(TOKENS.IDENT)) {
       return
@@ -147,7 +159,7 @@ export class Parser {
     return new LetStatement(letToken, name, value!)
   }
 
-  parseReturnStatement = () => {
+  private readonly parseReturnStatement = () => {
     const token = this.curToken
 
     this.nextToken()
@@ -161,7 +173,7 @@ export class Parser {
     return new ReturnStatement(token, returnValue)
   }
 
-  parseExpressionStatement = () => {
+  private readonly parseExpressionStatement = () => {
     const stmt = new ExpressionStatement(
       this.curToken,
       this.parseExpression(PRECEDENCE_LEVELS.LOWEST)
@@ -174,10 +186,12 @@ export class Parser {
     return stmt
   }
 
-  parseExpression = (precedence: PRECEDENCE_LEVELS): Expression | undefined => {
+  private readonly parseExpression = (
+    precedence: PRECEDENCE_LEVELS
+  ): Expression | undefined => {
     const prefixParserFn = this.prefixParseFns[this.curToken.type]
     if (!prefixParserFn) {
-      this.trhowNoPrefixParseFnError(this.curToken.type)
+      this.throwNoPrefixParseFnError(this.curToken.type)
       return
     }
     let leftExpression = prefixParserFn()
@@ -202,11 +216,11 @@ export class Parser {
   }
 
   // these need to be fat arrow so they can be referenced but not called
-  parseIdentifier = () => {
+  private readonly parseIdentifier = () => {
     return new Identifier(this.curToken, this.curToken.literal)
   }
 
-  parseIntegerLiteral = () => {
+  private readonly parseIntegerLiteral = () => {
     const value = parseInt(this.curToken.literal, 10)
     if (isNaN(value)) {
       this.errors.push('could not parse', this.curToken.literal, 'as integer')
@@ -215,7 +229,7 @@ export class Parser {
     return new IntegerLiteral(this.curToken, value)
   }
 
-  parsePrefixExpression = () => {
+  private readonly parsePrefixExpression = () => {
     const expression = new PrefixExpression(
       this.curToken,
       this.curToken.literal
@@ -228,7 +242,7 @@ export class Parser {
     return expression
   }
 
-  parseInfixExpression = (left: Expression) => {
+  private readonly parseInfixExpression = (left: Expression) => {
     const expression = new InfixExpression(
       this.curToken,
       left,
@@ -243,10 +257,10 @@ export class Parser {
     return expression
   }
 
-  parseBoolean = () =>
+  private readonly parseBoolean = () =>
     new BoolExpression(this.curToken, this.curTokenIs(TOKENS.TRUE))
 
-  parseGroupedExpression = () => {
+  private readonly parseGroupedExpression = () => {
     this.nextToken()
     const expression = this.parseExpression(PRECEDENCE_LEVELS.LOWEST)
     if (!this.expectAndAdvance(TOKENS.RPAREN)) {
@@ -255,7 +269,7 @@ export class Parser {
     return expression
   }
 
-  parseIfExpression = () => {
+  private readonly parseIfExpression = () => {
     // build an expression
     const token = this.curToken
     if (!this.expectAndAdvance(TOKENS.LPAREN)) {
@@ -287,7 +301,7 @@ export class Parser {
     return new IfExpression(token, condition!, consequence, alternative)
   }
 
-  parseBlockStatement = () => {
+  private readonly parseBlockStatement = () => {
     const token = this.curToken
     const statements: Statement[] = []
 
@@ -302,7 +316,7 @@ export class Parser {
     return new BlockStatement(token, statements)
   }
 
-  parseFunctionLiteral = () => {
+  private readonly parseFunctionLiteral = () => {
     const token = this.curToken
 
     if (!this.expectAndAdvance(TOKENS.LPAREN)) {
@@ -320,7 +334,7 @@ export class Parser {
     return new FunctionLiteral(token, parameters!, body)
   }
 
-  parseFunctionParameters = () => {
+  private readonly parseFunctionParameters = () => {
     const identifers: Identifier[] = []
 
     // no params
@@ -347,13 +361,13 @@ export class Parser {
     return identifers
   }
 
-  parseCallExpression = (func: Expression) => {
+  private readonly parseCallExpression = (func: Expression) => {
     const token = this.curToken
     const args = this.parseCallArguments()
     return new CallExpression(token, func, args!)
   }
 
-  parseCallArguments = () => {
+  private readonly parseCallArguments = () => {
     const args: Expression[] = []
 
     if (this.peekTokenIs(TOKENS.RPAREN)) {
@@ -380,14 +394,14 @@ export class Parser {
   }
 
   // HELPERS //
-  curTokenIs = (t: TOKENS) => this.curToken.type === t
+  private readonly curTokenIs = (t: TOKENS) => this.curToken.type === t
 
-  peekTokenIs = (t: TOKENS) => this.peekToken.type === t
+  private readonly peekTokenIs = (t: TOKENS) => this.peekToken.type === t
 
   /**
    * in the book it's `expectPeek`, which is a bad name
    */
-  expectAndAdvance = (t: TOKENS) => {
+  private readonly expectAndAdvance = (t: TOKENS) => {
     if (this.peekTokenIs(t)) {
       this.nextToken()
       return true
@@ -397,7 +411,7 @@ export class Parser {
     }
   }
 
-  peekError = (t: TOKENS) => {
+  private readonly peekError = (t: TOKENS) => {
     this.errors.push(
       `expected next token to be ${t}, got ${this.peekToken.type} instead`
     )

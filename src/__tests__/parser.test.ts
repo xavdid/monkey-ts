@@ -21,12 +21,6 @@ import {
 //   return obj as T
 // }
 
-const raiseParserErrors = (p: Parser) => {
-  if (p.errors.length) {
-    throw new Error(p.errors.join('\n'))
-  }
-}
-
 const testLetStatement = (s: LetStatement, name: string) => {
   expect(s).toBeInstanceOf(LetStatement)
   expect(s.tokenLiteral()).toEqual('let')
@@ -109,7 +103,7 @@ describe('parser', () => {
         const l = new Lexer(input)
         const p = new Parser(l)
         const program = p.parseProgram()
-        raiseParserErrors(p)
+        p.raiseParserErrors()
 
         expect(program.statements.length).toEqual(1)
 
@@ -131,7 +125,7 @@ describe('parser', () => {
         const l = new Lexer(input)
         const p = new Parser(l)
         const program = p.parseProgram()
-        raiseParserErrors(p)
+        p.raiseParserErrors()
 
         expect(program.statements.length).toEqual(1)
 
@@ -148,7 +142,7 @@ describe('parser', () => {
 
       const p = new Parser(l)
       const program = p.parseProgram()
-      raiseParserErrors(p)
+      p.raiseParserErrors()
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
@@ -163,7 +157,7 @@ describe('parser', () => {
 
       const p = new Parser(l)
       const program = p.parseProgram()
-      raiseParserErrors(p)
+      p.raiseParserErrors()
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
@@ -202,7 +196,7 @@ describe('parser', () => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()
-        raiseParserErrors(p)
+        p.raiseParserErrors()
 
         expect(program.statements.length).toEqual(1)
         const stmt = program.statements[0] as ExpressionStatement
@@ -244,7 +238,7 @@ describe('parser', () => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()
-        raiseParserErrors(p)
+        p.raiseParserErrors()
 
         expect(program.statements.length).toEqual(1)
         const stmt = program.statements[0] as ExpressionStatement
@@ -358,7 +352,7 @@ describe('parser', () => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()
-        raiseParserErrors(p)
+        p.raiseParserErrors()
 
         expect(program.toString()).toEqual(test.expected)
       })
@@ -380,7 +374,7 @@ describe('parser', () => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()
-        raiseParserErrors(p)
+        p.raiseParserErrors()
 
         expect(program.statements.length).toEqual(1)
         const stmt = program.statements[0] as ExpressionStatement
@@ -393,7 +387,7 @@ describe('parser', () => {
       const l = new Lexer('if (x < y) { x }')
       const p = new Parser(l)
       const program = p.parseProgram()
-      raiseParserErrors(p)
+      p.raiseParserErrors()
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
@@ -414,7 +408,7 @@ describe('parser', () => {
       const l = new Lexer('if (x < y) { x } else { y }')
       const p = new Parser(l)
       const program = p.parseProgram()
-      raiseParserErrors(p)
+      p.raiseParserErrors()
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
@@ -439,7 +433,7 @@ describe('parser', () => {
       const l = new Lexer('fn(x, y) { x + y; }')
       const p = new Parser(l)
       const program = p.parseProgram()
-      raiseParserErrors(p)
+      p.raiseParserErrors()
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
@@ -479,7 +473,7 @@ describe('parser', () => {
         const l = new Lexer(test.input)
         const p = new Parser(l)
         const program = p.parseProgram()
-        raiseParserErrors(p)
+        p.raiseParserErrors()
 
         const stmt = program.statements[0] as ExpressionStatement
         expect(stmt).toBeInstanceOf(ExpressionStatement)
@@ -498,7 +492,7 @@ describe('parser', () => {
       const l = new Lexer('add(1, 2 * 3, 4 + 5);')
       const p = new Parser(l)
       const program = p.parseProgram()
-      raiseParserErrors(p)
+      p.raiseParserErrors()
 
       expect(program.statements.length).toEqual(1)
       const stmt = program.statements[0] as ExpressionStatement
@@ -536,7 +530,7 @@ describe('parser', () => {
         const l = new Lexer(input)
         const p = new Parser(l)
         const program = p.parseProgram()
-        raiseParserErrors(p)
+        p.raiseParserErrors()
 
         const stmt = program.statements[0] as ExpressionStatement
         expect(stmt).toBeInstanceOf(ExpressionStatement)
