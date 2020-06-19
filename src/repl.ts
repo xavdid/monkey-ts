@@ -1,4 +1,4 @@
-import * as repl from 'repl'
+import { start } from 'repl' // native node module
 import { Lexer } from './lexer'
 import { TOKENS } from './token'
 
@@ -16,7 +16,7 @@ const lineToTokens = (
 }
 
 export default () => {
-  repl.start({
+  start({
     prompt: '>> ',
     eval: lineToTokens,
   })

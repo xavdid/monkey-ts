@@ -10,8 +10,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "validate": "yarn test && yarn lint",
-    "release": "npx np",
     "go": "yarn build && node ."
+  },
+  "bin": {
+    "monkey": "./lib/index"
   },
   "keywords": [],
   "files": [

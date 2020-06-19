@@ -8,4 +8,7 @@ const main = (): void => {
   repl()
 }
 
-main()
+if (require.main === module) {
+  // could take input as well? like, a filepath?
+  main()
+}

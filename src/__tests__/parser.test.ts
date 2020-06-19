@@ -124,7 +124,7 @@ describe('parser', () => {
         { input: 'return 5;', value: 5 },
         { input: 'return true;', value: true },
         { input: 'return foobar;', value: 'foobar' },
-        // { input: 'return;', value: undefined },
+        // { input: 'return;', value: undefined }, // not added yet
       ]
 
       tests.forEach(({ input, value }) => {
