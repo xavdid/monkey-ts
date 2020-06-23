@@ -1,6 +1,6 @@
 import { Token } from './token'
 
-interface Node {
+export interface Node {
   token?: Token
   tokenLiteral: () => string | undefined
   toString: () => string
@@ -18,7 +18,7 @@ abstract class BaseNode implements Node {
   tokenLiteral = () => this.token?.literal ?? ''
 }
 
-export class Program {
+export class Program implements Node {
   statements: Statement[] = []
 
   tokenLiteral = () => {
@@ -55,7 +55,7 @@ export class ReturnStatement extends BaseNode implements Statement {
 }
 
 export class ExpressionStatement extends BaseNode implements Statement {
-  constructor(public token: Token, public expression?: Expression) {
+  constructor(public token: Token, public expression: Expression) {
     super()
   }
 

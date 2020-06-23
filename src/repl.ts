@@ -12,7 +12,6 @@ const lineToTokens = (
   const p = new Parser(l)
 
   const program = p.parseProgram()
-  p.raiseParserErrors()
 
   console.log(program.toString(), '\n')
 

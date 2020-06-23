@@ -1,4 +1,5 @@
 /* eslint-disable jest/expect-expect */
+// ^ ok to ignore because the assertions are in a helper
 
 import { Lexer } from '../lexer'
 import { TOKENS } from '../token'

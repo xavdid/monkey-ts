@@ -101,7 +101,7 @@ export class Parser {
     this.errors.push(msg)
   }
 
-  parseProgram = () => {
+  parseProgram = (shouldRaiseForParsingErrors = true) => {
     const program = new Program()
 
     while (this.curToken.type !== TOKENS.EOF) {
@@ -113,10 +113,13 @@ export class Parser {
       this.nextToken()
     }
     this.parsed = true
+    if (shouldRaiseForParsingErrors) {
+      this.raiseParserErrors()
+    }
     return program
   }
 
-  raiseParserErrors = () => {
+  private readonly raiseParserErrors = () => {
     if (!this.parsed) {
       return
     }
@@ -176,7 +179,8 @@ export class Parser {
   private readonly parseExpressionStatement = () => {
     const stmt = new ExpressionStatement(
       this.curToken,
-      this.parseExpression(PRECEDENCE_LEVELS.LOWEST)
+      // parseExpression is only ever undefined if there was an error
+      this.parseExpression(PRECEDENCE_LEVELS.LOWEST)!
     )
 
     if (this.peekTokenIs(TOKENS.SEMICOLON)) {

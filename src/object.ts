@@ -4,14 +4,16 @@ const enum ObjectType {
   NULL_OBJ = 'NULL',
 }
 
-interface BaseObject {
+export interface BaseObject {
   type: () => ObjectType
   inspect: () => string
 }
 
-interface BaseNonNullObject extends BaseObject {
+export interface BaseNonNullObject extends BaseObject {
   value: any
 }
+
+export type Obj = BaseObject | BaseNonNullObject
 
 export class IntegerObj implements BaseNonNullObject {
   constructor(public value: number) {}
