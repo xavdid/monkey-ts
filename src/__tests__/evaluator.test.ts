@@ -13,19 +13,59 @@ const evalProgram = (input: string) => {
 
 describe('evaulator', () => {
   it('should evaluate integer expressions', () => {
-    const tests = ['10', '5', '-5', '-10']
+    const tests: Array<[string, number]> = [
+      ['10', 10],
+      ['5', 5],
+      ['-5', -5],
+      ['-10', -10],
+      ['5 + 5 + 5 + 5 - 10', 10],
+      ['2 * 2 * 2 * 2 * 2', 32],
+      ['-50 + 100 + -50', 0],
+      ['5 * 2 + 10', 20],
+      ['5 + 2 * 10', 25],
+      ['20 + 2 * -10', 0],
+      ['50 / 2 * 2 + 10', 60],
+      ['2 * (5 + 10)', 30],
+      ['3 * 3 * 3 + 10', 37],
+      ['3 * (3 * 3) + 10', 37],
+      ['(5 + 10 * 2 + 15 / 3) * 2 + -10', 50],
+    ]
 
-    tests.forEach((input) => {
-      expect(evalProgram(input).value).toEqual(parseInt(input, 10))
+    tests.forEach(([input, expected]) => {
+      expect(evalProgram(input).value).toEqual(expected)
     })
   })
 
   it('should evaluate boolean expressions', () => {
-    const tests = [true, false]
+    const tests: Array<[string, boolean]> = [
+      ['true', true],
+      ['false', false],
+      ['1 < 2', true],
+      ['1 > 2', false],
+      ['1 < 1', false],
+      ['1 > 1', false],
+      ['1 == 1', true],
+      ['1 != 1', false],
+      ['1 == 2', false],
+      ['1 != 2', true],
+      ['true == true', true],
+      ['false == false', true],
+      ['true == false', false],
+      ['true != false', true],
+      ['false != true', true],
+      ['(1 < 2) == true', true],
+      ['(1 < 2) == false', false],
+      ['(1 > 2) == true', false],
+      ['(1 > 2) == false', true],
+    ]
 
-    tests.forEach((input) => {
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      expect(evalProgram(`${input}`).value).toEqual(input)
+    tests.forEach(([input, expected]) => {
+      try {
+        expect(evalProgram(input).value).toEqual(expected)
+      } catch (e) {
+        console.log('The following input failed:', input)
+        throw e
+      }
     })
   })
 

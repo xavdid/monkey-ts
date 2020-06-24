@@ -96,7 +96,7 @@ export class Parser {
   private readonly curPrecedence = () => this._getPrecedence(this.curToken)
 
   // PARSERS //
-  private readonly throwNoPrefixParseFnError = (t: string) => {
+  private readonly recordNoPrefixParseFnError = (t: string) => {
     const msg = `no prefix parse function for ${t} found`
     this.errors.push(msg)
   }
@@ -195,7 +195,7 @@ export class Parser {
   ): Expression | undefined => {
     const prefixParserFn = this.prefixParseFns[this.curToken.type]
     if (!prefixParserFn) {
-      this.throwNoPrefixParseFnError(this.curToken.type)
+      this.recordNoPrefixParseFnError(this.curToken.type)
       return
     }
     let leftExpression = prefixParserFn()
@@ -234,29 +234,33 @@ export class Parser {
   }
 
   private readonly parsePrefixExpression = () => {
-    const expression = new PrefixExpression(
-      this.curToken,
-      this.curToken.literal
-    )
+    const token = this.curToken
+    const literal = this.curToken.literal
 
     this.nextToken()
 
-    expression.right = this.parseExpression(PRECEDENCE_LEVELS.PREFIX)
-
-    return expression
+    return new PrefixExpression(
+      token,
+      literal,
+      this.parseExpression(PRECEDENCE_LEVELS.PREFIX)!
+    )
   }
 
   private readonly parseInfixExpression = (left: Expression) => {
-    const expression = new InfixExpression(
-      this.curToken,
-      left,
-      this.curToken.literal
-    )
-
+    const token = this.curToken
+    const literal = this.curToken.literal
     const precedence = this.curPrecedence()
+
     this.nextToken()
-    // could if on expression.operator and decrement for + to make it hug right
-    expression.right = this.parseExpression(precedence)
+
+    // could `if` on expression.operator and decrement for + to make it hug right
+
+    const expression = new InfixExpression(
+      token,
+      left,
+      literal,
+      this.parseExpression(precedence)!
+    )
 
     return expression
   }

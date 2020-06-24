@@ -18,7 +18,7 @@ const lineToTokens = (
   // console.log(program.toString(), '\n')
 
   // actual evaluates everything
-  console.log(evaluate(program)?.inspect())
+  console.log(evaluate(program)?.toString())
 
   callback(null)
 }

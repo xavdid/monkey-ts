@@ -6,7 +6,7 @@ export const enum ObjectType {
 
 export interface BaseObject {
   type: ObjectType
-  inspect: () => string
+  toString: () => string
   value: number | boolean | null
 }
 
@@ -14,7 +14,7 @@ export class IntegerObj implements BaseObject {
   type = ObjectType.INTEGER_OBJ
   constructor(public readonly value: number) {}
 
-  inspect() {
+  toString() {
     return String(this.value)
   }
 }
@@ -23,7 +23,7 @@ export class BooleanObj implements BaseObject {
   type = ObjectType.BOOLEAN_OBJ
   constructor(public readonly value: boolean) {}
 
-  inspect() {
+  toString() {
     return String(this.value)
   }
 }
@@ -36,7 +36,7 @@ export class NullObj implements BaseObject {
     this.value = null
   }
 
-  inspect() {
+  toString() {
     return 'null'
   }
 }

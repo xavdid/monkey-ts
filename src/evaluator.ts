@@ -6,14 +6,9 @@ import {
   ExpressionStatement,
   BoolExpression,
   PrefixExpression,
+  InfixExpression,
 } from './ast'
-import {
-  IntegerObj,
-  BooleanObj,
-  NullObj,
-  BaseObject,
-  ObjectType,
-} from './object'
+import { IntegerObj, BooleanObj, NullObj, BaseObject } from './object'
 
 // CONSTANTS
 // there's only ever 1 true/false, so we can reuse those objects
@@ -21,6 +16,14 @@ import {
 const TRUE = new BooleanObj(true)
 const FALSE = new BooleanObj(false)
 const NULL = new NullObj()
+
+/// ###############################
+
+/**
+ * important so that we're always comparing the True Boolean Objects
+ */
+const convertExpressionToBooleanObj = (input: boolean): BooleanObj =>
+  input ? TRUE : FALSE
 
 export const evalStatements = (statements: Statement[]): BaseObject => {
   let result: BaseObject = NULL
@@ -49,12 +52,69 @@ const evalBangOperatorExpression = (right: BaseObject): BaseObject => {
   return FALSE
 }
 
+/**
+ * if it's a number, turns it into a negative number
+ */
 const evalMinusPrefixOperatorExpression = (right: BaseObject): BaseObject => {
   if (!(right instanceof IntegerObj)) {
     return NULL
   }
 
   return new IntegerObj(-right.value)
+}
+
+const intOpFuncs: { [x: string]: (a: number, b: number) => number } = {
+  '+': (a, b) => a + b,
+  '-': (a, b) => a - b,
+  '*': (a, b) => a * b,
+  '/': (a, b) => a / b,
+}
+
+const boolOpFuncs: { [x: string]: (a: number, b: number) => boolean } = {
+  '<': (a, b) => a < b,
+  '>': (a, b) => a > b,
+  '==': (a, b) => a === b,
+  '!=': (a, b) => a !== b,
+}
+
+const evalIntegerInfixExpression = (
+  left: IntegerObj,
+  operator: string,
+  right: IntegerObj
+): BaseObject => {
+  const leftVal = left.value
+  const rightVal = right.value
+
+  if (intOpFuncs[operator]) {
+    return new IntegerObj(intOpFuncs[operator](leftVal, rightVal))
+  }
+
+  if (boolOpFuncs[operator]) {
+    return convertExpressionToBooleanObj(
+      boolOpFuncs[operator](leftVal, rightVal)
+    )
+  }
+
+  return NULL
+}
+
+const evalInfixExpression = (
+  left: BaseObject,
+  operator: string,
+  right: BaseObject
+): BaseObject => {
+  if (left instanceof IntegerObj && right instanceof IntegerObj) {
+    return evalIntegerInfixExpression(left, operator, right)
+  }
+
+  // the assumption here is that if we get this far, we only have booleans
+  if (operator === '==') {
+    return convertExpressionToBooleanObj(left === right)
+  }
+  if (operator === '!=') {
+    return convertExpressionToBooleanObj(left !== right)
+  }
+  return NULL
 }
 
 const evalPrefixExpression = (
@@ -86,12 +146,20 @@ export const evaluate = (node: Node): BaseObject => {
   }
 
   if (node instanceof BoolExpression) {
-    return node.value ? TRUE : FALSE
+    return convertExpressionToBooleanObj(node.value)
   }
 
   if (node instanceof PrefixExpression) {
-    const right = evaluate(node.right)
-    return evalPrefixExpression(node.operator, right)
+    return evalPrefixExpression(node.operator, evaluate(node.right))
   }
+
+  if (node instanceof InfixExpression) {
+    return evalInfixExpression(
+      evaluate(node.left),
+      node.operator,
+      evaluate(node.right)
+    )
+  }
+
   return NULL
 }
