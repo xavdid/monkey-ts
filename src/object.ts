@@ -7,16 +7,11 @@ const enum ObjectType {
 export interface BaseObject {
   type: () => ObjectType
   inspect: () => string
+  value: number | boolean | null
 }
 
-export interface BaseNonNullObject extends BaseObject {
-  value: any
-}
-
-export type Obj = BaseObject | BaseNonNullObject
-
-export class IntegerObj implements BaseNonNullObject {
-  constructor(public value: number) {}
+export class IntegerObj implements BaseObject {
+  constructor(public readonly value: number) {}
   type() {
     return ObjectType.INTEGER_OBJ
   }
@@ -26,8 +21,8 @@ export class IntegerObj implements BaseNonNullObject {
   }
 }
 
-export class BooleanObj implements BaseNonNullObject {
-  constructor(public value: boolean) {}
+export class BooleanObj implements BaseObject {
+  constructor(public readonly value: boolean) {}
 
   type() {
     return ObjectType.BOOLEAN_OBJ
@@ -39,6 +34,11 @@ export class BooleanObj implements BaseNonNullObject {
 }
 
 export class NullObj implements BaseObject {
+  public readonly value: null
+  constructor() {
+    this.value = null
+  }
+
   type() {
     return ObjectType.NULL_OBJ
   }

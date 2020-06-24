@@ -2,7 +2,6 @@ import { Lexer } from '../lexer'
 import { Parser } from '../parser'
 
 import { evaluate } from '../evaluator'
-import { BaseNonNullObject } from '../object'
 
 const evalProgram = (input: string) => {
   const lexer = new Lexer(input)
@@ -17,9 +16,16 @@ describe('evaulator', () => {
     const tests = ['10', '5']
 
     tests.forEach((input) => {
-      expect((evalProgram(input) as BaseNonNullObject).value).toEqual(
-        parseInt(input, 10)
-      )
+      expect(evalProgram(input).value).toEqual(parseInt(input, 10))
+    })
+  })
+
+  it('should eval boolean expressions', () => {
+    const tests = [true, false]
+
+    tests.forEach((input) => {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      expect(evalProgram(`${input}`).value).toEqual(input)
     })
   })
 })

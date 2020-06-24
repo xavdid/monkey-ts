@@ -1,6 +1,7 @@
 import { start } from 'repl' // native node module
 import { Lexer } from './lexer'
 import { Parser } from './parser'
+import { evaluate } from './evaluator'
 
 const lineToTokens = (
   line: string,
@@ -13,7 +14,11 @@ const lineToTokens = (
 
   const program = p.parseProgram()
 
-  console.log(program.toString(), '\n')
+  // prints a nicely wrapped program:
+  // console.log(program.toString(), '\n')
+
+  // actual evaluates everything
+  console.log(evaluate(program)?.inspect())
 
   callback(null)
 }
