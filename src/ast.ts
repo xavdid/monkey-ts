@@ -12,7 +12,7 @@ export type Statement = Node
 export type Expression = Node
 
 abstract class BaseNode implements Node {
-  token?: Token
+  abstract token: Token
   abstract toString: () => string
   // this is always defined, but whatever
   tokenLiteral = () => this.token?.literal ?? ''
@@ -82,7 +82,7 @@ export class PrefixExpression extends BaseNode implements Expression {
   constructor(
     public token: Token, // eg "!"
     public operator: string,
-    public right?: Expression // added after initialization
+    public right: Expression // added after initialization
   ) {
     super()
   }
@@ -95,7 +95,7 @@ export class InfixExpression extends BaseNode implements Expression {
     public token: Token, // eg "+"
     public left: Expression,
     public operator: string,
-    public right?: Expression // added after initialization
+    public right: Expression // added after initialization
   ) {
     super()
   }
