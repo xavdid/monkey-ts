@@ -1,17 +1,17 @@
-export const enum ObjectType {
-  INTEGER_OBJ = 'INTEGER',
-  BOOLEAN_OBJ = 'BOOLEAN',
-  NULL_OBJ = 'NULL',
-}
+// export const enum ObjectType {
+//   INTEGER_OBJ = 'INTEGER',
+//   BOOLEAN_OBJ = 'BOOLEAN',
+//   NULL_OBJ = 'NULL',
+// }
 
 export interface BaseObject {
-  type: ObjectType
+  // type: ObjectType
   toString: () => string
-  value: number | boolean | null
+  value: number | boolean | null | BaseObject
 }
 
 export class IntegerObj implements BaseObject {
-  type = ObjectType.INTEGER_OBJ
+  // type = ObjectType.INTEGER_OBJ
   constructor(public readonly value: number) {}
 
   toString() {
@@ -20,7 +20,7 @@ export class IntegerObj implements BaseObject {
 }
 
 export class BooleanObj implements BaseObject {
-  type = ObjectType.BOOLEAN_OBJ
+  // type = ObjectType.BOOLEAN_OBJ
   constructor(public readonly value: boolean) {}
 
   toString() {
@@ -29,7 +29,7 @@ export class BooleanObj implements BaseObject {
 }
 
 export class NullObj implements BaseObject {
-  type = ObjectType.NULL_OBJ
+  // type = ObjectType.NULL_OBJ
   public readonly value: null
 
   constructor() {
@@ -38,5 +38,13 @@ export class NullObj implements BaseObject {
 
   toString() {
     return 'null'
+  }
+}
+
+export class ReturnObj implements BaseObject {
+  constructor(public readonly value: BaseObject) {}
+
+  toString() {
+    return this.value.toString()
   }
 }

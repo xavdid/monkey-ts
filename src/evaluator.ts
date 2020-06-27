@@ -1,7 +1,6 @@
 import {
   Node,
   IntegerLiteral,
-  Statement,
   Program,
   ExpressionStatement,
   BoolExpression,
@@ -9,8 +8,15 @@ import {
   InfixExpression,
   IfExpression,
   BlockStatement,
+  ReturnStatement,
 } from './ast'
-import { IntegerObj, BooleanObj, NullObj, BaseObject } from './object'
+import {
+  IntegerObj,
+  BooleanObj,
+  NullObj,
+  BaseObject,
+  ReturnObj,
+} from './object'
 
 // CONSTANTS
 // there's only ever 1 true/false, so we can reuse those objects
@@ -27,12 +33,29 @@ const NULL = new NullObj()
 const convertExpressionToBooleanObj = (input: boolean): BooleanObj =>
   input ? TRUE : FALSE
 
-export const evalStatements = (statements: Statement[]): BaseObject => {
+const evalProgram = (program: Program): BaseObject => {
   let result: BaseObject = NULL
 
-  statements.forEach((statement) => {
+  for (const statement of program.statements) {
     result = evaluate(statement)
-  })
+
+    if (result instanceof ReturnObj) {
+      return result.value
+    }
+  }
+
+  return result
+}
+
+const evalBlockStatement = (block: BlockStatement): BaseObject => {
+  let result: BaseObject = NULL
+
+  for (const statement of block.statements) {
+    result = evaluate(statement)
+    if (result instanceof ReturnObj) {
+      return result
+    }
+  }
 
   return result
 }
@@ -154,10 +177,10 @@ const evalIfExpression = (ie: IfExpression): BaseObject => {
   return NULL
 }
 
-export const evaluate = (node: Node): BaseObject => {
+export const evaluate = (node?: Node): BaseObject => {
   // statements
   if (node instanceof Program) {
-    return evalStatements(node.statements)
+    return evalProgram(node)
   }
 
   if (node instanceof ExpressionStatement) {
@@ -165,7 +188,11 @@ export const evaluate = (node: Node): BaseObject => {
   }
 
   if (node instanceof BlockStatement) {
-    return evalStatements(node.statements)
+    return evalBlockStatement(node)
+  }
+
+  if (node instanceof ReturnStatement) {
+    return new ReturnObj(evaluate(node.returnValue))
   }
 
   // expressions

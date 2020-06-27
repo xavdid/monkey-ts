@@ -60,12 +60,7 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      try {
-        expect(evalProgram(input).value).toEqual(expected)
-      } catch (e) {
-        console.log('The following input failed:', input)
-        throw e
-      }
+      expect(evalProgram(input).value).toEqual(expected)
     })
   })
 
@@ -93,6 +88,30 @@ describe('evaulator', () => {
       ['if (1 > 2) { 10 }', null],
       ['if (1 > 2) { 10 } else { 20 }', 20],
       ['if (1 < 2) { 10 } else { 20 }', 10],
+    ]
+
+    tests.forEach(([input, expected]) => {
+      expect(evalProgram(input).value).toEqual(expected)
+    })
+  })
+
+  it('should evaluate return expressions', () => {
+    const tests: Array<[string, number]> = [
+      ['return 10;', 10],
+      ['return 10; 9;', 10],
+      ['return 2 * 5; 9;', 10],
+      ['9; return 2 * 5; 9;', 10],
+      [
+        `
+        if (10 > 1) {
+          if (10 > 1) {
+            return 10;
+          }
+          return 1;
+        }
+      `.trim(),
+        10,
+      ],
     ]
 
     tests.forEach(([input, expected]) => {
