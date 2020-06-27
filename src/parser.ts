@@ -254,7 +254,6 @@ export class Parser {
     this.nextToken()
 
     // could `if` on expression.operator and decrement for + to make it hug right
-
     const expression = new InfixExpression(
       token,
       left,

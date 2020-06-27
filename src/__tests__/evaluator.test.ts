@@ -83,4 +83,20 @@ describe('evaulator', () => {
       expect(evalProgram(input).value).toEqual(expected)
     })
   })
+
+  it('should evaluate if expressions', () => {
+    const tests: Array<[string, number | null]> = [
+      ['if (true) { 10 }', 10],
+      ['if (false) { 10 }', null],
+      ['if (1) { 10 }', 10],
+      ['if (1 < 2) { 10 }', 10],
+      ['if (1 > 2) { 10 }', null],
+      ['if (1 > 2) { 10 } else { 20 }', 20],
+      ['if (1 < 2) { 10 } else { 20 }', 10],
+    ]
+
+    tests.forEach(([input, expected]) => {
+      expect(evalProgram(input).value).toEqual(expected)
+    })
+  })
 })

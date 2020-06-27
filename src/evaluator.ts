@@ -7,6 +7,8 @@ import {
   BoolExpression,
   PrefixExpression,
   InfixExpression,
+  IfExpression,
+  BlockStatement,
 } from './ast'
 import { IntegerObj, BooleanObj, NullObj, BaseObject } from './object'
 
@@ -130,6 +132,28 @@ const evalPrefixExpression = (
   return NULL
 }
 
+const isTruthy = (obj: BaseObject): boolean => {
+  if (obj === NULL) {
+    return false
+  }
+  if (obj === TRUE) {
+    return true
+  }
+  if (obj === FALSE) {
+    return false
+  }
+  return true
+}
+
+const evalIfExpression = (ie: IfExpression): BaseObject => {
+  if (isTruthy(evaluate(ie.condition))) {
+    return evaluate(ie.consequence)
+  } else if (ie.alternative) {
+    return evaluate(ie.alternative)
+  }
+  return NULL
+}
+
 export const evaluate = (node: Node): BaseObject => {
   // statements
   if (node instanceof Program) {
@@ -138,6 +162,10 @@ export const evaluate = (node: Node): BaseObject => {
 
   if (node instanceof ExpressionStatement) {
     return evaluate(node.expression)
+  }
+
+  if (node instanceof BlockStatement) {
+    return evalStatements(node.statements)
   }
 
   // expressions
@@ -159,6 +187,10 @@ export const evaluate = (node: Node): BaseObject => {
       node.operator,
       evaluate(node.right)
     )
+  }
+
+  if (node instanceof IfExpression) {
+    return evalIfExpression(node)
   }
 
   return NULL
