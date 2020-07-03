@@ -2,6 +2,7 @@ import { Lexer } from '../lexer'
 import { Parser } from '../parser'
 
 import { evaluate } from '../evaluator'
+import { ErrorObj } from '../object'
 
 const evalProgram = (input: string) => {
   const lexer = new Lexer(input)
@@ -116,6 +117,42 @@ describe('evaulator', () => {
 
     tests.forEach(([input, expected]) => {
       expect(evalProgram(input).value).toEqual(expected)
+    })
+  })
+
+  it('should throw nice error messages', () => {
+    const tests: Array<[string, string]> = [
+      ['5 + true;', 'ERROR: type mismatch: INTEGER + BOOLEAN'],
+      ['5 + true; 5;', 'ERROR: type mismatch: INTEGER + BOOLEAN'],
+      ['-true', 'ERROR: unknown operator: -BOOLEAN'],
+      ['true + false;', 'ERROR: unknown operator: BOOLEAN + BOOLEAN'],
+      ['5; true + false; 5', 'ERROR: unknown operator: BOOLEAN + BOOLEAN'],
+      [
+        'if (10 > 1) { true + false; }',
+        'ERROR: unknown operator: BOOLEAN + BOOLEAN',
+      ],
+      [
+        `
+        if (10 > 1) {
+          if (10 > 1) {
+            return true + false;
+          }
+          return 1;
+        }
+        `.trim(),
+        'ERROR: unknown operator: BOOLEAN + BOOLEAN',
+      ],
+    ]
+
+    tests.forEach(([input, expected]) => {
+      const output = evalProgram(input)
+      try {
+        expect(output).toBeInstanceOf(ErrorObj)
+        expect(output.toString()).toEqual(expected)
+      } catch (e) {
+        console.log('failed on', input)
+        throw e
+      }
     })
   })
 })

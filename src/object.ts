@@ -1,17 +1,13 @@
-// export const enum ObjectType {
-//   INTEGER_OBJ = 'INTEGER',
-//   BOOLEAN_OBJ = 'BOOLEAN',
-//   NULL_OBJ = 'NULL',
-// }
-
 export interface BaseObject {
-  // type: ObjectType
   toString: () => string
   value: number | boolean | null | BaseObject
+  message?: string // errors only
+  privitive: string
 }
 
 export class IntegerObj implements BaseObject {
-  // type = ObjectType.INTEGER_OBJ
+  privitive = 'INTEGER'
+
   constructor(public readonly value: number) {}
 
   toString() {
@@ -20,7 +16,8 @@ export class IntegerObj implements BaseObject {
 }
 
 export class BooleanObj implements BaseObject {
-  // type = ObjectType.BOOLEAN_OBJ
+  privitive = 'BOOLEAN'
+
   constructor(public readonly value: boolean) {}
 
   toString() {
@@ -29,7 +26,8 @@ export class BooleanObj implements BaseObject {
 }
 
 export class NullObj implements BaseObject {
-  // type = ObjectType.NULL_OBJ
+  privitive = 'NULL'
+
   public readonly value: null
 
   constructor() {
@@ -42,9 +40,22 @@ export class NullObj implements BaseObject {
 }
 
 export class ReturnObj implements BaseObject {
+  privitive = 'RETURN_VALUE'
+
   constructor(public readonly value: BaseObject) {}
 
   toString() {
     return this.value.toString()
+  }
+}
+
+export class ErrorObj implements BaseObject {
+  value = null
+  privitive = 'ERROR'
+
+  constructor(public readonly message: string) {}
+
+  toString() {
+    return `ERROR: ${this.message}`
   }
 }

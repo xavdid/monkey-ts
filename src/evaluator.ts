@@ -16,6 +16,7 @@ import {
   NullObj,
   BaseObject,
   ReturnObj,
+  ErrorObj,
 } from './object'
 
 // CONSTANTS
@@ -42,6 +43,9 @@ const evalProgram = (program: Program): BaseObject => {
     if (result instanceof ReturnObj) {
       return result.value
     }
+    if (result instanceof ErrorObj) {
+      return result
+    }
   }
 
   return result
@@ -52,7 +56,7 @@ const evalBlockStatement = (block: BlockStatement): BaseObject => {
 
   for (const statement of block.statements) {
     result = evaluate(statement)
-    if (result instanceof ReturnObj) {
+    if (result instanceof ReturnObj || result instanceof ErrorObj) {
       return result
     }
   }
@@ -82,7 +86,7 @@ const evalBangOperatorExpression = (right: BaseObject): BaseObject => {
  */
 const evalMinusPrefixOperatorExpression = (right: BaseObject): BaseObject => {
   if (!(right instanceof IntegerObj)) {
-    return NULL
+    return new ErrorObj(`unknown operator: -${right.privitive}`)
   }
 
   return new IntegerObj(-right.value)
@@ -120,7 +124,9 @@ const evalIntegerInfixExpression = (
     )
   }
 
-  return NULL
+  return new ErrorObj(
+    `unknown operator: ${left.privitive} ${operator} ${right.privitive}`
+  )
 }
 
 const evalInfixExpression = (
@@ -139,7 +145,14 @@ const evalInfixExpression = (
   if (operator === '!=') {
     return convertExpressionToBooleanObj(left !== right)
   }
-  return NULL
+  if (left.privitive !== right.privitive) {
+    return new ErrorObj(
+      `type mismatch: ${left.privitive} ${operator} ${right.privitive}`
+    )
+  }
+  return new ErrorObj(
+    `unknown operator: ${left.privitive} ${operator} ${right.privitive}`
+  )
 }
 
 const evalPrefixExpression = (
@@ -152,7 +165,7 @@ const evalPrefixExpression = (
   if (operator === '-') {
     return evalMinusPrefixOperatorExpression(right)
   }
-  return NULL
+  return new ErrorObj(`unknown operator: ${operator}${right.privitive}`)
 }
 
 const isTruthy = (obj: BaseObject): boolean => {
@@ -169,7 +182,11 @@ const isTruthy = (obj: BaseObject): boolean => {
 }
 
 const evalIfExpression = (ie: IfExpression): BaseObject => {
-  if (isTruthy(evaluate(ie.condition))) {
+  const condition = evaluate(ie.condition)
+  if (isError(condition)) {
+    return condition
+  }
+  if (isTruthy(condition)) {
     return evaluate(ie.consequence)
   } else if (ie.alternative) {
     return evaluate(ie.alternative)
@@ -192,7 +209,8 @@ export const evaluate = (node?: Node): BaseObject => {
   }
 
   if (node instanceof ReturnStatement) {
-    return new ReturnObj(evaluate(node.returnValue))
+    const val = evaluate(node.returnValue)
+    return isError(val) ? val : new ReturnObj(val)
   }
 
   // expressions
@@ -205,15 +223,24 @@ export const evaluate = (node?: Node): BaseObject => {
   }
 
   if (node instanceof PrefixExpression) {
-    return evalPrefixExpression(node.operator, evaluate(node.right))
+    const right = evaluate(node.right)
+    if (isError(right)) {
+      return right
+    }
+    return evalPrefixExpression(node.operator, right)
   }
 
   if (node instanceof InfixExpression) {
-    return evalInfixExpression(
-      evaluate(node.left),
-      node.operator,
-      evaluate(node.right)
-    )
+    const left = evaluate(node.left)
+    if (isError(left)) {
+      return left
+    }
+    const right = evaluate(node.right)
+    if (isError(right)) {
+      return right
+    }
+
+    return evalInfixExpression(left, node.operator, right)
   }
 
   if (node instanceof IfExpression) {
@@ -222,3 +249,5 @@ export const evaluate = (node?: Node): BaseObject => {
 
   return NULL
 }
+
+export const isError = (obj: BaseObject): boolean => obj instanceof ErrorObj
