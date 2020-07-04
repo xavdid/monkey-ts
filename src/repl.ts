@@ -2,6 +2,11 @@ import { start } from 'repl' // native node module
 import { Lexer } from './lexer'
 import { Parser } from './parser'
 import { evaluate } from './evaluator'
+import { Environment } from './environment'
+
+// needs to be out here so it's reused across lines
+// also means its global across requires, which might be bad
+const env = new Environment()
 
 const lineToTokens = (
   line: string,
@@ -18,7 +23,10 @@ const lineToTokens = (
   // console.log(program.toString(), '\n')
 
   // actual evaluates everything
-  console.log(evaluate(program)?.toString())
+  const output = evaluate(program, env)
+  if (output.value) {
+    console.log(output.toString())
+  }
 
   callback(null)
 }

@@ -3,13 +3,15 @@ import { Parser } from '../parser'
 
 import { evaluate } from '../evaluator'
 import { ErrorObj } from '../object'
+import { Environment } from '../environment'
 
 const evalProgram = (input: string) => {
   const lexer = new Lexer(input)
   const parser = new Parser(lexer)
   const program = parser.parseProgram()
+  const env = new Environment()
 
-  return evaluate(program)
+  return evaluate(program, env)
 }
 
 describe('evaulator', () => {
@@ -142,17 +144,27 @@ describe('evaulator', () => {
         `.trim(),
         'ERROR: unknown operator: BOOLEAN + BOOLEAN',
       ],
+      ['foobar', 'ERROR: identifier not found: foobar'],
     ]
 
     tests.forEach(([input, expected]) => {
       const output = evalProgram(input)
-      try {
-        expect(output).toBeInstanceOf(ErrorObj)
-        expect(output.toString()).toEqual(expected)
-      } catch (e) {
-        console.log('failed on', input)
-        throw e
-      }
+
+      expect(output).toBeInstanceOf(ErrorObj)
+      expect(output.toString()).toEqual(expected)
+    })
+  })
+
+  it('should evaluate let statements', () => {
+    const tests: Array<[string, number]> = [
+      ['let a = 5; a;', 5],
+      ['let a = 5 * 5; a;', 25],
+      ['let a = 5; let b = a; b;', 5],
+      ['let a = 5; let b = a; let c = a + b + 5; c;', 15],
+    ]
+
+    tests.forEach(([input, expected]) => {
+      expect(evalProgram(input).value).toEqual(expected)
     })
   })
 })

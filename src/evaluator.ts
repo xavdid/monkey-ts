@@ -9,6 +9,8 @@ import {
   IfExpression,
   BlockStatement,
   ReturnStatement,
+  LetStatement,
+  Identifier,
 } from './ast'
 import {
   IntegerObj,
@@ -18,6 +20,7 @@ import {
   ReturnObj,
   ErrorObj,
 } from './object'
+import { Environment } from './environment'
 
 // CONSTANTS
 // there's only ever 1 true/false, so we can reuse those objects
@@ -34,11 +37,11 @@ const NULL = new NullObj()
 const convertExpressionToBooleanObj = (input: boolean): BooleanObj =>
   input ? TRUE : FALSE
 
-const evalProgram = (program: Program): BaseObject => {
+const evalProgram = (program: Program, env: Environment): BaseObject => {
   let result: BaseObject = NULL
 
   for (const statement of program.statements) {
-    result = evaluate(statement)
+    result = evaluate(statement, env)
 
     if (result instanceof ReturnObj) {
       return result.value
@@ -51,11 +54,14 @@ const evalProgram = (program: Program): BaseObject => {
   return result
 }
 
-const evalBlockStatement = (block: BlockStatement): BaseObject => {
+const evalBlockStatement = (
+  block: BlockStatement,
+  env: Environment
+): BaseObject => {
   let result: BaseObject = NULL
 
   for (const statement of block.statements) {
-    result = evaluate(statement)
+    result = evaluate(statement, env)
     if (result instanceof ReturnObj || result instanceof ErrorObj) {
       return result
     }
@@ -181,35 +187,46 @@ const isTruthy = (obj: BaseObject): boolean => {
   return true
 }
 
-const evalIfExpression = (ie: IfExpression): BaseObject => {
-  const condition = evaluate(ie.condition)
+const evalIfExpression = (ie: IfExpression, env: Environment): BaseObject => {
+  const condition = evaluate(ie.condition, env)
   if (isError(condition)) {
     return condition
   }
   if (isTruthy(condition)) {
-    return evaluate(ie.consequence)
+    return evaluate(ie.consequence, env)
   } else if (ie.alternative) {
-    return evaluate(ie.alternative)
+    return evaluate(ie.alternative, env)
   }
   return NULL
 }
 
-export const evaluate = (node?: Node): BaseObject => {
+const evalIdentifier = (node: Identifier, env: Environment): BaseObject => {
+  const val = env.get(node.value)
+  if (!val) {
+    return new ErrorObj(`identifier not found: ${node.value}`)
+  }
+  return val
+}
+
+export const evaluate = (
+  node: Node | undefined,
+  env: Environment
+): BaseObject => {
   // statements
   if (node instanceof Program) {
-    return evalProgram(node)
+    return evalProgram(node, env)
   }
 
   if (node instanceof ExpressionStatement) {
-    return evaluate(node.expression)
+    return evaluate(node.expression, env)
   }
 
   if (node instanceof BlockStatement) {
-    return evalBlockStatement(node)
+    return evalBlockStatement(node, env)
   }
 
   if (node instanceof ReturnStatement) {
-    const val = evaluate(node.returnValue)
+    const val = evaluate(node.returnValue, env)
     return isError(val) ? val : new ReturnObj(val)
   }
 
@@ -223,7 +240,7 @@ export const evaluate = (node?: Node): BaseObject => {
   }
 
   if (node instanceof PrefixExpression) {
-    const right = evaluate(node.right)
+    const right = evaluate(node.right, env)
     if (isError(right)) {
       return right
     }
@@ -231,11 +248,11 @@ export const evaluate = (node?: Node): BaseObject => {
   }
 
   if (node instanceof InfixExpression) {
-    const left = evaluate(node.left)
+    const left = evaluate(node.left, env)
     if (isError(left)) {
       return left
     }
-    const right = evaluate(node.right)
+    const right = evaluate(node.right, env)
     if (isError(right)) {
       return right
     }
@@ -244,7 +261,20 @@ export const evaluate = (node?: Node): BaseObject => {
   }
 
   if (node instanceof IfExpression) {
-    return evalIfExpression(node)
+    return evalIfExpression(node, env)
+  }
+
+  if (node instanceof LetStatement) {
+    const val = evaluate(node.value, env)
+    if (isError(val)) {
+      return val
+    }
+    env.set(node.name.value, val)
+    return NULL
+  }
+
+  if (node instanceof Identifier) {
+    return evalIdentifier(node, env)
   }
 
   return NULL
