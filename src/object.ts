@@ -1,8 +1,11 @@
+import { Identifier, BlockStatement } from './ast'
+import { Environment } from './environment'
+
 export interface BaseObject {
   toString: () => string
   value: number | boolean | null | BaseObject
-  message?: string // errors only
   privitive: string
+  message?: string // errors only
 }
 
 export class IntegerObj implements BaseObject {
@@ -57,5 +60,22 @@ export class ErrorObj implements BaseObject {
 
   toString() {
     return `ERROR: ${this.message}`
+  }
+}
+
+export class FunctionObj implements BaseObject {
+  privitive = 'FUNCTION'
+  value = null // might need to change this
+
+  constructor(
+    public readonly parameters: Identifier[],
+    public readonly body: BlockStatement,
+    public env: Environment
+  ) {}
+
+  toString() {
+    return `fn(${this.parameters.join(', ')}) {
+      ${this.body}
+    }`
   }
 }

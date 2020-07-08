@@ -2,10 +2,10 @@ import { Lexer } from '../lexer'
 import { Parser } from '../parser'
 
 import { evaluate } from '../evaluator'
-import { ErrorObj } from '../object'
+import { ErrorObj, FunctionObj } from '../object'
 import { Environment } from '../environment'
 
-const evalProgram = (input: string) => {
+const testEval = (input: string) => {
   const lexer = new Lexer(input)
   const parser = new Parser(lexer)
   const program = parser.parseProgram()
@@ -35,7 +35,7 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(evalProgram(input).value).toEqual(expected)
+      expect(testEval(input).value).toEqual(expected)
     })
   })
 
@@ -63,7 +63,7 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(evalProgram(input).value).toEqual(expected)
+      expect(testEval(input).value).toEqual(expected)
     })
   })
 
@@ -78,7 +78,7 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(evalProgram(input).value).toEqual(expected)
+      expect(testEval(input).value).toEqual(expected)
     })
   })
 
@@ -94,7 +94,7 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(evalProgram(input).value).toEqual(expected)
+      expect(testEval(input).value).toEqual(expected)
     })
   })
 
@@ -118,7 +118,7 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(evalProgram(input).value).toEqual(expected)
+      expect(testEval(input).value).toEqual(expected)
     })
   })
 
@@ -148,7 +148,7 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      const output = evalProgram(input)
+      const output = testEval(input)
 
       expect(output).toBeInstanceOf(ErrorObj)
       expect(output.toString()).toEqual(expected)
@@ -164,7 +164,53 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(evalProgram(input).value).toEqual(expected)
+      expect(testEval(input).value).toEqual(expected)
+    })
+  })
+
+  describe('functions', () => {
+    it('should build function objects', () => {
+      const input = 'fn(x) { x + 2; };'
+      const evaluated = testEval(input) as FunctionObj
+      expect(evaluated).toBeInstanceOf(FunctionObj)
+      expect(evaluated.parameters.length).toEqual(1)
+      expect(evaluated.parameters[0].toString()).toEqual('x')
+      expect(evaluated.body.toString()).toEqual('(x + 2)')
+    })
+
+    it('should evaluate functions', () => {
+      const tests: Array<[string, number]> = [
+        ['let identity = fn(x) { x; }; identity(5);', 5],
+        ['let identity = fn(x) { return x; }; identity(5);', 5],
+        ['let double = fn(x) { x * 2; }; double(5);', 10],
+        ['let add = fn(x, y) { x + y; }; add(5, 5);', 10],
+        ['let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));', 20],
+        ['fn(x) { x; }(5)', 5],
+      ]
+
+      tests.forEach(([input, expected]) => {
+        expect(testEval(input).value).toEqual(expected)
+      })
+    })
+
+    it('should test closures', () => {
+      const tests: Array<[string, number]> = [
+        [
+          `
+          let newAdder = fn(x) {
+            fn(y) { x + y };
+          };
+
+          let addTwo = newAdder(2);
+          addTwo(2);
+          `.trim(),
+          4,
+        ],
+      ]
+
+      tests.forEach(([input, expected]) => {
+        expect(testEval(input).value).toEqual(expected)
+      })
     })
   })
 })

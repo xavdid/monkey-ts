@@ -1,10 +1,16 @@
 import { BaseObject } from './object'
 
 export class Environment {
-  private store: { [x: string]: BaseObject } = {}
+  private readonly store: { [x: string]: BaseObject | undefined } = {}
+
+  constructor(private readonly outer?: Environment) {}
 
   get(name: string): BaseObject | undefined {
-    return this.store[name]
+    let result = this.store[name]
+    if (!result && this.outer) {
+      result = this.outer.get(name)
+    }
+    return result
   }
 
   set(name: string, val: BaseObject): BaseObject {

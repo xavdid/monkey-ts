@@ -74,7 +74,7 @@ const testInfixExpression = (
   expect(exp).toBeInstanceOf(InfixExpression)
   testLiteralExpression(exp.left, left)
   expect(exp.operator).toEqual(operator)
-  testLiteralExpression(exp.right!, right)
+  testLiteralExpression(exp.right, right)
 }
 
 describe('parser', () => {
@@ -199,7 +199,7 @@ describe('parser', () => {
 
         expect(exp.operator).toEqual(test.operator)
 
-        testLiteralExpression(exp.right!, test.value)
+        testLiteralExpression(exp.right, test.value)
       })
     })
 

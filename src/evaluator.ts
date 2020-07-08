@@ -11,6 +11,9 @@ import {
   ReturnStatement,
   LetStatement,
   Identifier,
+  FunctionLiteral,
+  CallExpression,
+  Expression,
 } from './ast'
 import {
   IntegerObj,
@@ -19,6 +22,7 @@ import {
   BaseObject,
   ReturnObj,
   ErrorObj,
+  FunctionObj,
 } from './object'
 import { Environment } from './environment'
 
@@ -208,6 +212,53 @@ const evalIdentifier = (node: Identifier, env: Environment): BaseObject => {
   return val
 }
 
+const evalExpressions = (
+  exps: Expression[],
+  env: Environment
+): BaseObject[] => {
+  // might need to have a copy of the original env here? if we think args could modify state
+  const result = []
+  for (const exp of exps) {
+    const evaluated = evaluate(exp, env)
+    if (isError(evaluated)) {
+      return [evaluated]
+    }
+    result.push(evaluated)
+  }
+  return result
+}
+
+const unwrapReturnValue = (obj: BaseObject): BaseObject => {
+  if (obj instanceof ReturnObj) {
+    return obj.value
+  }
+
+  return obj
+}
+
+const extendFunctionEnv = (
+  func: FunctionObj,
+  args: BaseObject[]
+): Environment => {
+  const env = new Environment(func.env)
+
+  func.parameters.forEach((arg, i) => {
+    env.set(arg.value, args[i])
+  })
+
+  return env
+}
+
+const applyFunction = (func: BaseObject, args: BaseObject[]): BaseObject => {
+  if (!(func instanceof FunctionObj)) {
+    throw new Error(`not a function: ${func.privitive}`)
+  }
+
+  const extnededEnv = extendFunctionEnv(func, args)
+  const evaluated = evaluate(func.body, extnededEnv)
+  return unwrapReturnValue(evaluated)
+}
+
 export const evaluate = (
   node: Node | undefined,
   env: Environment
@@ -275,6 +326,23 @@ export const evaluate = (
 
   if (node instanceof Identifier) {
     return evalIdentifier(node, env)
+  }
+
+  if (node instanceof FunctionLiteral) {
+    return new FunctionObj(node.parameters, node.body, env)
+  }
+
+  if (node instanceof CallExpression) {
+    const func = evaluate(node.func, env)
+    if (isError(func)) {
+      return func
+    }
+    const args = evalExpressions(node.args, env)
+    if (isError(args[0])) {
+      // need to check arg length here?
+      return args[0]
+    }
+    return applyFunction(func, args)
   }
 
   return NULL
