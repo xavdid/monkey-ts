@@ -168,3 +168,12 @@ export class CallExpression extends BaseNode implements Expression {
 
   toString = () => `${this.func}(${this.args.join(', ')})`
 }
+
+export class StringLiteral extends BaseNode implements Expression {
+  constructor(public token: Token, public value: string) {
+    super()
+  }
+
+  tokenLiteral = () => this.token.literal
+  toString = () => this.token.literal
+}

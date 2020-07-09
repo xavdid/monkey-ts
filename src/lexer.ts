@@ -1,13 +1,18 @@
 import { TOKENS, Token, lookupIdent } from './token'
-import { numToString, stringToNum, isLetter, isDigit } from './utils'
+import {
+  numToString,
+  stringToNum,
+  isLetter,
+  isDigit,
+  notDoubleQuote,
+} from './utils'
 
 export class Lexer {
-  input: string
   position: number
   readPosition: number
   ch: number // char code
 
-  constructor(input: string) {
+  constructor(private readonly input: string) {
     this.input = input
     this.position = 0
     this.readPosition = 0
@@ -16,7 +21,7 @@ export class Lexer {
     this.readChar()
   }
 
-  nextToken = () => {
+  nextToken() {
     let tok: Token
 
     this.skipWhitepsace()
@@ -64,6 +69,9 @@ export class Lexer {
       case '}':
         tok = this.generateToken(TOKENS.RBRACE, this.ch)
         break
+      case '"':
+        tok = new Token(TOKENS.STRING, this.readString())
+        break
       case numToString(0):
         tok = new Token(TOKENS.EOF, '')
         break
@@ -82,27 +90,35 @@ export class Lexer {
     return tok
   }
 
-  generateToken = (type: TOKENS, char: number) => {
+  private generateToken(type: TOKENS, char: number) {
     return new Token(type, numToString(char))
   }
 
-  readIdentifier = () => {
+  private readIdentifier() {
     // DEVIATION: made a root function for reading
-    return this._read(isLetter)
+    return this.readWhile(isLetter)
   }
 
-  readNumber = () => {
-    return this._read(isDigit)
+  private readNumber() {
+    return this.readWhile(isDigit)
   }
 
-  readChar = () => {
+  private readString() {
+    // is mostly normal, but needs an offset
+    return this.readWhile(notDoubleQuote).slice(1)
+  }
+
+  /**
+   * advances the position while we're in a string
+   */
+  private readonly readChar = () => {
     // DEVIATION: use peekChar here instead of repeating code
     this.ch = stringToNum(this.peekChar())
     this.position = this.readPosition
     this.readPosition += 1
   }
 
-  maybeReadSecondChar = (yes: TOKENS, no: TOKENS, second: string) => {
+  private maybeReadSecondChar(yes: TOKENS, no: TOKENS, second: string): Token {
     // DEVIATION: consolidate second character behavior
     if (this.peekChar() === second) {
       const ch = this.ch
@@ -114,7 +130,7 @@ export class Lexer {
     }
   }
 
-  peekChar = () => {
+  private peekChar(): string {
     // DEVIATION: don't read past the end of the string
     // DEVIATION: this returns an actual character instead of a char code
     if (this.readPosition >= this.input.length) {
@@ -124,17 +140,22 @@ export class Lexer {
     }
   }
 
-  skipWhitepsace = () => {
+  private skipWhitepsace() {
     while ([' ', '\t', '\n', '\r'].includes(numToString(this.ch))) {
       this.readChar()
     }
   }
 
-  private readonly _read = (fn: (ch: number) => boolean) => {
+  /**
+   * returns a slice of the input as long as the next character matches the filter
+   */
+  private readWhile(fn: (ch: number) => boolean) {
     const startingPosition = this.position
-    while (fn(this.ch)) {
+    // DEVIATION: his is a while, mine is a do-while. tests pass though ¯\_(ツ)_/¯
+    // could add an extra readChar behind an `if` if it turns out the do-while messes something up
+    do {
       this.readChar()
-    }
+    } while (fn(this.ch))
     return this.input.slice(startingPosition, this.position)
   }
 }

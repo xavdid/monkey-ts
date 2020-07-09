@@ -16,6 +16,7 @@ import {
   Statement,
   FunctionLiteral,
   CallExpression,
+  StringLiteral,
 } from './ast'
 
 type prefixParserFn = () => Expression | undefined
@@ -65,6 +66,7 @@ export class Parser {
       [TOKENS.LPAREN]: this.parseGroupedExpression,
       [TOKENS.IF]: this.parseIfExpression,
       [TOKENS.FUNCTION]: this.parseFunctionLiteral,
+      [TOKENS.STRING]: this.parseStringLiteral,
     }
     this.infixParseFns = {
       [TOKENS.EQ]: this.parseInfixExpression,
@@ -339,6 +341,10 @@ export class Parser {
     const body = this.parseBlockStatement()
 
     return new FunctionLiteral(token, parameters!, body)
+  }
+
+  private readonly parseStringLiteral = () => {
+    return new StringLiteral(this.curToken, this.curToken.literal)
   }
 
   private readonly parseFunctionParameters = () => {

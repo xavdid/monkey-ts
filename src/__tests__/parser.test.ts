@@ -13,6 +13,7 @@ import {
   FunctionLiteral,
   ReturnStatement,
   CallExpression,
+  StringLiteral,
 } from '../ast'
 
 // can't quite get this working
@@ -76,6 +77,10 @@ const testInfixExpression = (
   expect(exp.operator).toEqual(operator)
   testLiteralExpression(exp.right, right)
 }
+
+// const testStringLiteralExpression = (
+
+// )=>{}
 
 describe('parser', () => {
   it('should have parse errors', () => {
@@ -529,6 +534,20 @@ describe('parser', () => {
           expect(arg.toString()).toEqual(params[i])
         })
       })
+    })
+
+    it('should parse call string expressions', () => {
+      const l = new Lexer('"hello world"')
+      const p = new Parser(l)
+      const program = p.parseProgram()
+
+      const stmt = program.statements[0] as ExpressionStatement
+      expect(stmt).toBeInstanceOf(ExpressionStatement)
+
+      const literal = stmt.expression as StringLiteral
+      expect(literal).toBeInstanceOf(StringLiteral)
+
+      expect(literal.value).toEqual('hello world')
     })
   })
 })

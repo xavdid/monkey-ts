@@ -151,4 +151,20 @@ describe('lexer', () => {
 
     validateAnswers(resultingTokens, l)
   })
+
+  it('should lex strings', () => {
+    const input = `
+      "foobar"
+      "foo bar"
+    `.trim()
+
+    const l = new Lexer(input)
+    const resultingTokens: lexerResults = [
+      [TOKENS.STRING, 'foobar'],
+      [TOKENS.STRING, 'foo bar'],
+      [TOKENS.EOF, ''],
+    ]
+
+    validateAnswers(resultingTokens, l)
+  })
 })

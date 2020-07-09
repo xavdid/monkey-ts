@@ -43,6 +43,8 @@ export const enum TOKENS {
   IF = 'IF',
   ELSE = 'ELSE',
   RETURN = 'RETURN',
+
+  STRING = 'STRING',
 }
 
 export const keywords: { [x: string]: TOKENS } = {
