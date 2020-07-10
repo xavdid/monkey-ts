@@ -3,13 +3,13 @@ import { Environment } from './environment'
 
 export interface BaseObject {
   toString: () => string
-  value: number | boolean | null | BaseObject
-  privitive: string
+  value: number | boolean | null | BaseObject | string
+  readonly primitive: string
   message?: string // errors only
 }
 
 export class IntegerObj implements BaseObject {
-  privitive = 'INTEGER'
+  readonly primitive = 'INTEGER'
 
   constructor(public readonly value: number) {}
 
@@ -19,7 +19,7 @@ export class IntegerObj implements BaseObject {
 }
 
 export class BooleanObj implements BaseObject {
-  privitive = 'BOOLEAN'
+  readonly primitive = 'BOOLEAN'
 
   constructor(public readonly value: boolean) {}
 
@@ -29,7 +29,7 @@ export class BooleanObj implements BaseObject {
 }
 
 export class NullObj implements BaseObject {
-  privitive = 'NULL'
+  readonly primitive = 'NULL'
 
   public readonly value: null
 
@@ -43,7 +43,7 @@ export class NullObj implements BaseObject {
 }
 
 export class ReturnObj implements BaseObject {
-  privitive = 'RETURN_VALUE'
+  readonly primitive = 'RETURN_VALUE'
 
   constructor(public readonly value: BaseObject) {}
 
@@ -54,7 +54,7 @@ export class ReturnObj implements BaseObject {
 
 export class ErrorObj implements BaseObject {
   value = null
-  privitive = 'ERROR'
+  primitive = 'ERROR'
 
   constructor(public readonly message: string) {}
 
@@ -64,7 +64,7 @@ export class ErrorObj implements BaseObject {
 }
 
 export class FunctionObj implements BaseObject {
-  privitive = 'FUNCTION'
+  readonly primitive = 'FUNCTION'
   value = null // might need to change this
 
   constructor(
@@ -77,5 +77,14 @@ export class FunctionObj implements BaseObject {
     return `fn(${this.parameters.join(', ')}) {
       ${this.body}
     }`
+  }
+}
+
+export class StringObj implements BaseObject {
+  readonly primitive = 'STRING'
+  constructor(public readonly value: string) {}
+
+  toString() {
+    return this.value
   }
 }

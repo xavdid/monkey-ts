@@ -2,7 +2,7 @@ import { Lexer } from '../lexer'
 import { Parser } from '../parser'
 
 import { evaluate } from '../evaluator'
-import { ErrorObj, FunctionObj } from '../object'
+import { ErrorObj, FunctionObj, StringObj } from '../object'
 import { Environment } from '../environment'
 
 const testEval = (input: string) => {
@@ -145,6 +145,7 @@ describe('evaulator', () => {
         'ERROR: unknown operator: BOOLEAN + BOOLEAN',
       ],
       ['foobar', 'ERROR: identifier not found: foobar'],
+      ['"Hello" - "World"', 'ERROR: unknown operator: STRING - STRING'],
     ]
 
     tests.forEach(([input, expected]) => {
@@ -165,6 +166,24 @@ describe('evaulator', () => {
 
     tests.forEach(([input, expected]) => {
       expect(testEval(input).value).toEqual(expected)
+    })
+  })
+
+  describe('strings', () => {
+    it('should evaluate string literals', () => {
+      const input = '"Hello World!"'
+
+      const evaluated = testEval(input) as StringObj
+      expect(evaluated).toBeInstanceOf(StringObj)
+      expect(evaluated.value).toEqual('Hello World!')
+    })
+
+    it('should concatenate string literals', () => {
+      const input = '"Hello" + " " + "World!"'
+
+      const evaluated = testEval(input) as StringObj
+      expect(evaluated).toBeInstanceOf(StringObj)
+      expect(evaluated.value).toEqual('Hello World!')
     })
   })
 

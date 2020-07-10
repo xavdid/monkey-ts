@@ -14,6 +14,7 @@ import {
   FunctionLiteral,
   CallExpression,
   Expression,
+  StringLiteral,
 } from './ast'
 import {
   IntegerObj,
@@ -23,6 +24,7 @@ import {
   ReturnObj,
   ErrorObj,
   FunctionObj,
+  StringObj,
 } from './object'
 import { Environment } from './environment'
 
@@ -96,7 +98,7 @@ const evalBangOperatorExpression = (right: BaseObject): BaseObject => {
  */
 const evalMinusPrefixOperatorExpression = (right: BaseObject): BaseObject => {
   if (!(right instanceof IntegerObj)) {
-    return new ErrorObj(`unknown operator: -${right.privitive}`)
+    return new ErrorObj(`unknown operator: -${right.primitive}`)
   }
 
   return new IntegerObj(-right.value)
@@ -135,8 +137,22 @@ const evalIntegerInfixExpression = (
   }
 
   return new ErrorObj(
-    `unknown operator: ${left.privitive} ${operator} ${right.privitive}`
+    `unknown operator: ${left.primitive} ${operator} ${right.primitive}`
   )
+}
+
+const evalStringInfixExpression = (
+  left: StringObj,
+  operator: string,
+  right: StringObj
+): BaseObject => {
+  if (operator !== '+') {
+    return new ErrorObj(
+      `unknown operator: ${left.primitive} ${operator} ${right.primitive}`
+    )
+  }
+
+  return new StringObj(`${left.toString()}${right.toString()}`)
 }
 
 const evalInfixExpression = (
@@ -148,6 +164,10 @@ const evalInfixExpression = (
     return evalIntegerInfixExpression(left, operator, right)
   }
 
+  if (left instanceof StringObj && right instanceof StringObj) {
+    return evalStringInfixExpression(left, operator, right)
+  }
+
   // the assumption here is that if we get this far, we only have booleans
   if (operator === '==') {
     return convertExpressionToBooleanObj(left === right)
@@ -155,13 +175,13 @@ const evalInfixExpression = (
   if (operator === '!=') {
     return convertExpressionToBooleanObj(left !== right)
   }
-  if (left.privitive !== right.privitive) {
+  if (left.primitive !== right.primitive) {
     return new ErrorObj(
-      `type mismatch: ${left.privitive} ${operator} ${right.privitive}`
+      `type mismatch: ${left.primitive} ${operator} ${right.primitive}`
     )
   }
   return new ErrorObj(
-    `unknown operator: ${left.privitive} ${operator} ${right.privitive}`
+    `unknown operator: ${left.primitive} ${operator} ${right.primitive}`
   )
 }
 
@@ -175,7 +195,7 @@ const evalPrefixExpression = (
   if (operator === '-') {
     return evalMinusPrefixOperatorExpression(right)
   }
-  return new ErrorObj(`unknown operator: ${operator}${right.privitive}`)
+  return new ErrorObj(`unknown operator: ${operator}${right.primitive}`)
 }
 
 const isTruthy = (obj: BaseObject): boolean => {
@@ -251,7 +271,7 @@ const extendFunctionEnv = (
 
 const applyFunction = (func: BaseObject, args: BaseObject[]): BaseObject => {
   if (!(func instanceof FunctionObj)) {
-    throw new Error(`not a function: ${func.privitive}`)
+    throw new Error(`not a function: ${func.primitive}`)
   }
 
   const extnededEnv = extendFunctionEnv(func, args)
@@ -343,6 +363,10 @@ export const evaluate = (
       return args[0]
     }
     return applyFunction(func, args)
+  }
+
+  if (node instanceof StringLiteral) {
+    return new StringObj(node.value)
   }
 
   return NULL
