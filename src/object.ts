@@ -88,3 +88,16 @@ export class StringObj implements BaseObject {
     return this.value
   }
 }
+
+type BuiltinFunction = (...args: BaseObject[]) => BaseObject
+
+export class BuiltinFuncObj implements BaseObject {
+  readonly primitive = 'BUILTIN'
+  value = null // might need to change this?
+
+  constructor(public readonly func: BuiltinFunction) {}
+
+  toString() {
+    return 'builtin function'
+  }
+}

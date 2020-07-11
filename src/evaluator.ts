@@ -25,8 +25,10 @@ import {
   ErrorObj,
   FunctionObj,
   StringObj,
+  BuiltinFuncObj,
 } from './object'
 import { Environment } from './environment'
+import builtinFuncs from './builtins'
 
 // CONSTANTS
 // there's only ever 1 true/false, so we can reuse those objects
@@ -226,10 +228,15 @@ const evalIfExpression = (ie: IfExpression, env: Environment): BaseObject => {
 
 const evalIdentifier = (node: Identifier, env: Environment): BaseObject => {
   const val = env.get(node.value)
-  if (!val) {
-    return new ErrorObj(`identifier not found: ${node.value}`)
+  if (val) {
+    return val
   }
-  return val
+
+  if (builtinFuncs[node.value]) {
+    return builtinFuncs[node.value]
+  }
+
+  return new ErrorObj(`identifier not found: ${node.value}`)
 }
 
 const evalExpressions = (
@@ -270,13 +277,17 @@ const extendFunctionEnv = (
 }
 
 const applyFunction = (func: BaseObject, args: BaseObject[]): BaseObject => {
-  if (!(func instanceof FunctionObj)) {
-    throw new Error(`not a function: ${func.primitive}`)
+  if (func instanceof FunctionObj) {
+    const extnededEnv = extendFunctionEnv(func, args)
+    const evaluated = evaluate(func.body, extnededEnv)
+    return unwrapReturnValue(evaluated)
   }
 
-  const extnededEnv = extendFunctionEnv(func, args)
-  const evaluated = evaluate(func.body, extnededEnv)
-  return unwrapReturnValue(evaluated)
+  if (func instanceof BuiltinFuncObj) {
+    return func.func(...args)
+  }
+
+  return new ErrorObj(`not a function: ${func.primitive}`)
 }
 
 export const evaluate = (

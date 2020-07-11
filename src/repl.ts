@@ -24,7 +24,7 @@ const lineToTokens = (
 
   // actual evaluates everything
   const output = evaluate(program, env)
-  if (output.value !== null) {
+  if (output.primitive !== 'null') {
     console.log(output.toString())
   }
 

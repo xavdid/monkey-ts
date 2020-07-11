@@ -2,7 +2,14 @@ import { Lexer } from '../lexer'
 import { Parser } from '../parser'
 
 import { evaluate } from '../evaluator'
-import { ErrorObj, FunctionObj, StringObj } from '../object'
+import {
+  ErrorObj,
+  FunctionObj,
+  StringObj,
+  BaseObject,
+  IntegerObj,
+  BooleanObj,
+} from '../object'
 import { Environment } from '../environment'
 
 const testEval = (input: string) => {
@@ -14,7 +21,27 @@ const testEval = (input: string) => {
   return evaluate(program, env)
 }
 
+// can't figure out how to type the binded function
+// `_testObjType.bind<number>(null, IntegerObj)` gives "expected 1 arg, got two"
+const _testObjType: (
+  objType: new (args: any) => BaseObject,
+  obj: BaseObject,
+  value: number | string | boolean
+) => void = (objType, obj, value) => {
+  expect(obj).toBeInstanceOf(objType)
+  expect(obj.value).toEqual(value)
+}
+const testIntegerObj = _testObjType.bind(null, IntegerObj)
+const testStringObj = _testObjType.bind(null, StringObj)
+const testBooleanObj = _testObjType.bind(null, BooleanObj)
+
+const testErrorObj = (output: BaseObject, expected: string) => {
+  expect(output).toBeInstanceOf(ErrorObj)
+  expect(output.toString()).toEqual(expected)
+}
+
 describe('evaulator', () => {
+  // eslint-disable-next-line jest/expect-expect
   it('should evaluate integer expressions', () => {
     const tests: Array<[string, number]> = [
       ['10', 10],
@@ -35,10 +62,11 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(testEval(input).value).toEqual(expected)
+      testIntegerObj(testEval(input), expected)
     })
   })
 
+  // eslint-disable-next-line jest/expect-expect
   it('should evaluate boolean expressions', () => {
     const tests: Array<[string, boolean]> = [
       ['true', true],
@@ -63,10 +91,11 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(testEval(input).value).toEqual(expected)
+      testBooleanObj(testEval(input), expected)
     })
   })
 
+  // eslint-disable-next-line jest/expect-expect
   it('should evaluate !prefix expressions', () => {
     const tests: Array<[string, boolean]> = [
       ['!true', false],
@@ -78,7 +107,7 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(testEval(input).value).toEqual(expected)
+      testBooleanObj(testEval(input), expected)
     })
   })
 
@@ -94,10 +123,15 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(testEval(input).value).toEqual(expected)
+      if (expected) {
+        testIntegerObj(testEval(input), expected)
+      } else {
+        expect(testEval(input).value).toEqual(expected)
+      }
     })
   })
 
+  // eslint-disable-next-line jest/expect-expect
   it('should evaluate return expressions', () => {
     const tests: Array<[string, number]> = [
       ['return 10;', 10],
@@ -118,10 +152,11 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(testEval(input).value).toEqual(expected)
+      testIntegerObj(testEval(input), expected)
     })
   })
 
+  // eslint-disable-next-line jest/expect-expect
   it('should throw nice error messages', () => {
     const tests: Array<[string, string]> = [
       ['5 + true;', 'ERROR: type mismatch: INTEGER + BOOLEAN'],
@@ -149,13 +184,11 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      const output = testEval(input)
-
-      expect(output).toBeInstanceOf(ErrorObj)
-      expect(output.toString()).toEqual(expected)
+      testErrorObj(testEval(input), expected)
     })
   })
 
+  // eslint-disable-next-line jest/expect-expect
   it('should evaluate let statements', () => {
     const tests: Array<[string, number]> = [
       ['let a = 5; a;', 5],
@@ -165,25 +198,19 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      expect(testEval(input).value).toEqual(expected)
+      testIntegerObj(testEval(input), expected)
     })
   })
 
   describe('strings', () => {
+    // eslint-disable-next-line jest/expect-expect
     it('should evaluate string literals', () => {
-      const input = '"Hello World!"'
-
-      const evaluated = testEval(input) as StringObj
-      expect(evaluated).toBeInstanceOf(StringObj)
-      expect(evaluated.value).toEqual('Hello World!')
+      testStringObj(testEval('"Hello World!"'), 'Hello World!')
     })
 
+    // eslint-disable-next-line jest/expect-expect
     it('should concatenate string literals', () => {
-      const input = '"Hello" + " " + "World!"'
-
-      const evaluated = testEval(input) as StringObj
-      expect(evaluated).toBeInstanceOf(StringObj)
-      expect(evaluated.value).toEqual('Hello World!')
+      testStringObj(testEval('"Hello" + " " + "World!"'), 'Hello World!')
     })
   })
 
@@ -197,6 +224,7 @@ describe('evaulator', () => {
       expect(evaluated.body.toString()).toEqual('(x + 2)')
     })
 
+    // eslint-disable-next-line jest/expect-expect
     it('should evaluate functions', () => {
       const tests: Array<[string, number]> = [
         ['let identity = fn(x) { x; }; identity(5);', 5],
@@ -208,10 +236,11 @@ describe('evaulator', () => {
       ]
 
       tests.forEach(([input, expected]) => {
-        expect(testEval(input).value).toEqual(expected)
+        testIntegerObj(testEval(input), expected)
       })
     })
 
+    // eslint-disable-next-line jest/expect-expect
     it('should test closures', () => {
       const tests: Array<[string, number]> = [
         [
@@ -228,7 +257,37 @@ describe('evaulator', () => {
       ]
 
       tests.forEach(([input, expected]) => {
-        expect(testEval(input).value).toEqual(expected)
+        testIntegerObj(testEval(input), expected)
+      })
+    })
+
+    describe('builtin functions', () => {
+      // eslint-disable-next-line jest/expect-expect
+      it('should test builtin functions', () => {
+        const tests: Array<[string, number]> = [
+          ['len("")', 0],
+          ['len("four")', 4],
+          ['len("hello world")', 11],
+        ]
+
+        tests.forEach(([input, expected]) => {
+          testIntegerObj(testEval(input), expected)
+        })
+      })
+
+      // eslint-disable-next-line jest/expect-expect
+      it('should test builtin functions error handling', () => {
+        const tests: Array<[string, string]> = [
+          ['len(1)', 'ERROR: argument to `len` not supported, got INTEGER'],
+          [
+            'len("one", "two")',
+            'ERROR: wrong number of arguments. got=2, want=1',
+          ],
+        ]
+
+        tests.forEach(([input, expected]) => {
+          testErrorObj(testEval(input), expected)
+        })
       })
     })
   })
