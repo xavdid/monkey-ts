@@ -17,6 +17,7 @@ import {
   FunctionLiteral,
   CallExpression,
   StringLiteral,
+  ArrayLiteral,
 } from './ast'
 
 type prefixParserFn = () => Expression | undefined
@@ -67,6 +68,7 @@ export class Parser {
       [TOKENS.IF]: this.parseIfExpression,
       [TOKENS.FUNCTION]: this.parseFunctionLiteral,
       [TOKENS.STRING]: this.parseStringLiteral,
+      [TOKENS.LBRACKET]: this.parseArrayLiteral,
     }
     this.infixParseFns = {
       [TOKENS.EQ]: this.parseInfixExpression,
@@ -193,7 +195,7 @@ export class Parser {
   }
 
   private readonly parseExpression = (
-    precedence: PRECEDENCE_LEVELS
+    precedence: PRECEDENCE_LEVELS = PRECEDENCE_LEVELS.LOWEST
   ): Expression | undefined => {
     const prefixParserFn = this.prefixParseFns[this.curToken.type]
     if (!prefixParserFn) {
@@ -375,35 +377,44 @@ export class Parser {
   }
 
   private readonly parseCallExpression = (func: Expression) => {
-    const token = this.curToken
-    const args = this.parseCallArguments()
-    return new CallExpression(token, func, args!)
+    return new CallExpression(
+      this.curToken,
+      func,
+      this.parseExpressionList(TOKENS.RPAREN)!
+    )
   }
 
-  private readonly parseCallArguments = () => {
-    const args: Expression[] = []
+  private readonly parseExpressionList = (
+    end: TOKENS
+  ): Expression[] | undefined => {
+    const list: Expression[] = []
 
-    if (this.peekTokenIs(TOKENS.RPAREN)) {
+    if (this.peekTokenIs(end)) {
       this.nextToken()
-      return args
+      return list
     }
 
     this.nextToken()
 
-    args.push(this.parseExpression(PRECEDENCE_LEVELS.LOWEST)!)
+    list.push(this.parseExpression()!)
 
     while (this.peekTokenIs(TOKENS.COMMA)) {
       this.nextToken()
       this.nextToken()
-
-      args.push(this.parseExpression(PRECEDENCE_LEVELS.LOWEST)!)
+      list.push(this.parseExpression()!)
     }
 
-    if (!this.expectAndAdvance(TOKENS.RPAREN)) {
+    if (!this.expectAndAdvance(end)) {
       return
     }
+    return list
+  }
 
-    return args
+  private readonly parseArrayLiteral = (): Expression => {
+    return new ArrayLiteral(
+      this.curToken,
+      this.parseExpressionList(TOKENS.RBRACKET)!
+    )
   }
 
   // HELPERS //

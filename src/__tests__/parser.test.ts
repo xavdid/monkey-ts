@@ -14,6 +14,7 @@ import {
   ReturnStatement,
   CallExpression,
   StringLiteral,
+  ArrayLiteral,
 } from '../ast'
 
 // can't quite get this working
@@ -548,6 +549,23 @@ describe('parser', () => {
       expect(literal).toBeInstanceOf(StringLiteral)
 
       expect(literal.value).toEqual('hello world')
+    })
+
+    it('should parse array literals', () => {
+      const l = new Lexer('[1, 2 * 2, 3 + 3]')
+      const p = new Parser(l)
+      const program = p.parseProgram()
+
+      const stmt = program.statements[0] as ExpressionStatement
+      expect(stmt).toBeInstanceOf(ExpressionStatement)
+
+      const arr = stmt.expression as ArrayLiteral
+      expect(arr).toBeInstanceOf(ArrayLiteral)
+
+      expect(arr.elements.length).toEqual(3)
+      testIntegerLiteral(arr.elements[0] as IntegerLiteral, 1)
+      testInfixExpression(arr.elements[1] as InfixExpression, 2, '*', 2)
+      testInfixExpression(arr.elements[2] as InfixExpression, 3, '+', 3)
     })
   })
 })

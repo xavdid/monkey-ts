@@ -177,3 +177,15 @@ export class StringLiteral extends BaseNode implements Expression {
   tokenLiteral = () => this.token.literal
   toString = () => this.token.literal
 }
+
+export class ArrayLiteral extends BaseNode implements Expression {
+  constructor(
+    public token: Token, // "["
+    public elements: Expression[]
+  ) {
+    super()
+  }
+
+  tokenLiteral = () => this.token.literal
+  toString = () => `[${this.elements.map((e) => e.toString()).join(', ')}]`
+}

@@ -34,6 +34,8 @@ export const enum TOKENS {
   RPAREN = ')',
   LBRACE = '{',
   RBRACE = '}',
+  LBRACKET = '[',
+  RBRACKET = ']',
 
   // Keywords
   FUNCTION = 'FUNCTION',

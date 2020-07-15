@@ -167,4 +167,21 @@ describe('lexer', () => {
 
     validateAnswers(resultingTokens, l)
   })
+
+  it('should lex arrays', () => {
+    const input = '[1, 2];'
+
+    const l = new Lexer(input)
+    const resultingTokens: lexerResults = [
+      [TOKENS.LBRACKET, '['],
+      [TOKENS.INT, '1'],
+      [TOKENS.COMMA, ','],
+      [TOKENS.INT, '2'],
+      [TOKENS.RBRACKET, ']'],
+      [TOKENS.SEMICOLON, ';'],
+      [TOKENS.EOF, ''],
+    ]
+
+    validateAnswers(resultingTokens, l)
+  })
 })

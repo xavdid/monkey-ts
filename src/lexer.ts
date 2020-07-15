@@ -70,7 +70,14 @@ export class Lexer {
         tok = this.generateToken(TOKENS.RBRACE, this.ch)
         break
       case '"':
+        // don't use generateToken because we have to read multiple characters
         tok = new Token(TOKENS.STRING, this.readString())
+        break
+      case '[':
+        tok = this.generateToken(TOKENS.LBRACKET, this.ch)
+        break
+      case ']':
+        tok = this.generateToken(TOKENS.RBRACKET, this.ch)
         break
       case numToString(0):
         tok = new Token(TOKENS.EOF, '')
