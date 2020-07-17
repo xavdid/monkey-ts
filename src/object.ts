@@ -101,3 +101,15 @@ export class BuiltinFuncObj implements BaseObject {
     return 'builtin function'
   }
 }
+
+export class ArrayObj implements BaseObject {
+  readonly primitive = 'ARRAY'
+
+  constructor(public readonly elements: BaseObject[]) {}
+
+  value = null
+
+  toString() {
+    return `[${this.elements.map((e) => e.toString()).join(', ')}]`
+  }
+}

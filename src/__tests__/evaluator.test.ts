@@ -9,6 +9,8 @@ import {
   BaseObject,
   IntegerObj,
   BooleanObj,
+  ArrayObj,
+  NullObj,
 } from '../object'
 import { Environment } from '../environment'
 
@@ -26,7 +28,7 @@ const testEval = (input: string) => {
 const _testObjType: (
   objType: new (args: any) => BaseObject,
   obj: BaseObject,
-  value: number | string | boolean
+  value: number | string | boolean | null
 ) => void = (objType, obj, value) => {
   expect(obj).toBeInstanceOf(objType)
   expect(obj.value).toEqual(value)
@@ -34,6 +36,7 @@ const _testObjType: (
 const testIntegerObj = _testObjType.bind(null, IntegerObj)
 const testStringObj = _testObjType.bind(null, StringObj)
 const testBooleanObj = _testObjType.bind(null, BooleanObj)
+const testNullObj = _testObjType.bind(null, NullObj)
 
 const testErrorObj = (output: BaseObject, expected: string) => {
   expect(output).toBeInstanceOf(ErrorObj)
@@ -111,6 +114,7 @@ describe('evaulator', () => {
     })
   })
 
+  // eslint-disable-next-line jest/expect-expect
   it('should evaluate if expressions', () => {
     const tests: Array<[string, number | null]> = [
       ['if (true) { 10 }', 10],
@@ -123,11 +127,9 @@ describe('evaulator', () => {
     ]
 
     tests.forEach(([input, expected]) => {
-      if (expected) {
-        testIntegerObj(testEval(input), expected)
-      } else {
-        expect(testEval(input).value).toEqual(expected)
-      }
+      const output = testEval(input)
+      const func = expected ? testIntegerObj : testNullObj
+      func(output, expected)
     })
   })
 
@@ -288,6 +290,71 @@ describe('evaulator', () => {
         tests.forEach(([input, expected]) => {
           testErrorObj(testEval(input), expected)
         })
+      })
+    })
+  })
+
+  describe('arrays', () => {
+    it('should evaluate array literals', () => {
+      const arr = testEval('[1, 2 * 2, 3 + 3]') as ArrayObj
+      expect(arr).toBeInstanceOf(ArrayObj)
+      expect(arr.elements.length).toEqual(3)
+
+      testIntegerObj(arr.elements[0], 1)
+      testIntegerObj(arr.elements[1], 4)
+      testIntegerObj(arr.elements[2], 6)
+    })
+
+    // eslint-disable-next-line jest/expect-expect
+    it('should evaluate index expressions', () => {
+      const tests: Array<{ input: string; expected: number | null }> = [
+        {
+          input: '[1, 2, 3][0]',
+          expected: 1,
+        },
+        {
+          input: '[1, 2, 3][1]',
+          expected: 2,
+        },
+        {
+          input: '[1, 2, 3][2]',
+          expected: 3,
+        },
+        {
+          input: 'let i = 0; [1][i];',
+          expected: 1,
+        },
+        {
+          input: '[1, 2, 3][1 + 1];',
+          expected: 3,
+        },
+        {
+          input: 'let myArray = [1, 2, 3]; myArray[2];',
+          expected: 3,
+        },
+        {
+          input:
+            'let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];',
+          expected: 6,
+        },
+        {
+          input: 'let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]',
+          expected: 2,
+        },
+        {
+          input: '[1, 2, 3][3]',
+          expected: null,
+        },
+        {
+          input: '[1, 2, 3][-1]',
+          expected: null,
+        },
+      ]
+
+      tests.forEach(({ input, expected }) => {
+        const output = testEval(input)
+        const func = expected ? testIntegerObj : testNullObj
+        func(output, expected)
       })
     })
   })

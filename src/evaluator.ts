@@ -15,6 +15,8 @@ import {
   CallExpression,
   Expression,
   StringLiteral,
+  ArrayLiteral,
+  IndexExpression,
 } from './ast'
 import {
   IntegerObj,
@@ -26,6 +28,7 @@ import {
   FunctionObj,
   StringObj,
   BuiltinFuncObj,
+  ArrayObj,
 } from './object'
 import { Environment } from './environment'
 import builtinFuncs from './builtins'
@@ -290,6 +293,26 @@ const applyFunction = (func: BaseObject, args: BaseObject[]): BaseObject => {
   return new ErrorObj(`not a function: ${func.primitive}`)
 }
 
+const evalArrayIndexExpression = (
+  arr: ArrayObj,
+  index: IntegerObj
+): BaseObject => {
+  if (index.value < 0 || index.value >= arr.elements.length) {
+    return NULL
+  }
+  return arr.elements[index.value]
+}
+
+const evalIndexExpression = (
+  left: BaseObject,
+  index: BaseObject
+): BaseObject => {
+  if (left instanceof ArrayObj && index instanceof IntegerObj) {
+    return evalArrayIndexExpression(left, index)
+  }
+  return new ErrorObj(`index operator not supported: ${left.primitive}`)
+}
+
 export const evaluate = (
   node: Node | undefined,
   env: Environment
@@ -378,6 +401,27 @@ export const evaluate = (
 
   if (node instanceof StringLiteral) {
     return new StringObj(node.value)
+  }
+
+  if (node instanceof ArrayLiteral) {
+    const elements = evalExpressions(node.elements, env)
+    if (isError(elements[0])) {
+      // need to check arg length here?
+      return elements[0]
+    }
+    return new ArrayObj(elements)
+  }
+
+  if (node instanceof IndexExpression) {
+    const left = evaluate(node.left, env)
+    if (isError(left)) {
+      return left
+    }
+    const index = evaluate(node.index, env)
+    if (isError(index)) {
+      return index
+    }
+    return evalIndexExpression(left, index)
   }
 
   return NULL
