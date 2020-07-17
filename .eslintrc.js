@@ -17,5 +17,6 @@ module.exports = {
     '@typescript-eslint/strict-boolean-expressions': 0,
     // this is helpful sometimes, though I could probably change the way parsing errors are handled and remove it
     '@typescript-eslint/no-non-null-assertion': 0,
+    '@typescript-eslint/member-delimiter-style': 0,
   },
 }

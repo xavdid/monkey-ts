@@ -15,6 +15,7 @@ import {
   CallExpression,
   StringLiteral,
   ArrayLiteral,
+  IndexExpression,
 } from '../ast'
 
 // can't quite get this working
@@ -249,7 +250,7 @@ describe('parser', () => {
     })
 
     it('should parse operator precedence', () => {
-      const tests = [
+      const tests: Array<{ input: string; expected: string }> = [
         {
           input: '-a * b',
           expected: '((-a) * b)',
@@ -345,6 +346,14 @@ describe('parser', () => {
         {
           input: 'add(a + b + c * d / f + g)',
           expected: 'add((((a + b) + ((c * d) / f)) + g))',
+        },
+        {
+          input: 'a * [1, 2, 3, 4][b * c] * d',
+          expected: '((a * ([1, 2, 3, 4][(b * c)])) * d)',
+        },
+        {
+          input: 'add(a * b[2], b[1], 2 * [1, 2][1])',
+          expected: 'add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))',
         },
       ]
 
@@ -566,6 +575,21 @@ describe('parser', () => {
       testIntegerLiteral(arr.elements[0] as IntegerLiteral, 1)
       testInfixExpression(arr.elements[1] as InfixExpression, 2, '*', 2)
       testInfixExpression(arr.elements[2] as InfixExpression, 3, '+', 3)
+    })
+
+    it('should parse index expressions', () => {
+      const l = new Lexer('myArray[1 + 1]')
+      const p = new Parser(l)
+      const program = p.parseProgram()
+
+      const stmt = program.statements[0] as ExpressionStatement
+      expect(stmt).toBeInstanceOf(ExpressionStatement)
+
+      const indexExp = stmt.expression as IndexExpression
+      expect(indexExp).toBeInstanceOf(IndexExpression)
+
+      testIdentifier(indexExp.left as Identifier, 'myArray')
+      testInfixExpression(indexExp.index as InfixExpression, 1, '+', 1)
     })
   })
 })

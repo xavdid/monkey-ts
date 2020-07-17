@@ -121,10 +121,6 @@ export class BlockStatement extends BaseNode implements Statement {
     super()
   }
 
-  tokenLiteral = () => {
-    return this.token.literal
-  }
-
   toString = () => this.statements.map(String).join('')
 }
 
@@ -174,7 +170,6 @@ export class StringLiteral extends BaseNode implements Expression {
     super()
   }
 
-  tokenLiteral = () => this.token.literal
   toString = () => this.token.literal
 }
 
@@ -186,6 +181,17 @@ export class ArrayLiteral extends BaseNode implements Expression {
     super()
   }
 
-  tokenLiteral = () => this.token.literal
   toString = () => `[${this.elements.map((e) => e.toString()).join(', ')}]`
+}
+
+export class IndexExpression extends BaseNode implements Expression {
+  constructor(
+    public token: Token, // [
+    public left: Expression,
+    public index: Expression
+  ) {
+    super()
+  }
+
+  toString = () => `(${this.left.toString()}[${this.index.toString()}])`
 }

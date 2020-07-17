@@ -18,6 +18,7 @@ import {
   CallExpression,
   StringLiteral,
   ArrayLiteral,
+  IndexExpression,
 } from './ast'
 
 type prefixParserFn = () => Expression | undefined
@@ -31,6 +32,7 @@ const enum PRECEDENCE_LEVELS {
   PRODUCT, // * or /
   PREFIX, // -X or !X
   CALL, // myFunc(X)
+  INDEX, // array[index]
 }
 
 const OPERATOR_PRECEDENCE: { [k in TOKENS]?: PRECEDENCE_LEVELS } = {
@@ -43,6 +45,7 @@ const OPERATOR_PRECEDENCE: { [k in TOKENS]?: PRECEDENCE_LEVELS } = {
   [TOKENS.MINUS]: PRECEDENCE_LEVELS.SUM,
   [TOKENS.SLASH]: PRECEDENCE_LEVELS.PRODUCT,
   [TOKENS.ASTERISK]: PRECEDENCE_LEVELS.PRODUCT,
+  [TOKENS.LBRACKET]: PRECEDENCE_LEVELS.INDEX,
 }
 
 export class Parser {
@@ -80,6 +83,7 @@ export class Parser {
       [TOKENS.SLASH]: this.parseInfixExpression,
       [TOKENS.ASTERISK]: this.parseInfixExpression,
       [TOKENS.LPAREN]: this.parseCallExpression,
+      [TOKENS.LBRACKET]: this.parseIndexExpression,
     }
     // read two tokens, so cur and peek are both set
     this.nextToken()
@@ -415,6 +419,20 @@ export class Parser {
       this.curToken,
       this.parseExpressionList(TOKENS.RBRACKET)!
     )
+  }
+
+  private readonly parseIndexExpression = (left: Expression): Expression => {
+    const token = this.curToken
+    this.nextToken()
+
+    const index = this.parseExpression()
+
+    if (!this.expectAndAdvance(TOKENS.RBRACKET)) {
+      // in the book, he returns nothing. not sure if that's better/different
+      throw new Error('not a paren?')
+    }
+
+    return new IndexExpression(token, left, index!)
   }
 
   // HELPERS //
