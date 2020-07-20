@@ -2,6 +2,9 @@ export type tokenType = string
 
 export class Token {
   constructor(public type: TOKENS, public literal: string) {}
+  clone() {
+    return new Token(this.type, this.literal)
+  }
 }
 
 export const enum TOKENS {

@@ -21,7 +21,6 @@ import {
 import {
   IntegerObj,
   BooleanObj,
-  NullObj,
   BaseObject,
   ReturnObj,
   ErrorObj,
@@ -29,16 +28,12 @@ import {
   StringObj,
   BuiltinFuncObj,
   ArrayObj,
+  TRUE,
+  FALSE,
+  NULL,
 } from './object'
 import { Environment } from './environment'
 import builtinFuncs from './builtins'
-
-// CONSTANTS
-// there's only ever 1 true/false, so we can reuse those objects
-
-const TRUE = new BooleanObj(true)
-const FALSE = new BooleanObj(false)
-const NULL = new NullObj()
 
 /// ###############################
 

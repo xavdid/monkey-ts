@@ -4,6 +4,7 @@ export interface Node {
   token?: Token
   tokenLiteral: () => string | undefined
   toString: () => string
+  clone: () => Node
 }
 
 // not sure I even need these since they're the same
@@ -16,6 +17,7 @@ abstract class BaseNode implements Node {
   abstract toString: () => string
   // this is always defined, but whatever
   tokenLiteral = () => this.token?.literal ?? ''
+  abstract clone: () => Node
 }
 
 export class Program implements Node {
@@ -30,6 +32,11 @@ export class Program implements Node {
   }
 
   toString = () => this.statements.map(String).join('')
+
+  clone() {
+    console.log('do not clone a program??')
+    return new Program()
+  }
 }
 
 export class LetStatement extends BaseNode implements Statement {
@@ -43,6 +50,9 @@ export class LetStatement extends BaseNode implements Statement {
 
   toString = () =>
     `${this.tokenLiteral()} ${this.name} = ${this.value ? this.value : ''};`
+
+  clone = () =>
+    new LetStatement(this.token.clone(), this.name.clone(), this.value.clone())
 }
 
 export class ReturnStatement extends BaseNode implements Statement {
@@ -52,6 +62,9 @@ export class ReturnStatement extends BaseNode implements Statement {
 
   toString = () =>
     `${this.tokenLiteral()} ${this.returnValue ? this.returnValue : ''};`
+
+  clone = () =>
+    new ReturnStatement(this.token.clone(), this.returnValue?.clone())
 }
 
 export class ExpressionStatement extends BaseNode implements Statement {
@@ -60,6 +73,9 @@ export class ExpressionStatement extends BaseNode implements Statement {
   }
 
   toString = () => String(this.expression)
+
+  clone = () =>
+    new ExpressionStatement(this.token.clone(), this.expression.clone())
 }
 
 export class Identifier extends BaseNode implements Expression {
@@ -68,6 +84,8 @@ export class Identifier extends BaseNode implements Expression {
   }
 
   toString = () => this.value
+
+  clone = () => new Identifier(this.token.clone(), this.value)
 }
 
 export class IntegerLiteral extends BaseNode implements Expression {
@@ -76,6 +94,7 @@ export class IntegerLiteral extends BaseNode implements Expression {
   }
 
   toString = () => String(this.value)
+  clone = () => new IntegerLiteral(this.token.clone(), this.value)
 }
 
 export class PrefixExpression extends BaseNode implements Expression {
@@ -88,6 +107,9 @@ export class PrefixExpression extends BaseNode implements Expression {
   }
 
   toString = () => `(${this.operator}${this.right})`
+
+  clone = () =>
+    new PrefixExpression(this.token.clone(), this.operator, this.right.clone())
 }
 
 export class InfixExpression extends BaseNode implements Expression {
@@ -101,6 +123,14 @@ export class InfixExpression extends BaseNode implements Expression {
   }
 
   toString = () => `(${this.left} ${this.operator} ${this.right})`
+
+  clone = () =>
+    new InfixExpression(
+      this.token.clone(),
+      this.left.clone(),
+      this.operator,
+      this.right.clone()
+    )
 }
 
 export class BoolExpression extends BaseNode implements Expression {
@@ -114,6 +144,8 @@ export class BoolExpression extends BaseNode implements Expression {
   toString = () => {
     return this.token.literal
   }
+
+  clone = () => new BoolExpression(this.token.clone(), this.value)
 }
 
 export class BlockStatement extends BaseNode implements Statement {
@@ -122,6 +154,11 @@ export class BlockStatement extends BaseNode implements Statement {
   }
 
   toString = () => this.statements.map(String).join('')
+  clone = () =>
+    new BlockStatement(
+      this.token.clone(),
+      this.statements.map((x) => x.clone())
+    )
 }
 
 export class IfExpression extends BaseNode implements Expression {
@@ -138,6 +175,14 @@ export class IfExpression extends BaseNode implements Expression {
     `if ${this.condition} ${this.consequence}${
       this.alternative ? ` else ${this.alternative}` : ''
     }`
+
+  clone = () =>
+    new IfExpression(
+      this.token.clone(),
+      this.condition.clone(),
+      this.consequence.clone(),
+      this.alternative?.clone()
+    )
 }
 
 export class FunctionLiteral extends BaseNode implements Expression {
@@ -151,6 +196,13 @@ export class FunctionLiteral extends BaseNode implements Expression {
 
   toString = () =>
     `${this.tokenLiteral()}(${this.parameters.join(', ')})(${this.body})`
+
+  clone = () =>
+    new FunctionLiteral(
+      this.token.clone(),
+      this.parameters.map((x) => x.clone()),
+      this.body.clone()
+    )
 }
 
 export class CallExpression extends BaseNode implements Expression {
@@ -163,6 +215,12 @@ export class CallExpression extends BaseNode implements Expression {
   }
 
   toString = () => `${this.func}(${this.args.join(', ')})`
+  clone = () =>
+    new CallExpression(
+      this.token.clone(),
+      this.func.clone(),
+      this.args.map((x) => x.clone())
+    )
 }
 
 export class StringLiteral extends BaseNode implements Expression {
@@ -171,6 +229,7 @@ export class StringLiteral extends BaseNode implements Expression {
   }
 
   toString = () => this.token.literal
+  clone = () => new StringLiteral(this.token.clone(), this.value)
 }
 
 export class ArrayLiteral extends BaseNode implements Expression {
@@ -182,6 +241,11 @@ export class ArrayLiteral extends BaseNode implements Expression {
   }
 
   toString = () => `[${this.elements.map((e) => e.toString()).join(', ')}]`
+  clone = () =>
+    new ArrayLiteral(
+      this.token.clone(),
+      this.elements.map((x) => x.clone())
+    )
 }
 
 export class IndexExpression extends BaseNode implements Expression {
@@ -194,4 +258,10 @@ export class IndexExpression extends BaseNode implements Expression {
   }
 
   toString = () => `(${this.left.toString()}[${this.index.toString()}])`
+  clone = () =>
+    new IndexExpression(
+      this.token.clone(),
+      this.left.clone(),
+      this.index.clone()
+    )
 }

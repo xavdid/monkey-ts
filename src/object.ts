@@ -4,6 +4,7 @@ import { Environment } from './environment'
 export interface BaseObject {
   toString: () => string
   value: number | boolean | null | BaseObject | string
+  clone: () => BaseObject
   readonly primitive: string
   message?: string // errors only
 }
@@ -16,6 +17,10 @@ export class IntegerObj implements BaseObject {
   toString() {
     return String(this.value)
   }
+
+  clone() {
+    return new IntegerObj(this.value)
+  }
 }
 
 export class BooleanObj implements BaseObject {
@@ -25,6 +30,10 @@ export class BooleanObj implements BaseObject {
 
   toString() {
     return String(this.value)
+  }
+
+  clone() {
+    return new BooleanObj(this.value)
   }
 }
 
@@ -40,6 +49,11 @@ export class NullObj implements BaseObject {
   toString() {
     return 'null'
   }
+
+  clone() {
+    console.log('cloning null??')
+    return new NullObj()
+  }
 }
 
 export class ReturnObj implements BaseObject {
@@ -49,6 +63,11 @@ export class ReturnObj implements BaseObject {
 
   toString() {
     return this.value.toString()
+  }
+
+  clone() {
+    console.log('cloning return??')
+    return new ReturnObj(this.value.clone())
   }
 }
 
@@ -60,6 +79,11 @@ export class ErrorObj implements BaseObject {
 
   toString() {
     return `ERROR: ${this.message}`
+  }
+
+  clone() {
+    console.log('cloning error??')
+    return this
   }
 }
 
@@ -78,6 +102,14 @@ export class FunctionObj implements BaseObject {
       ${this.body}
     }`
   }
+
+  clone() {
+    return new FunctionObj(
+      this.parameters.map((x) => x.clone()),
+      this.body.clone(),
+      this.env
+    )
+  }
 }
 
 export class StringObj implements BaseObject {
@@ -86,6 +118,10 @@ export class StringObj implements BaseObject {
 
   toString() {
     return this.value
+  }
+
+  clone() {
+    return new StringObj(this.value)
   }
 }
 
@@ -100,6 +136,11 @@ export class BuiltinFuncObj implements BaseObject {
   toString() {
     return 'builtin function'
   }
+
+  clone() {
+    // I think this works?
+    return new BuiltinFuncObj(this.func)
+  }
 }
 
 export class ArrayObj implements BaseObject {
@@ -112,4 +153,15 @@ export class ArrayObj implements BaseObject {
   toString() {
     return `[${this.elements.map((e) => e.toString()).join(', ')}]`
   }
+
+  clone() {
+    return new ArrayObj(this.elements.map((x) => x.clone()))
+  }
 }
+
+// CONSTANTS
+// there's only ever 1 true/false, so we can reuse those objects
+
+export const TRUE = new BooleanObj(true)
+export const FALSE = new BooleanObj(false)
+export const NULL = new NullObj()
