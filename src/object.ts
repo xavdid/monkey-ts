@@ -145,10 +145,9 @@ export class BuiltinFuncObj implements BaseObject {
 
 export class ArrayObj implements BaseObject {
   readonly primitive = 'ARRAY'
+  value = null
 
   constructor(public readonly elements: BaseObject[]) {}
-
-  value = null
 
   toString() {
     return `[${this.elements.map((e) => e.toString()).join(', ')}]`

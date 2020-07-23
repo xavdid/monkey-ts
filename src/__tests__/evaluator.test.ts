@@ -38,6 +38,14 @@ const testStringObj = _testObjType.bind(null, StringObj)
 const testBooleanObj = _testObjType.bind(null, BooleanObj)
 const testNullObj = _testObjType.bind(null, NullObj)
 
+const testNumberArray = (obj: ArrayObj, value: number[]) => {
+  expect(obj).toBeInstanceOf(ArrayObj)
+  expect(obj.elements.length).toEqual(value.length)
+  obj.elements.forEach((int, idx) => {
+    testIntegerObj(int, value[idx])
+  })
+}
+
 const testErrorObj = (output: BaseObject, expected: string) => {
   expect(output).toBeInstanceOf(ErrorObj)
   expect(output.toString()).toEqual(expected)
@@ -270,6 +278,10 @@ describe('evaulator', () => {
           ['len("")', 0],
           ['len("four")', 4],
           ['len("hello world")', 11],
+          ['len([1, 2, 3])', 3],
+          ['len([])', 0],
+          ['first([1, 2, 3])', 1],
+          ['last([1, 2, 3])', 3],
         ]
 
         tests.forEach(([input, expected]) => {
@@ -280,29 +292,65 @@ describe('evaulator', () => {
       // eslint-disable-next-line jest/expect-expect
       it('should test builtin functions error handling', () => {
         const tests: Array<[string, string]> = [
-          ['len(1)', 'ERROR: argument to `len` not supported, got INTEGER'],
+          ['len(1)', 'ERROR: argument to "len" not supported, got INTEGER'],
           [
             'len("one", "two")',
             'ERROR: wrong number of arguments. got=2, want=1',
           ],
+          ['first(1)', 'ERROR: argument to "first" must be ARRAY, got INTEGER'],
+          ['last(1)', 'ERROR: argument to "last" must be ARRAY, got INTEGER'],
+          [
+            'push(1, 1)',
+            'ERROR: argument to "push" must be ARRAY, got INTEGER',
+          ],
         ]
 
         tests.forEach(([input, expected]) => {
-          testErrorObj(testEval(input), expected)
+          try {
+            testErrorObj(testEval(input), expected)
+          } catch (e) {
+            console.log(input)
+            throw e
+          }
+        })
+      })
+
+      // eslint-disable-next-line jest/expect-expect
+      it('should test builtin functions returning null', () => {
+        const tests: string[] = [
+          // ['puts("hello", "world!")', null],
+          'first([])',
+          'last([])',
+          'rest([])',
+        ]
+
+        tests.forEach((input) => {
+          testNullObj(testEval(input), null)
+        })
+      })
+
+      // eslint-disable-next-line jest/expect-expect
+      it('should test builtin functions that return arrays', () => {
+        const tests: Array<[string, number[]]> = [
+          ['rest([1, 2, 3])', [2, 3]],
+          ['push([], 1)', [1]],
+        ]
+
+        tests.forEach(([input, expected]) => {
+          testNumberArray(testEval(input) as ArrayObj, expected)
         })
       })
     })
   })
 
   describe('arrays', () => {
+    // eslint-disable-next-line jest/expect-expect
     it('should evaluate array literals', () => {
-      const arr = testEval('[1, 2 * 2, 3 + 3]') as ArrayObj
-      expect(arr).toBeInstanceOf(ArrayObj)
-      expect(arr.elements.length).toEqual(3)
-
-      testIntegerObj(arr.elements[0], 1)
-      testIntegerObj(arr.elements[1], 4)
-      testIntegerObj(arr.elements[2], 6)
+      testNumberArray((testEval('[1, 2 * 2, 3 + 3]') as unknown) as ArrayObj, [
+        1,
+        4,
+        6,
+      ])
     })
 
     // eslint-disable-next-line jest/expect-expect

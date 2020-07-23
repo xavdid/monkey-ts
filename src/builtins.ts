@@ -19,14 +19,14 @@ const lenFunc = new BuiltinFuncObj((...args) => {
   if (arg instanceof ArrayObj) {
     return new IntegerObj(arg.elements.length)
   }
-  return new ErrorObj(`argument to \`len\` not supported, got ${arg.primitive}`)
+  return new ErrorObj(`argument to "len" not supported, got ${arg.primitive}`)
 })
 
 // these are both so similar, I figured I'd make a generic version
 const generateArrayBuiltinFunc = (
   name: string,
   operation: (elements: BaseObject[], input?: BaseObject) => BaseObject,
-  expectedArgs: number = 1
+  { expectedArgs = 1, canActOnEmptyArrays = false } = {}
 ): BuiltinFuncObj =>
   new BuiltinFuncObj((...args) => {
     if (args.length !== expectedArgs) {
@@ -41,26 +41,31 @@ const generateArrayBuiltinFunc = (
         `argument to "${name}" must be ARRAY, got ${arr.primitive}`
       )
     }
-    if (arr.elements.length > 0) {
-      return operation(arr.elements, arg)
+
+    if (!canActOnEmptyArrays && arr.elements.length === 0) {
+      return NULL
     }
-    return NULL
+
+    return operation(arr.elements, arg)
   })
 
 const builtinFuncs: { [x: string]: BuiltinFuncObj } = {
   len: lenFunc,
-  first: generateArrayBuiltinFunc('first', (arr) => arr[0]),
-  last: generateArrayBuiltinFunc('last', (arr) => arr[arr.length - 1]),
+  first: generateArrayBuiltinFunc('first', (elements) => elements[0]),
+  last: generateArrayBuiltinFunc(
+    'last',
+    (elements) => elements[elements.length - 1]
+  ),
   rest: generateArrayBuiltinFunc(
     'rest',
-    (arr) => new ArrayObj(arr.slice(1).map((x) => x.clone()))
+    (elements) => new ArrayObj(elements.slice(1).map((x) => x.clone()))
   ),
   push: generateArrayBuiltinFunc(
     'push',
-    (arr, arg) => {
-      return new ArrayObj([...arr.map((x) => x.clone()), arg!])
+    (elements, arg) => {
+      return new ArrayObj([...elements.map((x) => x.clone()), arg!])
     },
-    2
+    { expectedArgs: 2, canActOnEmptyArrays: true }
   ),
 }
 
