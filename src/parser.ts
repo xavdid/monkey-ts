@@ -10,7 +10,7 @@ import {
   IntegerLiteral,
   PrefixExpression,
   InfixExpression,
-  BoolExpression,
+  BooleanLiteral,
   IfExpression,
   BlockStatement,
   Statement,
@@ -19,6 +19,7 @@ import {
   StringLiteral,
   ArrayLiteral,
   IndexExpression,
+  HashLiteral,
 } from './ast'
 
 type prefixParserFn = () => Expression | undefined
@@ -72,6 +73,7 @@ export class Parser {
       [TOKENS.FUNCTION]: this.parseFunctionLiteral,
       [TOKENS.STRING]: this.parseStringLiteral,
       [TOKENS.LBRACKET]: this.parseArrayLiteral,
+      [TOKENS.LBRACE]: this.parseHashLiteral,
     }
     this.infixParseFns = {
       [TOKENS.EQ]: this.parseInfixExpression,
@@ -203,6 +205,7 @@ export class Parser {
   ): Expression | undefined => {
     const prefixParserFn = this.prefixParseFns[this.curToken.type]
     if (!prefixParserFn) {
+      // TODO: throw an error here, then nothing is undefined
       this.recordNoPrefixParseFnError(this.curToken.type)
       return
     }
@@ -273,7 +276,7 @@ export class Parser {
   }
 
   private readonly parseBoolean = () =>
-    new BoolExpression(this.curToken, this.curTokenIs(TOKENS.TRUE))
+    new BooleanLiteral(this.curToken, this.curTokenIs(TOKENS.TRUE))
 
   private readonly parseGroupedExpression = () => {
     this.nextToken()
@@ -433,6 +436,40 @@ export class Parser {
     }
 
     return new IndexExpression(token, left, index!)
+  }
+
+  private readonly parseHashLiteral = () => {
+    const token = this.curToken
+    const hash = new HashLiteral(token, new Map())
+
+    while (!this.peekTokenIs(TOKENS.RBRACE)) {
+      this.nextToken()
+      const key = this.parseExpression()
+
+      if (!this.expectAndAdvance(TOKENS.COLON)) {
+        throw new Error('invalid hash: missing a colon after a key')
+      }
+
+      this.nextToken()
+
+      const value = this.parseExpression()
+
+      // these are only undefined if there's a parser error, so it's fine
+      hash.pairs.set(key!, value!)
+
+      if (
+        !this.peekTokenIs(TOKENS.RBRACE) &&
+        !this.expectAndAdvance(TOKENS.COMMA)
+      ) {
+        throw new Error('invalid hash: missing a comma after a value')
+      }
+    }
+
+    if (!this.expectAndAdvance(TOKENS.RBRACE)) {
+      throw new Error('invalid hash: missing a closing brace')
+    }
+
+    return hash
   }
 
   // HELPERS //

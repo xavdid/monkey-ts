@@ -133,7 +133,7 @@ export class InfixExpression extends BaseNode implements Expression {
     )
 }
 
-export class BoolExpression extends BaseNode implements Expression {
+export class BooleanLiteral extends BaseNode implements Expression {
   constructor(
     public token: Token, // eg "+"
     public value: boolean
@@ -145,7 +145,7 @@ export class BoolExpression extends BaseNode implements Expression {
     return this.token.literal
   }
 
-  clone = () => new BoolExpression(this.token.clone(), this.value)
+  clone = () => new BooleanLiteral(this.token.clone(), this.value)
 }
 
 export class BlockStatement extends BaseNode implements Statement {
@@ -250,7 +250,7 @@ export class ArrayLiteral extends BaseNode implements Expression {
 
 export class IndexExpression extends BaseNode implements Expression {
   constructor(
-    public token: Token, // [
+    public token: Token, // "["
     public left: Expression,
     public index: Expression
   ) {
@@ -263,5 +263,31 @@ export class IndexExpression extends BaseNode implements Expression {
       this.token.clone(),
       this.left.clone(),
       this.index.clone()
+    )
+}
+
+export class HashLiteral extends BaseNode implements Expression {
+  constructor(
+    public token: Token, // "{"
+    public pairs: Map<Expression, Expression>
+  ) {
+    super()
+  }
+
+  toString = () =>
+    `
+    {
+      ${[...this.pairs]
+        .map(([key, value]) => `${key.toString()}:${value.toString()}`)
+        .join(', ')}
+    }
+  `.trim()
+
+  clone = () =>
+    new HashLiteral(
+      this.token,
+      new Map(
+        [...this.pairs].map(([key, value]) => [key.clone(), value.clone()])
+      )
     )
 }

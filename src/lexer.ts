@@ -79,6 +79,9 @@ export class Lexer {
       case ']':
         tok = this.generateToken(TOKENS.RBRACKET, this.ch)
         break
+      case ':':
+        tok = this.generateToken(TOKENS.COLON, this.ch)
+        break
       case numToString(0):
         tok = new Token(TOKENS.EOF, '')
         break

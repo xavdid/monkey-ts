@@ -184,4 +184,20 @@ describe('lexer', () => {
 
     validateAnswers(resultingTokens, l)
   })
+
+  it('should lex hashes', () => {
+    const input = '{"foo": "bar"}'
+
+    const l = new Lexer(input)
+    const resultingTokens: lexerResults = [
+      [TOKENS.LBRACE, '{'],
+      [TOKENS.STRING, 'foo'],
+      [TOKENS.COLON, ':'],
+      [TOKENS.STRING, 'bar'],
+      [TOKENS.RBRACE, '}'],
+      [TOKENS.EOF, ''],
+    ]
+
+    validateAnswers(resultingTokens, l)
+  })
 })

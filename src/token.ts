@@ -50,6 +50,7 @@ export const enum TOKENS {
   RETURN = 'RETURN',
 
   STRING = 'STRING',
+  COLON = ';',
 }
 
 export const keywords: { [x: string]: TOKENS } = {

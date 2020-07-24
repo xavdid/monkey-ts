@@ -3,7 +3,7 @@ import {
   IntegerLiteral,
   Program,
   ExpressionStatement,
-  BoolExpression,
+  BooleanLiteral,
   PrefixExpression,
   InfixExpression,
   IfExpression,
@@ -335,7 +335,7 @@ export const evaluate = (
     return new IntegerObj(node.value)
   }
 
-  if (node instanceof BoolExpression) {
+  if (node instanceof BooleanLiteral) {
     return convertExpressionToBooleanObj(node.value)
   }
 
