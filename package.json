@@ -62,6 +62,5 @@
     "prettier": "2.0.4",
     "ts-jest": "25.3.1",
     "typescript": "3.8.3"
-  },
-  "dependencies": {}
+  }
 }

@@ -17,6 +17,7 @@ import {
   StringLiteral,
   ArrayLiteral,
   IndexExpression,
+  HashLiteral,
 } from './ast'
 import {
   IntegerObj,
@@ -31,6 +32,9 @@ import {
   TRUE,
   FALSE,
   NULL,
+  HashObj,
+  HashPair,
+  objIsHashable,
 } from './object'
 import { Environment } from './environment'
 import builtinFuncs from './builtins'
@@ -308,6 +312,30 @@ const evalIndexExpression = (
   return new ErrorObj(`index operator not supported: ${left.primitive}`)
 }
 
+const evalHashLiteral = (node: HashLiteral, env: Environment): BaseObject => {
+  const pairs = new Map<string, HashPair>()
+
+  for (const [keyExpression, valueExpression] of node.pairs) {
+    const key = evaluate(keyExpression, env)
+    if (isError(key)) {
+      return key
+    }
+
+    if (!objIsHashable(key)) {
+      return new ErrorObj(`unusable as hash key: ${key.primitive}`)
+    }
+
+    const value = evaluate(valueExpression, env)
+    if (isError(value)) {
+      return value
+    }
+
+    const hashed = key.hashKey()
+    pairs.set(hashed, { key, value })
+  }
+  return new HashObj(pairs)
+}
+
 export const evaluate = (
   node: Node | undefined,
   env: Environment
@@ -417,6 +445,10 @@ export const evaluate = (
       return index
     }
     return evalIndexExpression(left, index)
+  }
+
+  if (node instanceof HashLiteral) {
+    return evalHashLiteral(node, env)
   }
 
   return NULL

@@ -1,18 +1,35 @@
 import { Identifier, BlockStatement } from './ast'
 import { Environment } from './environment'
 
-export interface BaseObject {
-  toString: () => string
-  value: number | boolean | null | BaseObject | string
-  clone: () => BaseObject
-  readonly primitive: string
+export abstract class BaseObject {
+  abstract toString(): string
+  abstract value: number | boolean | null | BaseObject | string
+  abstract clone(): BaseObject
+  abstract readonly primitive: string
   message?: string // errors only
+  isHashable = false
 }
 
-export class IntegerObj implements BaseObject {
+abstract class HashableObject extends BaseObject {
+  hashKey() {
+    // variation: this'll use more memory because we store the whole string
+    // but, there's no chance of hash collisions and it's more easily debugged
+    return `${this.primitive}|${this.value}`
+  }
+
+  isHashable = true
+}
+
+export const objIsHashable = (obj: BaseObject): obj is HashableObject => {
+  return obj.isHashable
+}
+
+export class IntegerObj extends HashableObject {
   readonly primitive = 'INTEGER'
 
-  constructor(public readonly value: number) {}
+  constructor(public readonly value: number) {
+    super()
+  }
 
   toString() {
     return String(this.value)
@@ -23,10 +40,12 @@ export class IntegerObj implements BaseObject {
   }
 }
 
-export class BooleanObj implements BaseObject {
+export class BooleanObj extends HashableObject {
   readonly primitive = 'BOOLEAN'
 
-  constructor(public readonly value: boolean) {}
+  constructor(public readonly value: boolean) {
+    super()
+  }
 
   toString() {
     return String(this.value)
@@ -37,12 +56,14 @@ export class BooleanObj implements BaseObject {
   }
 }
 
-export class NullObj implements BaseObject {
+export class NullObj extends BaseObject {
   readonly primitive = 'NULL'
 
   public readonly value: null
 
   constructor() {
+    super()
+    // set here so that this constructor takes no args
     this.value = null
   }
 
@@ -56,10 +77,12 @@ export class NullObj implements BaseObject {
   }
 }
 
-export class ReturnObj implements BaseObject {
+export class ReturnObj extends BaseObject {
   readonly primitive = 'RETURN_VALUE'
 
-  constructor(public readonly value: BaseObject) {}
+  constructor(public readonly value: BaseObject) {
+    super()
+  }
 
   toString() {
     return this.value.toString()
@@ -71,11 +94,13 @@ export class ReturnObj implements BaseObject {
   }
 }
 
-export class ErrorObj implements BaseObject {
+export class ErrorObj extends BaseObject {
   value = null
   primitive = 'ERROR'
 
-  constructor(public readonly message: string) {}
+  constructor(public readonly message: string) {
+    super()
+  }
 
   toString() {
     return `ERROR: ${this.message}`
@@ -87,7 +112,7 @@ export class ErrorObj implements BaseObject {
   }
 }
 
-export class FunctionObj implements BaseObject {
+export class FunctionObj extends BaseObject {
   readonly primitive = 'FUNCTION'
   value = null // might need to change this
 
@@ -95,7 +120,9 @@ export class FunctionObj implements BaseObject {
     public readonly parameters: Identifier[],
     public readonly body: BlockStatement,
     public env: Environment
-  ) {}
+  ) {
+    super()
+  }
 
   toString() {
     return `fn(${this.parameters.join(', ')}) {
@@ -112,9 +139,11 @@ export class FunctionObj implements BaseObject {
   }
 }
 
-export class StringObj implements BaseObject {
+export class StringObj extends HashableObject {
   readonly primitive = 'STRING'
-  constructor(public readonly value: string) {}
+  constructor(public readonly value: string) {
+    super()
+  }
 
   toString() {
     return this.value
@@ -127,11 +156,13 @@ export class StringObj implements BaseObject {
 
 type BuiltinFunction = (...args: BaseObject[]) => BaseObject
 
-export class BuiltinFuncObj implements BaseObject {
+export class BuiltinFuncObj extends BaseObject {
   readonly primitive = 'BUILTIN'
   value = null // might need to change this?
 
-  constructor(public readonly func: BuiltinFunction) {}
+  constructor(public readonly func: BuiltinFunction) {
+    super()
+  }
 
   toString() {
     return 'builtin function'
@@ -143,11 +174,13 @@ export class BuiltinFuncObj implements BaseObject {
   }
 }
 
-export class ArrayObj implements BaseObject {
+export class ArrayObj extends BaseObject {
   readonly primitive = 'ARRAY'
   value = null
 
-  constructor(public readonly elements: BaseObject[]) {}
+  constructor(public readonly elements: BaseObject[]) {
+    super()
+  }
 
   toString() {
     return `[${this.elements.map((e) => e.toString()).join(', ')}]`
@@ -155,6 +188,33 @@ export class ArrayObj implements BaseObject {
 
   clone() {
     return new ArrayObj(this.elements.map((x) => x.clone()))
+  }
+}
+
+export interface HashPair {
+  key: BaseObject
+  value: BaseObject
+}
+export class HashObj extends BaseObject {
+  readonly primitive = 'HASH_OBJ'
+  value = null
+
+  constructor(public readonly pairs: Map<string, HashPair>) {
+    super()
+  }
+
+  clone() {
+    // TODO: fix this
+    return new HashObj(new Map())
+  }
+
+  toString() {
+    return `
+{
+  ${Array.from(this.pairs)
+    .map(([, { key, value }]) => `${key.toString()}: ${value.toString()}`)
+    .join(',\n')}
+}`.trim()
   }
 }
 

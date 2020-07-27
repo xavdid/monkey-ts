@@ -11,6 +11,9 @@ import {
   BooleanObj,
   ArrayObj,
   NullObj,
+  HashObj,
+  TRUE,
+  FALSE,
 } from '../object'
 import { Environment } from '../environment'
 
@@ -406,4 +409,46 @@ describe('evaulator', () => {
       })
     })
   })
+
+  describe('hashes', () => {
+    it('should evaluate hash literals', () => {
+      const input = `let two = "two";
+      {
+        "one": 10 - 9,
+        two: 1 + 1,
+        "thr" + "ee": 6 / 2,
+        4: 4,
+        true: 5,
+        false: 6
+      }`
+
+      const result = testEval(input) as HashObj
+      expect(result).toBeInstanceOf(HashObj)
+
+      const expected = new Map<string, number>([
+        [new StringObj('one').hashKey(), 1],
+        [new StringObj('two').hashKey(), 2],
+        [new StringObj('three').hashKey(), 3],
+        [new IntegerObj(4).hashKey(), 4],
+        [TRUE.hashKey(), 5],
+        [FALSE.hashKey(), 6],
+      ])
+
+      expect(result.pairs.size).toEqual(expected.size)
+
+      for (const [expectedKey, expectedValue] of expected) {
+        // i only need the bang here because jest doesn't give me a typeguard
+        const pair = result.pairs.get(expectedKey)!
+
+        expect(pair).toBeDefined()
+
+        testIntegerObj(pair.value, expectedValue)
+      }
+    })
+  })
 })
+
+// juice
+// dust
+// crunch
+// plummet
