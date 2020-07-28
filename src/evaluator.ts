@@ -302,12 +302,26 @@ const evalArrayIndexExpression = (
   return arr.elements[index.value]
 }
 
+const evalHashIndexExpression = (
+  hash: HashObj,
+  index: BaseObject
+): BaseObject => {
+  if (!objIsHashable(index)) {
+    return new ErrorObj(`unusable as hash key: ${index.primitive}`)
+  }
+  const pair = hash.pairs.get(index.hashKey())
+  return pair ? pair.value : NULL
+}
+
 const evalIndexExpression = (
   left: BaseObject,
   index: BaseObject
 ): BaseObject => {
   if (left instanceof ArrayObj && index instanceof IntegerObj) {
     return evalArrayIndexExpression(left, index)
+  }
+  if (left instanceof HashObj) {
+    return evalHashIndexExpression(left, index)
   }
   return new ErrorObj(`index operator not supported: ${left.primitive}`)
 }
