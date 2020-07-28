@@ -306,6 +306,10 @@ describe('evaulator', () => {
             'push(1, 1)',
             'ERROR: argument to "push" must be ARRAY, got INTEGER',
           ],
+          [
+            '{"name": "Monkey"}[fn(x) { x }]',
+            'ERROR: unusable as hash key: FUNCTION',
+          ],
         ]
 
         tests.forEach(([input, expected]) => {
@@ -443,6 +447,49 @@ describe('evaulator', () => {
         expect(pair).toBeDefined()
 
         testIntegerObj(pair.value, expectedValue)
+      }
+    })
+  })
+
+  // eslint-disable-next-line jest/expect-expect
+  it('should evaluate hash index expressions', () => {
+    const tests = [
+      {
+        input: '{"foo": 5}["foo"]',
+        expected: 5,
+      },
+      {
+        input: '{"foo": 5}["bar"]',
+        expected: null,
+      },
+      {
+        input: 'let key = "foo"; {"foo": 5}[key]',
+        expected: 5,
+      },
+      {
+        input: '{}["foo"]',
+        expected: null,
+      },
+      {
+        input: '{5: 5}[5]',
+        expected: 5,
+      },
+      {
+        input: '{true: 5}[true]',
+        expected: 5,
+      },
+      {
+        input: '{false: 5}[false]',
+        expected: 5,
+      },
+    ]
+
+    tests.forEach(({ input, expected }) => {
+      const evaluated = testEval(input)
+      if (expected) {
+        testIntegerObj(evaluated, expected)
+      } else {
+        testNullObj(evaluated, expected)
       }
     })
   })
