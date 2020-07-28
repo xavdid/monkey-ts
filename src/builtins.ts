@@ -22,6 +22,13 @@ const lenFunc = new BuiltinFuncObj((...args) => {
   return new ErrorObj(`argument to "len" not supported, got ${arg.primitive}`)
 })
 
+const putFunc = new BuiltinFuncObj((...args) => {
+  args.forEach((arg) => {
+    console.log(arg.toString())
+  })
+  return NULL
+})
+
 // these are both so similar, I figured I'd make a generic version
 const generateArrayBuiltinFunc = (
   name: string,
@@ -67,6 +74,7 @@ const builtinFuncs: { [x: string]: BuiltinFuncObj } = {
     },
     { expectedArgs: 2, canActOnEmptyArrays: true }
   ),
+  puts: putFunc,
 }
 
 export default builtinFuncs

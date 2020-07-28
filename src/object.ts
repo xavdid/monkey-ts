@@ -1,6 +1,7 @@
 import { Identifier, BlockStatement } from './ast'
 import { Environment } from './environment'
 
+// tihs could use some cleanup
 export abstract class BaseObject {
   abstract toString(): string
   abstract value: number | boolean | null | BaseObject | string
@@ -126,8 +127,8 @@ export class FunctionObj extends BaseObject {
 
   toString() {
     return `fn(${this.parameters.join(', ')}) {
-      ${this.body}
-    }`
+  ${this.body}
+}`
   }
 
   clone() {
@@ -204,8 +205,12 @@ export class HashObj extends BaseObject {
   }
 
   clone() {
-    // TODO: fix this
-    return new HashObj(new Map())
+    const clonedMap = new Map<string, HashPair>()
+    for (const [key, value] of this.pairs) {
+      // the key doesn't need cloning, since the hashkey will be the same
+      clonedMap.set(key, { key: value.key.clone(), value: value.value.clone() })
+    }
+    return new HashObj(clonedMap)
   }
 
   toString() {
