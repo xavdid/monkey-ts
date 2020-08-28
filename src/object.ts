@@ -1,4 +1,4 @@
-import { Identifier, BlockStatement } from './ast'
+import { Identifier, BlockStatement, Node } from './ast'
 import { Environment } from './environment'
 
 // tihs could use some cleanup
@@ -223,9 +223,25 @@ export class HashObj extends BaseObject {
   }
 }
 
+export class QuoteObj extends BaseObject {
+  value = null
+  primitive = 'QUOTE'
+
+  constructor(public readonly node: Node) {
+    super()
+  }
+
+  toString() {
+    return `QUOTE(${this.node.toString()})`
+  }
+
+  clone() {
+    return new QuoteObj(this.node.clone())
+  }
+}
+
 // CONSTANTS
 // there's only ever 1 true/false, so we can reuse those objects
-
 export const TRUE = new BooleanObj(true)
 export const FALSE = new BooleanObj(false)
 export const NULL = new NullObj()

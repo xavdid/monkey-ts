@@ -14,6 +14,7 @@ import {
   HashObj,
   TRUE,
   FALSE,
+  QuoteObj,
 } from '../object'
 import { Environment } from '../environment'
 
@@ -491,6 +492,29 @@ describe('evaulator', () => {
       } else {
         testNullObj(evaluated, expected)
       }
+    })
+  })
+
+  describe.skip('macros', () => {
+    it('should quote and unquote successfully', () => {
+      const tests = [
+        { input: 'quote(5)', expected: '5' },
+        { input: 'quote(5 + 8)', expected: '(5 + 8)' },
+        { input: 'quote(foobar)', expected: 'foobar' },
+        { input: 'quote(foobar + barfoo)', expected: '(foobar + barfoo)' },
+        { input: 'quote(unquote(4))', expected: '4' },
+        { input: 'quote(unquote(4 + 4))', expected: '8' },
+        { input: 'quote(8 + unquote(4 + 4))', expected: '(8 + 8)' },
+        { input: 'quote(unquote(4 + 4) + 8)', expected: '(8 + 8)' },
+      ]
+
+      tests.forEach(({ input, expected }) => {
+        const quote = testEval(input) as QuoteObj
+        expect(quote).toBeInstanceOf(QuoteObj)
+
+        expect(quote.node).toBeDefined()
+        expect(quote.node.toString()).toEqual(expected)
+      })
     })
   })
 })

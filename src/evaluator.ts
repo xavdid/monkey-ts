@@ -35,11 +35,14 @@ import {
   HashObj,
   HashPair,
   objIsHashable,
+  QuoteObj,
 } from './object'
 import { Environment } from './environment'
 import builtinFuncs from './builtins'
 
 /// ###############################
+
+export const quote = (node: Node): BaseObject => new QuoteObj(node)
 
 /**
  * important so that we're always comparing the True Boolean Objects
@@ -424,6 +427,9 @@ export const evaluate = (
   }
 
   if (node instanceof CallExpression) {
+    if (node.func.tokenLiteral() === 'quote') {
+      return quote(node.args[0])
+    }
     const func = evaluate(node.func, env)
     if (isError(func)) {
       return func

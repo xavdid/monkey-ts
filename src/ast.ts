@@ -21,7 +21,7 @@ abstract class BaseNode implements Node {
 }
 
 export class Program implements Node {
-  statements: Statement[] = []
+  constructor(public statements: Statement[] = []) {}
 
   tokenLiteral = () => {
     if (this.statements.length) {
@@ -290,4 +290,29 @@ export class HashLiteral extends BaseNode implements Expression {
         [...this.pairs].map(([key, value]) => [key.clone(), value.clone()])
       )
     )
+}
+
+type ModifierFunc = (node: Node) => Node
+
+export const modify = (node: Node, modifier: ModifierFunc): Node => {
+  if (node instanceof Program) {
+    node.statements = node.statements.map((statement) => {
+      return modify(statement, modifier)
+    })
+  }
+  if (node instanceof ExpressionStatement) {
+    node.expression = modify(node.expression, modifier) as ExpressionStatement
+  }
+  if (node instanceof InfixExpression) {
+    node.left = modifier(node.left)
+    node.right = modifier(node.right)
+  }
+  if (node instanceof IndexExpression) {
+    node.left = modifier(node.left)
+    node.index = modifier(node.index)
+  }
+  if (node instanceof PrefixExpression) {
+    node.right = modifier(node.right)
+  }
+  return modifier(node)
 }
