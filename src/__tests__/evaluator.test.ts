@@ -43,7 +43,7 @@ const testNullObj = _testObjType.bind(null, NullObj)
 
 const testNumberArray = (obj: ArrayObj, value: number[]) => {
   expect(obj).toBeInstanceOf(ArrayObj)
-  expect(obj.elements.length).toEqual(value.length)
+  expect(obj.elements).toHaveLength(value.length)
   obj.elements.forEach((int, idx) => {
     testIntegerObj(int, value[idx])
   })
@@ -232,7 +232,7 @@ describe('evaulator', () => {
       const input = 'fn(x) { x + 2; };'
       const evaluated = testEval(input) as FunctionObj
       expect(evaluated).toBeInstanceOf(FunctionObj)
-      expect(evaluated.parameters.length).toEqual(1)
+      expect(evaluated.parameters).toHaveLength(1)
       expect(evaluated.parameters[0].toString()).toEqual('x')
       expect(evaluated.body.toString()).toEqual('(x + 2)')
     })

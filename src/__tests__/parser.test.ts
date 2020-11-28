@@ -56,7 +56,7 @@ const parseProgram = (input: string, numExpectedStatements = 1): Expression => {
   const program = p.parseProgram()
 
   // if (numExpectedStatements > 0) {
-  expect(program.statements.length).toEqual(numExpectedStatements)
+  expect(program.statements).toHaveLength(numExpectedStatements)
   // }
 
   const stmt = program.statements[0] as ExpressionStatement
@@ -107,7 +107,7 @@ describe('parser', () => {
     const p = new Parser(l)
 
     p.parseProgram(false)
-    expect(p.errors.length).toEqual(4) // originally was 3, but bad parsing causes the "no function" error to be there?
+    expect(p.errors).toHaveLength(4) // originally was 3, but bad parsing causes the "no function" error to be there?
   })
 
   describe('statements', () => {
@@ -124,7 +124,7 @@ describe('parser', () => {
         const p = new Parser(l)
         const program = p.parseProgram()
 
-        expect(program.statements.length).toEqual(1)
+        expect(program.statements).toHaveLength(1)
 
         const statement = program.statements[0] as LetStatement
         testLetStatement(statement, indentifier)
@@ -145,7 +145,7 @@ describe('parser', () => {
         const p = new Parser(l)
         const program = p.parseProgram()
 
-        expect(program.statements.length).toEqual(1)
+        expect(program.statements).toHaveLength(1)
 
         const statement = program.statements[0] as ReturnStatement
         expect(statement).toBeInstanceOf(ReturnStatement)
@@ -380,7 +380,7 @@ describe('parser', () => {
       expect(exp).toBeInstanceOf(IfExpression)
 
       testInfixExpression(exp.condition as InfixExpression, 'x', '<', 'y')
-      expect(exp.consequence.statements.length).toEqual(1)
+      expect(exp.consequence.statements).toHaveLength(1)
 
       const consequence = exp.consequence.statements[0] as ExpressionStatement
       expect(consequence).toBeInstanceOf(ExpressionStatement)
@@ -399,7 +399,7 @@ describe('parser', () => {
 
       testInfixExpression(exp.condition as InfixExpression, 'x', '<', 'y')
 
-      expect(exp.consequence.statements.length).toEqual(1)
+      expect(exp.consequence.statements).toHaveLength(1)
       const consequence = exp.consequence.statements[0] as ExpressionStatement
       expect(consequence).toBeInstanceOf(ExpressionStatement)
       testIdentifier(consequence.expression as Identifier, 'x')
@@ -416,12 +416,12 @@ describe('parser', () => {
       const func = parseProgram(input) as FunctionLiteral
       expect(func).toBeInstanceOf(FunctionLiteral)
 
-      expect(func.parameters.length).toEqual(2)
+      expect(func.parameters).toHaveLength(2)
 
       testLiteralExpression(func.parameters[0], 'x')
       testLiteralExpression(func.parameters[1], 'y')
 
-      expect(func.body.statements.length).toEqual(1)
+      expect(func.body.statements).toHaveLength(1)
 
       const bodyExp = func.body.statements[0] as ExpressionStatement
       expect(bodyExp).toBeInstanceOf(ExpressionStatement)
@@ -449,7 +449,7 @@ describe('parser', () => {
         const func = parseProgram(input) as FunctionLiteral
         expect(func).toBeInstanceOf(FunctionLiteral)
 
-        expect(func.parameters.length).toEqual(expected.length)
+        expect(func.parameters).toHaveLength(expected.length)
         func.parameters.forEach((param, i) => {
           testLiteralExpression(param, expected[i])
         })
@@ -462,7 +462,7 @@ describe('parser', () => {
       const exp = parseProgram(input) as CallExpression
       testIdentifier(exp.func as Identifier, 'add')
 
-      expect(exp.args.length).toEqual(3)
+      expect(exp.args).toHaveLength(3)
       testLiteralExpression(exp.args[0], 1)
       testInfixExpression(exp.args[1] as InfixExpression, 2, '*', 3)
       testInfixExpression(exp.args[2] as InfixExpression, 4, '+', 5)
@@ -491,7 +491,7 @@ describe('parser', () => {
         const exp = parseProgram(input) as CallExpression
         testIdentifier(exp.func as Identifier, ident)
 
-        expect(exp.args.length).toEqual(params.length)
+        expect(exp.args).toHaveLength(params.length)
         exp.args.forEach((arg, i) => {
           expect(arg.toString()).toEqual(params[i])
         })
@@ -514,7 +514,7 @@ describe('parser', () => {
         const arr = parseProgram(input) as ArrayLiteral
         expect(arr).toBeInstanceOf(ArrayLiteral)
 
-        expect(arr.elements.length).toEqual(3)
+        expect(arr.elements).toHaveLength(3)
         testIntegerLiteral(arr.elements[0] as IntegerLiteral, 1)
         testInfixExpression(arr.elements[1] as InfixExpression, 2, '*', 2)
         testInfixExpression(arr.elements[2] as InfixExpression, 3, '+', 3)
