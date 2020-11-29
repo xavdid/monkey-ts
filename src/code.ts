@@ -91,7 +91,7 @@ export const readOperands = (
   return [operands, offset]
 }
 
-export const stringifyInstruction = (ins: Instructions): string => {
+export const stringifyInstructions = (ins: Instructions): string => {
   const res = []
   let i = 0
   while (i < ins.length) {

@@ -5,7 +5,7 @@ import {
   numToHexBytes,
   lookup,
   readOperands,
-  stringifyInstruction,
+  stringifyInstructions,
 } from '../code'
 
 describe('code', () => {
@@ -73,7 +73,7 @@ describe('code', () => {
       ]
 
       tests.forEach(({ input, expected }) => {
-        expect(stringifyInstruction(input)).toEqual(expected)
+        expect(stringifyInstructions(input)).toEqual(expected)
       })
     })
   })
