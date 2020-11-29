@@ -1,58 +1,22 @@
-import { Lexer } from '../lexer'
-import { Parser } from '../parser'
-
-import { evaluate } from '../evaluator'
 import {
-  ErrorObj,
   FunctionObj,
   StringObj,
-  BaseObject,
   IntegerObj,
-  BooleanObj,
   ArrayObj,
-  NullObj,
   HashObj,
   TRUE,
   FALSE,
 } from '../object'
-import { Environment } from '../environment'
 
-const testEval = (input: string) => {
-  const lexer = new Lexer(input)
-  const parser = new Parser(lexer)
-  const program = parser.parseProgram()
-  const env = new Environment()
-
-  return evaluate(program, env)
-}
-
-// can't figure out how to type the binded function
-// `_testObjType.bind<number>(null, IntegerObj)` gives "expected 1 arg, got two"
-const _testObjType: (
-  objType: new (args: any) => BaseObject,
-  obj: BaseObject,
-  value: number | string | boolean | null
-) => void = (objType, obj, value) => {
-  expect(obj).toBeInstanceOf(objType)
-  expect(obj.value).toEqual(value)
-}
-const testIntegerObj = _testObjType.bind(null, IntegerObj)
-const testStringObj = _testObjType.bind(null, StringObj)
-const testBooleanObj = _testObjType.bind(null, BooleanObj)
-const testNullObj = _testObjType.bind(null, NullObj)
-
-const testNumberArray = (obj: ArrayObj, value: number[]) => {
-  expect(obj).toBeInstanceOf(ArrayObj)
-  expect(obj.elements).toHaveLength(value.length)
-  obj.elements.forEach((int, idx) => {
-    testIntegerObj(int, value[idx])
-  })
-}
-
-const testErrorObj = (output: BaseObject, expected: string) => {
-  expect(output).toBeInstanceOf(ErrorObj)
-  expect(output.toString()).toEqual(expected)
-}
+import {
+  testIntegerObj,
+  testErrorObj,
+  testBooleanObj,
+  testNullObj,
+  testNumberArray,
+  testStringObj,
+  testEval,
+} from './helpers'
 
 describe('evaulator', () => {
   // eslint-disable-next-line jest/expect-expect

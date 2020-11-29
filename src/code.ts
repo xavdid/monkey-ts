@@ -1,10 +1,15 @@
-type Instructions = Uint8Array
-type Opcode = number // can't make uint8? that's not a primitive
+// const stringifyByte = (byte: number): string => {}
 
-const MAX_16_BIT_SIZE = 256
+// byte[]?
+export type Instructions = number[]
+
+// type Opcode = number // can't make uint8? that's not a primitive
+
+// const MAX_16_BIT_SIZE = 256
 
 // need to make sure all these values fit in a single byte?
 // that'll be fine as long as I don't have 256 opcodes
+// make these Byte objects?
 export enum Opcodes {
   OpConstant,
 }
@@ -26,35 +31,24 @@ export const lookup = (op: number): Definition => {
   return def
 }
 
-// binary math
-
-/**
- * function should split `n` into `size` uint8s
- */
-const bigEndianArr = (n: number, size: number): Uint8Array => {
-  // TODO: clamp to 16 bit max? (~65k)
-  const res = new Uint8Array(size)
-
-  let index = 0
-
-  while (index < size) {
-    if (n > MAX_16_BIT_SIZE) {
-      res[index] = Math.floor(n / MAX_16_BIT_SIZE)
-      n -= res[index] * MAX_16_BIT_SIZE
-      index++
-    } else {
-      res[index] = n
-      return res
-    }
-  }
-
-  return res
+// his is `ReadUint16`
+export const hexBytesToNum = (nums: number[]): number => {
+  return parseInt(Buffer.from(nums).toString('hex'), 16)
 }
 
-export const make = (op: Opcodes, ...operands: number[]): Uint8Array => {
+// this is probably a big performance hit
+export const numToHexBytes = (num: number, width: number): number[] => {
+  const paddedHex = num.toString(16).padStart(2 * width, '0')
+
+  // this looks odd, but it's faster than `[...buffer]` and I'll bet speed matters here
+  // https://stackoverflow.com/a/55127012/1825390
+  return Buffer.from(paddedHex, 'hex').toJSON().data
+}
+
+export const make = (op: Opcodes, ...operands: number[]): number[] => {
   const def = definitions.get(op)
   if (!def) {
-    return new Uint8Array()
+    return []
   }
 
   let instructionLen = 1
@@ -62,12 +56,12 @@ export const make = (op: Opcodes, ...operands: number[]): Uint8Array => {
   def.operandWidths.forEach((w) => (instructionLen += w))
 
   // let offset = 1
-  let res = new Uint8Array()
+  let res: number[] = []
   operands.forEach((operand, index) => {
     const width = def.operandWidths[index]
     switch (width) {
       case 2:
-        res = bigEndianArr(operand, width)
+        res = numToHexBytes(operand, width)
         break
       default:
         throw new Error('not yet implemented')
@@ -75,5 +69,55 @@ export const make = (op: Opcodes, ...operands: number[]): Uint8Array => {
     // offset += width
   })
 
-  return Uint8Array.from([op, ...res])
+  return [op, ...res]
+}
+
+export const readOperands = (
+  def: Definition,
+  instructions: Instructions
+): [number[], number] => {
+  const operands: number[] = Array(def.operandWidths.length)
+  let offset = 0
+  def.operandWidths.forEach((width, index) => {
+    switch (width) {
+      case 2:
+        operands[index] = hexBytesToNum(instructions.slice(offset))
+        break
+      default:
+        throw new Error('unimplemented readOperands')
+    }
+    offset += width
+  })
+  return [operands, offset]
+}
+
+export const stringifyInstruction = (ins: Instructions): string => {
+  const res = []
+  let i = 0
+  while (i < ins.length) {
+    const def = lookup(ins[i])
+    const [operands, read] = readOperands(def, ins.slice(i + 1))
+    res.push(
+      `${i.toString().padStart(4, '0')} ${strintifyOperand(def, operands)}`
+    )
+
+    i += 1 + read
+  }
+  return res.join('\n')
+}
+
+const strintifyOperand = (def: Definition, operands: number[]): string => {
+  const operandCount = def.operandWidths.length
+  if (operands.length !== operandCount) {
+    throw new Error(
+      `mismatched operand lengths: ${operands.length} !== ${operandCount}`
+    )
+  }
+
+  switch (operandCount) {
+    case 1:
+      return `${def.name} ${operands[0]}`
+    default:
+      throw new Error(`Stringify not ipmlemented: ${def.name}`)
+  }
 }
