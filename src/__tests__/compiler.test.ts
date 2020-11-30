@@ -10,11 +10,10 @@ interface CompilerTestCase {
 }
 
 const testInstructions = (expected: Instructions[], actual: Instructions) => {
-  const flatExpected = expected.flat()
-  expect(actual).toHaveLength(flatExpected.length)
-  flatExpected.forEach((exp, index) => {
-    expect(exp).toEqual(actual[index])
-  })
+  expect(actual).toEqual(expected.flat())
+  // flatExpected.forEach((exp, index) => {
+  //   expect(exp).toEqual(actual[index])
+  // })
 }
 
 const testConstants = (expected: any[], actual: BaseObject[]) => {
