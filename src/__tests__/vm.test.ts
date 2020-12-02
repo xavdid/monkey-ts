@@ -33,9 +33,9 @@ describe('vm', () => {
   // eslint-disable-next-line jest/expect-expect
   test('integer arithmetic', () => {
     const tests: VMTest[] = [
-      { input: '1', expected: 1 },
-      { input: '2', expected: 2 },
-      // {input: '1 + 2', expected: 2},
+      // { input: '1', expected: 1 },
+      // { input: '2', expected: 2 },
+      { input: '1 + 2', expected: 3 },
     ]
     runVmTests(tests)
   })

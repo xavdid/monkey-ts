@@ -45,10 +45,10 @@
     "singleQuote": true
   },
   "devDependencies": {
-    "@types/jest": "25.2.1",
-    "@types/node": "13.11.0",
-    "@typescript-eslint/eslint-plugin": "^4",
-    "@typescript-eslint/parser": "^4.4.1",
+    "@types/jest": "26.0.16",
+    "@types/node": "14.14.10",
+    "@typescript-eslint/eslint-plugin": "^4.9.0",
+    "@typescript-eslint/parser": "^4.9.0",
     "eslint": "^7",
     "eslint-config-prettier": "^6.13.0",
     "eslint-config-standard-with-typescript": "^19.0.1",
@@ -59,10 +59,10 @@
     "eslint-plugin-promise": "^4",
     "eslint-plugin-react": "^7.21.4",
     "eslint-plugin-react-hooks": "^4.1.2",
-    "eslint-plugin-standard": "^4",
-    "jest": "25.2.7",
-    "prettier": "2.0.4",
-    "ts-jest": "25.3.1",
+    "eslint-plugin-standard": "^5.0.0",
+    "jest": "26.6.3",
+    "prettier": "2.2.1",
+    "ts-jest": "26.4.4",
     "typescript": "~4.1"
   }
 }

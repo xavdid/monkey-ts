@@ -1,19 +1,23 @@
 import {
   make,
   Opcodes,
-  hexBytesToNum,
+  readUint16,
   numToHexBytes,
   lookup,
   readOperands,
   stringifyInstructions,
+  Instructions,
 } from '../code'
 
 describe('code', () => {
   describe('bytes conversion', () => {
     test('number to bytes', () => {
-      expect(hexBytesToNum([255, 254])).toEqual(65534)
-      expect(hexBytesToNum([255, 17])).toEqual(65297)
-      expect(hexBytesToNum([1])).toEqual(1)
+      expect(readUint16([255, 254])).toEqual(65534)
+      expect(readUint16([255, 17])).toEqual(65297)
+      expect(readUint16([0, 1])).toEqual(1)
+      // the rest of an array is ignored
+      expect(readUint16([0, 1, 123, 123, 123, 123])).toEqual(1)
+      expect(() => readUint16([1])).toThrow()
     })
     test('bytes to number', () => {
       expect(numToHexBytes(65534, 2)).toEqual([255, 254])
@@ -22,23 +26,26 @@ describe('code', () => {
     })
   })
 
-  describe('make', () => {
-    test('basic functionality', () => {
-      const tests: Array<{
-        op: Opcodes
-        operands: number[]
-        expected: number[]
-      }> = [
-        {
-          op: Opcodes.OpConstant,
-          operands: [65534],
-          expected: [Opcodes.OpConstant, 255, 254],
-        },
-      ]
+  test('make', () => {
+    const tests: Array<{
+      op: Opcodes
+      operands: number[]
+      expected: number[]
+    }> = [
+      {
+        op: Opcodes.OpConstant,
+        operands: [65534],
+        expected: [Opcodes.OpConstant, 255, 254],
+      },
+      {
+        op: Opcodes.OpAdd,
+        operands: [],
+        expected: [Opcodes.OpAdd],
+      },
+    ]
 
-      tests.forEach(({ op, operands, expected }) => {
-        expect(make(op, ...operands)).toEqual(expected)
-      })
+    tests.forEach(({ op, operands, expected }) => {
+      expect(make(op, ...operands)).toEqual(expected)
     })
   })
 
@@ -51,7 +58,6 @@ describe('code', () => {
       tests.forEach(({ op, operands, bytesRead }) => {
         const instruction = make(op, ...operands)
         const def = lookup(op)
-        expect(def).toBeDefined()
 
         const [operandsRead, numRead] = readOperands(def, instruction.slice(1))
 
@@ -63,12 +69,21 @@ describe('code', () => {
 
   describe('instructions', () => {
     it('should stringify correctly', () => {
-      const tests = [
-        { input: make(Opcodes.OpConstant, 1), expected: '0000 OpConstant 1' },
+      const tests: Array<{ input: Instructions; expected: string }> = [
+        { input: make(Opcodes.OpAdd), expected: '0000 OpAdd' },
         { input: make(Opcodes.OpConstant, 2), expected: '0000 OpConstant 2' },
         {
           input: make(Opcodes.OpConstant, 65535),
           expected: '0000 OpConstant 65535',
+        },
+        {
+          input: [
+            make(Opcodes.OpConstant, 1),
+            make(Opcodes.OpConstant, 2),
+            make(Opcodes.OpConstant, 65535),
+          ].flat(),
+          expected:
+            '0000 OpConstant 1\n0003 OpConstant 2\n0006 OpConstant 65535',
         },
       ]
 

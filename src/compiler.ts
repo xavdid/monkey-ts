@@ -42,6 +42,14 @@ export class Compiler {
     } else if (node instanceof InfixExpression) {
       this.compile(node.left)
       this.compile(node.right)
+
+      switch (node.operator) {
+        case '+':
+          this.emit(Opcodes.OpAdd)
+          break
+        default:
+          throw new Error(`unknown operator: "${node.operator}"`)
+      }
     } else if (node instanceof IntegerLiteral) {
       const int = new IntegerObj(node.value)
       this.emit(Opcodes.OpConstant, this.addConstant(int))

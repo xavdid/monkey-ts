@@ -1,4 +1,4 @@
-import { Instructions, make, Opcodes } from '../code'
+import { Instructions, make, Opcodes, stringifyInstructions } from '../code'
 import { Compiler } from '../compiler'
 import { BaseObject } from '../object'
 import { parseProgram, testIntegerObj } from './helpers'
@@ -10,10 +10,20 @@ interface CompilerTestCase {
 }
 
 const testInstructions = (expected: Instructions[], actual: Instructions) => {
-  expect(actual).toEqual(expected.flat())
-  // flatExpected.forEach((exp, index) => {
-  //   expect(exp).toEqual(actual[index])
-  // })
+  try {
+    expect(actual).toEqual(expected.flat())
+  } catch (e) {
+    console.log(
+      [
+        'expected',
+        stringifyInstructions(expected.flat()),
+        '',
+        'actual',
+        stringifyInstructions(actual),
+      ].join('\n')
+    )
+    throw e
+  }
 }
 
 const testConstants = (expected: any[], actual: BaseObject[]) => {
@@ -49,10 +59,12 @@ describe('compiler', () => {
         expectedInstructions: [
           make(Opcodes.OpConstant, 0),
           make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpAdd),
         ],
       },
     ]
 
+    console.log(tests[0])
     runCompilerTest(tests)
   })
 })

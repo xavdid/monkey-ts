@@ -1,6 +1,6 @@
-import { hexBytesToNum, Instructions, Opcodes } from './code'
+import { readUint16, Instructions, Opcodes } from './code'
 import { Bytecode } from './compiler'
-import { BaseObject } from './object'
+import { BaseObject, IntegerObj } from './object'
 
 const STACK_SIZE = 2048
 
@@ -40,16 +40,35 @@ export class VM {
 
       switch (op) {
         case Opcodes.OpConstant: {
-          const constIndex = hexBytesToNum(
+          const constIndex = readUint16(
             this.instructions.slice(instructionPointer + 1)
           )
           instructionPointer += 2
           this.push(this.constants[constIndex])
           break
         }
+        case Opcodes.OpAdd: {
+          const right = this.pop() as IntegerObj
+          const left = this.pop() as IntegerObj
+
+          const result = left.value + right.value
+          this.push(new IntegerObj(result))
+          break
+        }
         default:
           break
       }
     }
+  }
+
+  pop = (): BaseObject => {
+    const o = this.stack[this.stackPointer - 1]
+    this.stackPointer--
+    return o
+  }
+
+  logStack = () => {
+    console.log('vm stackPointer:', this.stackPointer)
+    console.log('vm stack', this.stack)
   }
 }

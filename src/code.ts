@@ -12,6 +12,7 @@ export type Instructions = number[]
 // make these Byte objects?
 export enum Opcodes {
   OpConstant,
+  OpAdd,
 }
 
 // not positive width is actually an array? go is weird
@@ -19,9 +20,17 @@ class Definition {
   constructor(public name: string, public operandWidths: number[]) {}
 }
 
-export const definitions = new Map<Opcodes, Definition>([
-  [Opcodes.OpConstant, new Definition(Opcodes[Opcodes.OpConstant], [2])],
-])
+const _definitions: Array<[Opcodes, number[]]> = [
+  [Opcodes.OpConstant, [2]],
+  [Opcodes.OpAdd, []],
+]
+
+export const definitions = new Map<Opcodes, Definition>(
+  _definitions.map(([opcode, paramWidths]) => [
+    opcode,
+    new Definition(Opcodes[opcode], paramWidths),
+  ])
+)
 
 export const lookup = (op: number): Definition => {
   const def = definitions.get(op)
@@ -32,8 +41,13 @@ export const lookup = (op: number): Definition => {
 }
 
 // his is `ReadUint16`
-export const hexBytesToNum = (nums: number[]): number => {
-  return parseInt(Buffer.from(nums).toString('hex'), 16)
+export const readUint16 = (nums: number[]): number => {
+  // takes only the first two items from an index, ignores the rest
+  if (nums.length < 2) {
+    throw new Error('unable to read Uint16 from array smaller than 2')
+  }
+
+  return parseInt(Buffer.from(nums.slice(0, 2)).toString('hex'), 16)
 }
 
 // this is probably a big performance hit
@@ -51,9 +65,9 @@ export const make = (op: Opcodes, ...operands: number[]): number[] => {
     return []
   }
 
-  let instructionLen = 1
-  // just need to sum all the widths + 1
-  def.operandWidths.forEach((w) => (instructionLen += w))
+  // let instructionLen = 1
+  // // just need to sum all the widths + 1
+  // def.operandWidths.forEach((w) => (instructionLen += w))
 
   // let offset = 1
   let res: number[] = []
@@ -64,7 +78,7 @@ export const make = (op: Opcodes, ...operands: number[]): number[] => {
         res = numToHexBytes(operand, width)
         break
       default:
-        throw new Error('not yet implemented')
+        throw new Error(`width ${width} not yet implemented in "make"`)
     }
     // offset += width
   })
@@ -76,15 +90,15 @@ export const readOperands = (
   def: Definition,
   instructions: Instructions
 ): [number[], number] => {
-  const operands: number[] = Array(def.operandWidths.length)
+  const operands: number[] = []
   let offset = 0
   def.operandWidths.forEach((width, index) => {
     switch (width) {
       case 2:
-        operands[index] = hexBytesToNum(instructions.slice(offset))
+        operands[index] = readUint16(instructions.slice(offset))
         break
       default:
-        throw new Error('unimplemented readOperands')
+        throw new Error(`width ${width} not unimplemented in readOperands`)
     }
     offset += width
   })
@@ -98,7 +112,7 @@ export const stringifyInstructions = (ins: Instructions): string => {
     const def = lookup(ins[i])
     const [operands, read] = readOperands(def, ins.slice(i + 1))
     res.push(
-      `${i.toString().padStart(4, '0')} ${strintifyOperand(def, operands)}`
+      `${i.toString().padStart(4, '0')} ${stringifyOperand(def, operands)}`
     )
 
     i += 1 + read
@@ -106,7 +120,7 @@ export const stringifyInstructions = (ins: Instructions): string => {
   return res.join('\n')
 }
 
-const strintifyOperand = (def: Definition, operands: number[]): string => {
+const stringifyOperand = (def: Definition, operands: number[]): string => {
   const operandCount = def.operandWidths.length
   if (operands.length !== operandCount) {
     throw new Error(
@@ -115,6 +129,8 @@ const strintifyOperand = (def: Definition, operands: number[]): string => {
   }
 
   switch (operandCount) {
+    case 0:
+      return def.name
     case 1:
       return `${def.name} ${operands[0]}`
     default:
