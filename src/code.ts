@@ -14,6 +14,9 @@ export enum Opcodes {
   OpConstant,
   OpAdd,
   OpPop,
+  OpSub,
+  OpMul,
+  OpDiv,
 }
 
 // not positive width is actually an array? go is weird
@@ -25,6 +28,9 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpConstant, [2]],
   [Opcodes.OpAdd, []],
   [Opcodes.OpPop, []],
+  [Opcodes.OpSub, []],
+  [Opcodes.OpMul, []],
+  [Opcodes.OpDiv, []],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(

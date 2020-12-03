@@ -30,6 +30,45 @@ export class VM {
     this.stackPointer++
   }
 
+  executeBinaryOperation = (op: Opcodes): void => {
+    const right = this.pop()
+    const left = this.pop()
+
+    if (left instanceof IntegerObj && right instanceof IntegerObj) {
+      return this.executeBinaryIntegerOperation(op, left, right)
+    }
+
+    throw new Error(
+      `Unsupported types for binary operation: ${left.primitive} & ${right.primitive}`
+    )
+  }
+
+  executeBinaryIntegerOperation = (
+    op: Opcodes,
+    left: IntegerObj,
+    right: IntegerObj
+  ): void => {
+    let result: number
+
+    switch (op) {
+      case Opcodes.OpAdd:
+        result = left.value + right.value
+        break
+      case Opcodes.OpSub:
+        result = left.value - right.value
+        break
+      case Opcodes.OpMul:
+        result = left.value * right.value
+        break
+      case Opcodes.OpDiv:
+        result = left.value / right.value
+        break
+      default:
+        throw new Error(`unknown integer operator: ${Opcodes[op]}`)
+    }
+    this.push(new IntegerObj(result))
+  }
+
   run = (): void => {
     for (
       let instructionPointer = 0;
@@ -47,12 +86,11 @@ export class VM {
           this.push(this.constants[constIndex])
           break
         }
-        case Opcodes.OpAdd: {
-          const right = this.pop() as IntegerObj
-          const left = this.pop() as IntegerObj
-
-          const result = left.value + right.value
-          this.push(new IntegerObj(result))
+        case Opcodes.OpAdd:
+        case Opcodes.OpSub:
+        case Opcodes.OpMul:
+        case Opcodes.OpDiv: {
+          this.executeBinaryOperation(op)
           break
         }
         case Opcodes.OpPop:

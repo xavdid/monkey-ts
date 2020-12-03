@@ -51,7 +51,7 @@ const runCompilerTest = (tests: CompilerTestCase[]) => {
 
 describe('compiler', () => {
   // eslint-disable-next-line jest/expect-expect
-  it('should run arithmetic', () => {
+  test('integer arithmetic', () => {
     const tests: CompilerTestCase[] = [
       {
         input: '1 + 2',
@@ -60,6 +60,36 @@ describe('compiler', () => {
           make(Opcodes.OpConstant, 0),
           make(Opcodes.OpConstant, 1),
           make(Opcodes.OpAdd),
+          make(Opcodes.OpPop),
+        ],
+      },
+      {
+        input: '1 - 2',
+        expectedConstants: [1, 2],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpSub),
+          make(Opcodes.OpPop),
+        ],
+      },
+      {
+        input: '1 * 2',
+        expectedConstants: [1, 2],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpMul),
+          make(Opcodes.OpPop),
+        ],
+      },
+      {
+        input: '2 / 1',
+        expectedConstants: [2, 1],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpDiv),
           make(Opcodes.OpPop),
         ],
       },
