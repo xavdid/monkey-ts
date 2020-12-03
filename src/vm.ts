@@ -15,12 +15,12 @@ export class VM {
     this.constants = bytecode.constants // TODO: need to copy?
   }
 
-  stackTop = (): BaseObject | undefined => {
-    if (this.stackPointer === 0) {
-      return undefined
-    }
-    return this.stack[this.stackPointer - 1]
-  }
+  // get stackTop(): BaseObject | undefined {
+  //   if (this.stackPointer === 0) {
+  //     return undefined
+  //   }
+  //   return this.stack[this.stackPointer - 1]
+  // }
 
   push = (o: BaseObject): void => {
     if (this.stackPointer >= STACK_SIZE) {
@@ -55,6 +55,9 @@ export class VM {
           this.push(new IntegerObj(result))
           break
         }
+        case Opcodes.OpPop:
+          this.pop()
+          break
         default:
           break
       }
@@ -65,6 +68,12 @@ export class VM {
     const o = this.stack[this.stackPointer - 1]
     this.stackPointer--
     return o
+  }
+
+  // for tests only
+
+  get lastPoppedStackElement(): BaseObject {
+    return this.stack[this.stackPointer]
   }
 
   logStack = () => {

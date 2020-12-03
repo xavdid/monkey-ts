@@ -39,6 +39,7 @@ export class Compiler {
       })
     } else if (node instanceof ExpressionStatement) {
       this.compile(node.expression)
+      this.emit(Opcodes.OpPop)
     } else if (node instanceof InfixExpression) {
       this.compile(node.left)
       this.compile(node.right)
@@ -72,7 +73,7 @@ export class Compiler {
     return this.constants.length - 1
   }
 
-  bytecode = (): Bytecode => {
+  get bytecode(): Bytecode {
     return new Bytecode(this.instructions, this.constants)
   }
 }

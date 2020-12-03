@@ -23,9 +23,9 @@ const runVmTests = (tests: VMTest[]) => {
     const comp = new Compiler()
     comp.compile(program)
 
-    const vm = new VM(comp.bytecode())
+    const vm = new VM(comp.bytecode)
     vm.run()
-    testExpectedObject(vm.stackTop(), expected)
+    testExpectedObject(vm.lastPoppedStackElement, expected)
   })
 }
 

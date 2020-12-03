@@ -3,6 +3,8 @@ import { Lexer } from './lexer'
 import { Parser } from './parser'
 import { evaluate } from './evaluator'
 import { Environment } from './environment'
+import { Compiler } from './compiler'
+import { VM } from './vm'
 
 // needs to be out here so it's reused across lines
 // also means its global across requires, which might be bad
@@ -22,11 +24,22 @@ const lineToTokens = (
   // prints a nicely wrapped program:
   // console.log(program.toString(), '\n')
 
-  // actual evaluates everything
-  const output = evaluate(program, env)
-  if (output.primitive !== 'null') {
-    console.log(output.toString())
-  }
+  // run using compiler
+  const comp = new Compiler()
+  comp.compile(program)
+
+  const machine = new VM(comp.bytecode)
+  machine.run()
+
+  const stackTop = machine.lastPoppedStackElement
+  console.log(stackTop?.toString())
+
+  // run using interpreter
+  // actually evaluates everything
+  // const output = evaluate(program, env)
+  // if (output.primitive !== 'null') {
+  //   console.log(output.toString())
+  // }
 
   callback(null)
 }

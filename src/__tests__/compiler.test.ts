@@ -42,7 +42,7 @@ const runCompilerTest = (tests: CompilerTestCase[]) => {
     const compiler = new Compiler()
     compiler.compile(program)
 
-    const bytecode = compiler.bytecode()
+    const bytecode = compiler.bytecode
 
     testInstructions(expectedInstructions, bytecode.instructions)
     testConstants(expectedConstants, bytecode.constants)
@@ -60,11 +60,21 @@ describe('compiler', () => {
           make(Opcodes.OpConstant, 0),
           make(Opcodes.OpConstant, 1),
           make(Opcodes.OpAdd),
+          make(Opcodes.OpPop),
+        ],
+      },
+      {
+        input: '1; 2',
+        expectedConstants: [1, 2],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpPop),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpPop),
         ],
       },
     ]
 
-    console.log(tests[0])
     runCompilerTest(tests)
   })
 })
