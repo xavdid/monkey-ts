@@ -11,14 +11,22 @@ export type Instructions = number[]
 // that'll be fine as long as I don't have 256 opcodes
 // make these Byte objects?
 export enum Opcodes {
+  // numbers
   OpConstant,
+  // arithmetic
   OpAdd,
   OpPop,
   OpSub,
   OpMul,
   OpDiv,
+  // booleans
   OpTrue,
   OpFalse,
+  // comparisons
+  OpEqual,
+  OpNotEqual,
+  // don't need a lessThan because we can just reorder the operands
+  OpGreaterThan,
 }
 
 // not positive width is actually an array? go is weird
@@ -35,6 +43,9 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpDiv, []],
   [Opcodes.OpTrue, []],
   [Opcodes.OpFalse, []],
+  [Opcodes.OpEqual, []],
+  [Opcodes.OpNotEqual, []],
+  [Opcodes.OpGreaterThan, []],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(

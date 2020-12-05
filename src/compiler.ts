@@ -42,6 +42,14 @@ export class Compiler {
       this.compile(node.expression)
       this.emit(Opcodes.OpPop)
     } else if (node instanceof InfixExpression) {
+      // special case because we need to reverse the sides
+      if (node.operator === '<') {
+        this.compile(node.right)
+        this.compile(node.left)
+        this.emit(Opcodes.OpGreaterThan)
+        return
+      }
+
       this.compile(node.left)
       this.compile(node.right)
 
@@ -57,6 +65,15 @@ export class Compiler {
           break
         case '/':
           this.emit(Opcodes.OpDiv)
+          break
+        case '>':
+          this.emit(Opcodes.OpGreaterThan)
+          break
+        case '==':
+          this.emit(Opcodes.OpEqual)
+          break
+        case '!=':
+          this.emit(Opcodes.OpNotEqual)
           break
         default:
           throw new Error(`unknown operator: "${node.operator}"`)

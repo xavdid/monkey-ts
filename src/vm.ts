@@ -8,6 +8,8 @@ const STACK_SIZE = 2048
 const TRUE = new BooleanObj(true)
 const FALSE = new BooleanObj(false)
 
+const nativeBoolToObj = (input: boolean): BooleanObj => (input ? TRUE : FALSE)
+
 export class VM {
   private readonly constants: BaseObject[]
   private readonly instructions: Instructions
@@ -66,6 +68,49 @@ export class VM {
     this.push(new IntegerObj(result))
   }
 
+  executeComparison = (op: Opcodes): void => {
+    const right = this.pop()
+    const left = this.pop()
+
+    if (left instanceof IntegerObj && right instanceof IntegerObj) {
+      return this.executeIntegerComparison(op, left, right)
+    }
+
+    switch (op) {
+      case Opcodes.OpEqual:
+        // only works because TRUE and FALSE are used for every boolean
+        this.push(nativeBoolToObj(left === right))
+        break
+      case Opcodes.OpNotEqual:
+        this.push(nativeBoolToObj(left !== right))
+        break
+      default:
+        throw new Error(
+          `unknown operator: ${Opcodes[op]} for ${left.primitive} and ${right.primitive}`
+        )
+    }
+  }
+
+  executeIntegerComparison = (
+    op: Opcodes,
+    left: IntegerObj,
+    right: IntegerObj
+  ): void => {
+    switch (op) {
+      case Opcodes.OpEqual:
+        this.push(nativeBoolToObj(left.value === right.value))
+        break
+      case Opcodes.OpNotEqual:
+        this.push(nativeBoolToObj(left.value !== right.value))
+        break
+      case Opcodes.OpGreaterThan:
+        this.push(nativeBoolToObj(left.value > right.value))
+        break
+      default:
+        throw new Error(`unknown operator: ${Opcodes[op]}`)
+    }
+  }
+
   run = (): void => {
     for (
       let instructionPointer = 0;
@@ -95,6 +140,11 @@ export class VM {
           break
         case Opcodes.OpFalse:
           this.push(FALSE)
+          break
+        case Opcodes.OpEqual:
+        case Opcodes.OpNotEqual:
+        case Opcodes.OpGreaterThan:
+          this.executeComparison(op)
           break
         case Opcodes.OpPop:
           this.pop()
