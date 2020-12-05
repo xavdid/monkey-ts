@@ -1,8 +1,12 @@
 import { readUint16, Instructions, Opcodes } from './code'
 import { Bytecode } from './compiler'
-import { BaseObject, IntegerObj } from './object'
+import { BaseObject, BooleanObj, IntegerObj } from './object'
 
 const STACK_SIZE = 2048
+
+// reusable, comparable
+const TRUE = new BooleanObj(true)
+const FALSE = new BooleanObj(false)
 
 export class VM {
   private readonly constants: BaseObject[]
@@ -14,13 +18,6 @@ export class VM {
     this.instructions = bytecode.instructions // TODO: need to copy?
     this.constants = bytecode.constants // TODO: need to copy?
   }
-
-  // get stackTop(): BaseObject | undefined {
-  //   if (this.stackPointer === 0) {
-  //     return undefined
-  //   }
-  //   return this.stack[this.stackPointer - 1]
-  // }
 
   push = (o: BaseObject): void => {
     if (this.stackPointer >= STACK_SIZE) {
@@ -93,6 +90,12 @@ export class VM {
           this.executeBinaryOperation(op)
           break
         }
+        case Opcodes.OpTrue:
+          this.push(TRUE)
+          break
+        case Opcodes.OpFalse:
+          this.push(FALSE)
+          break
         case Opcodes.OpPop:
           this.pop()
           break
@@ -103,6 +106,9 @@ export class VM {
   }
 
   pop = (): BaseObject => {
+    if (this.stackPointer === 0) {
+      throw new Error('Stack underflow, popped something off an empty stack')
+    }
     const o = this.stack[this.stackPointer - 1]
     this.stackPointer--
     return o

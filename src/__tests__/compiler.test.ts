@@ -107,4 +107,21 @@ describe('compiler', () => {
 
     runCompilerTest(tests)
   })
+  // eslint-disable-next-line jest/expect-expect
+  test('boolean expressions', () => {
+    const tests: CompilerTestCase[] = [
+      {
+        input: 'true',
+        expectedConstants: [],
+        expectedInstructions: [make(Opcodes.OpTrue), make(Opcodes.OpPop)],
+      },
+      {
+        input: 'false',
+        expectedConstants: [],
+        expectedInstructions: [make(Opcodes.OpFalse), make(Opcodes.OpPop)],
+      },
+    ]
+
+    runCompilerTest(tests)
+  })
 })

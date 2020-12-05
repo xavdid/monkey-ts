@@ -1,19 +1,25 @@
 import { Compiler } from '../compiler'
 import { BaseObject } from '../object'
 import { VM } from '../vm'
-import { parseProgram, testIntegerObj } from './helpers'
+import { parseProgram, testBooleanObj, testIntegerObj } from './helpers'
 
 interface VMTest {
   input: string
   expected: any
 }
 
-const testExpectedObject = (actual: BaseObject | undefined, expected: any) => {
-  if (!actual) {
+const testExpectedObject = (
+  actual: BaseObject | undefined,
+  expected: any
+): void => {
+  if (actual === undefined) {
     throw new Error('actual does not exist')
   }
   if (typeof expected === 'number') {
     testIntegerObj(actual, expected)
+  }
+  if (typeof expected === 'boolean') {
+    testBooleanObj(actual, expected)
   }
 }
 
@@ -50,6 +56,15 @@ describe('vm', () => {
       { input: '5 * 2 + 10', expected: 20 },
       { input: '5 + 2 * 10', expected: 25 },
       { input: '5 * (2 + 10)', expected: 60 },
+    ]
+    runVmTests(tests)
+  })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('boolean expressions', () => {
+    const tests: VMTest[] = [
+      { input: 'true', expected: true },
+      { input: 'false', expected: false },
     ]
     runVmTests(tests)
   })

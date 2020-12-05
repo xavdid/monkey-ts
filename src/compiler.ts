@@ -1,4 +1,5 @@
 import {
+  BooleanLiteral,
   ExpressionStatement,
   InfixExpression,
   IntegerLiteral,
@@ -63,6 +64,8 @@ export class Compiler {
     } else if (node instanceof IntegerLiteral) {
       const int = new IntegerObj(node.value)
       this.emit(Opcodes.OpConstant, this.addConstant(int))
+    } else if (node instanceof BooleanLiteral) {
+      this.emit(node.value ? Opcodes.OpTrue : Opcodes.OpFalse)
     }
   }
 
