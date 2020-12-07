@@ -30,10 +30,16 @@ export enum Opcodes {
   // prefix expressions
   OpMinus,
   OpBang,
+  // conditionals
+  OpJumpNotTruthy,
+  OpJump,
 }
 
-// not positive width is actually an array? go is weird
 class Definition {
+  /**
+   * operandWidths is how many 8-bit numbers each operand is
+   * `[2]` is a single 16-bit operand
+   */
   constructor(public name: string, public operandWidths: number[]) {}
 }
 
@@ -51,6 +57,8 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpGreaterThan, []],
   [Opcodes.OpMinus, []],
   [Opcodes.OpBang, []],
+  [Opcodes.OpJumpNotTruthy, [2]],
+  [Opcodes.OpJump, [2]],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(

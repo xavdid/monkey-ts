@@ -202,4 +202,28 @@ describe('compiler', () => {
 
     runCompilerTest(tests)
   })
+  // eslint-disable-next-line jest/expect-expect
+  test('conditionals', () => {
+    const tests: CompilerTestCase[] = [
+      {
+        input: 'if (true) { 10 }; 3333;',
+        expectedConstants: [10, 3333],
+        expectedInstructions: [
+          // 0000
+          make(Opcodes.OpTrue),
+          // 0001
+          make(Opcodes.OpJumpNotTruthy, 7),
+          // 0004
+          make(Opcodes.OpConstant, 0),
+          // 0007
+          make(Opcodes.OpPop),
+          // 0008
+          make(Opcodes.OpConstant, 1),
+          // 0011
+          make(Opcodes.OpPop),
+        ],
+      },
+    ]
+    runCompilerTest(tests)
+  })
 })
