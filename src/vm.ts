@@ -111,6 +111,21 @@ export class VM {
     }
   }
 
+  executeBangOperator = (): void => {
+    // non BooleanObj also return false
+    this.push(this.pop() === FALSE ? TRUE : FALSE)
+  }
+
+  executeMinusOperator = (): void => {
+    const operand = this.pop()
+
+    if (!(operand instanceof IntegerObj)) {
+      throw new Error(`unsupported type for negation: ${operand.primitive}`)
+    }
+
+    this.push(new IntegerObj(-operand.value))
+  }
+
   run = (): void => {
     for (
       let instructionPointer = 0;
@@ -148,6 +163,12 @@ export class VM {
           break
         case Opcodes.OpPop:
           this.pop()
+          break
+        case Opcodes.OpBang:
+          this.executeBangOperator()
+          break
+        case Opcodes.OpMinus:
+          this.executeMinusOperator()
           break
         default:
           break

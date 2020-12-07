@@ -4,6 +4,7 @@ import {
   InfixExpression,
   IntegerLiteral,
   Node,
+  PrefixExpression,
   Program,
 } from './ast'
 import { Instructions, make, Opcodes, stringifyInstructions } from './code'
@@ -41,6 +42,19 @@ export class Compiler {
     } else if (node instanceof ExpressionStatement) {
       this.compile(node.expression)
       this.emit(Opcodes.OpPop)
+    } else if (node instanceof PrefixExpression) {
+      this.compile(node.right)
+
+      switch (node.operator) {
+        case '!':
+          this.emit(Opcodes.OpBang)
+          break
+        case '-':
+          this.emit(Opcodes.OpMinus)
+          break
+        default:
+          throw new Error(`unknown prefix operator: ${node.operator}`)
+      }
     } else if (node instanceof InfixExpression) {
       // special case because we need to reverse the sides
       if (node.operator === '<') {
@@ -76,7 +90,7 @@ export class Compiler {
           this.emit(Opcodes.OpNotEqual)
           break
         default:
-          throw new Error(`unknown operator: "${node.operator}"`)
+          throw new Error(`unknown infix operator: "${node.operator}"`)
       }
     } else if (node instanceof IntegerLiteral) {
       const int = new IntegerObj(node.value)

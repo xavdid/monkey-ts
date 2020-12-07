@@ -27,6 +27,9 @@ export enum Opcodes {
   OpNotEqual,
   // don't need a lessThan because we can just reorder the operands
   OpGreaterThan,
+  // prefix expressions
+  OpMinus,
+  OpBang,
 }
 
 // not positive width is actually an array? go is weird
@@ -46,6 +49,8 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpEqual, []],
   [Opcodes.OpNotEqual, []],
   [Opcodes.OpGreaterThan, []],
+  [Opcodes.OpMinus, []],
+  [Opcodes.OpBang, []],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(
