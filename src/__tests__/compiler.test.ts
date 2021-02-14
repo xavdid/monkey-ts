@@ -63,6 +63,17 @@ describe('compiler', () => {
           make(Opcodes.OpPop),
         ],
       },
+      // ? smartly re-use already-allocated constants?
+      // {
+      //   input: '1 + 1',
+      //   expectedConstants: [1],
+      //   expectedInstructions: [
+      //     make(Opcodes.OpConstant, 0),
+      //     make(Opcodes.OpConstant, 0),
+      //     make(Opcodes.OpAdd),
+      //     make(Opcodes.OpPop),
+      //   ],
+      // },
       {
         input: '1 - 2',
         expectedConstants: [1, 2],
@@ -220,6 +231,28 @@ describe('compiler', () => {
           // 0008
           make(Opcodes.OpConstant, 1),
           // 0011
+          make(Opcodes.OpPop),
+        ],
+      },
+      {
+        input: 'if (true) { 10 } else { 20 }; 3333;',
+        expectedConstants: [10, 20, 3333],
+        expectedInstructions: [
+          // 0000
+          make(Opcodes.OpTrue),
+          // 0001
+          make(Opcodes.OpJumpNotTruthy, 10),
+          // 0004
+          make(Opcodes.OpConstant, 0),
+          // 0007
+          make(Opcodes.OpJump, 13),
+          // 0010
+          make(Opcodes.OpConstant, 1),
+          // 0013
+          make(Opcodes.OpPop),
+          // 0014
+          make(Opcodes.OpConstant, 2),
+          // 0017
           make(Opcodes.OpPop),
         ],
       },

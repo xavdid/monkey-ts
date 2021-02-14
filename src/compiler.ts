@@ -22,6 +22,9 @@ class EmittedInstruction {
 export class Bytecode {
   constructor(
     public instructions: Instructions,
+    // values that are constant at compile time (such as booleans an integers) can be declared and referenced
+    // bytecode will point to the index of a constant
+    // TODO: allow this to re-use already delcared nubmers?
     public constants: BaseObject[]
   ) {}
 
@@ -120,8 +123,25 @@ export class Compiler {
         this.removeLastPop()
       }
 
-      const afterConsequencePos = this.instructions.length
-      this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+      if (!node.alternative) {
+        // if there's no `else`, we can jump to here
+        const afterConsequencePos = this.instructions.length
+        this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+      } else {
+        // if there's an else, we have to jump farther
+        const jumpPos = this.emit(Opcodes.OpJump, 9999)
+
+        const afterConsequencePos = this.instructions.length
+        this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+
+        this.compile(node.alternative)
+        if (this.isLastInstructionPop) {
+          this.removeLastPop()
+        }
+
+        const afterAlternativePos = this.instructions.length
+        this.changeOperand(jumpPos, afterAlternativePos)
+      }
     } else if (node instanceof BlockStatement) {
       node.statements.forEach(this.compile)
     }

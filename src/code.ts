@@ -39,6 +39,7 @@ class Definition {
   /**
    * operandWidths is how many 8-bit numbers each operand is
    * `[2]` is a single 16-bit operand
+   * `[1, 2]` would be an 8-bit followed by a 16-bit
    */
   constructor(public name: string, public operandWidths: number[]) {}
 }
@@ -95,17 +96,15 @@ export const numToHexBytes = (num: number, width: number): number[] => {
   return Buffer.from(paddedHex, 'hex').toJSON().data
 }
 
+/**
+ * responsible for building properly-spaced bytecode from an opcode an its (optional) operands
+ */
 export const make = (op: Opcodes, ...operands: number[]): number[] => {
   const def = definitions.get(op)
   if (!def) {
     return []
   }
 
-  // let instructionLen = 1
-  // // just need to sum all the widths + 1
-  // def.operandWidths.forEach((w) => (instructionLen += w))
-
-  // let offset = 1
   let res: number[] = []
   operands.forEach((operand, index) => {
     const width = def.operandWidths[index]
@@ -116,7 +115,6 @@ export const make = (op: Opcodes, ...operands: number[]): number[] => {
       default:
         throw new Error(`width ${width} not yet implemented in "make"`)
     }
-    // offset += width
   })
 
   return [op, ...res]

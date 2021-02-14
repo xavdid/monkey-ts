@@ -78,7 +78,7 @@ export class VM {
 
     switch (op) {
       case Opcodes.OpEqual:
-        // only works because TRUE and FALSE are used for every boolean
+        // direct comparison only works because TRUE and FALSE instances are used for every boolean
         this.push(nativeBoolToObj(left === right))
         break
       case Opcodes.OpNotEqual:
@@ -136,11 +136,11 @@ export class VM {
 
       switch (op) {
         case Opcodes.OpConstant: {
-          const constIndex = readUint16(
+          const constantObjIndex = readUint16(
             this.instructions.slice(instructionPointer + 1)
           )
           instructionPointer += 2
-          this.push(this.constants[constIndex])
+          this.push(this.constants[constantObjIndex])
           break
         }
         case Opcodes.OpAdd:
