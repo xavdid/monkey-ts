@@ -94,4 +94,18 @@ describe('vm', () => {
     ]
     runVmTests(tests)
   })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('conditional expressions', () => {
+    const tests: VMTest[] = [
+      { input: 'if (true) { 10 }', expected: 10 },
+      { input: 'if (true) { 10 } else { 20 }', expected: 10 },
+      { input: 'if (false) { 10 } else { 20 } ', expected: 20 },
+      { input: 'if (1) { 10 }', expected: 10 },
+      { input: 'if (1 < 2) { 10 }', expected: 10 },
+      { input: 'if (1 < 2) { 10 } else { 20 }', expected: 10 },
+      { input: 'if (1 > 2) { 10 } else { 20 }', expected: 20 },
+    ]
+    runVmTests(tests)
+  })
 })

@@ -10,6 +10,14 @@ const FALSE = new BooleanObj(false)
 
 const nativeBoolToObj = (input: boolean): BooleanObj => (input ? TRUE : FALSE)
 
+const isTruthy = (obj: BaseObject): boolean => {
+  if (obj instanceof BooleanObj) {
+    return obj.value
+  }
+
+  return true
+}
+
 export class VM {
   private readonly constants: BaseObject[]
   private readonly instructions: Instructions
@@ -170,6 +178,26 @@ export class VM {
         case Opcodes.OpMinus:
           this.executeMinusOperator()
           break
+        case Opcodes.OpJump: {
+          const position = readUint16(
+            this.instructions.slice(instructionPointer + 1)
+          )
+          // set to 1 earlier so that we end up where we want to be when the loop runs
+          instructionPointer = position - 1
+          break
+        }
+        case Opcodes.OpJumpNotTruthy: {
+          const position = readUint16(
+            this.instructions.slice(instructionPointer + 1)
+          )
+          instructionPointer += 2 // consume the argument no matter what
+
+          const condition = this.pop()
+          if (!isTruthy(condition)) {
+            instructionPointer = position - 1
+          }
+          break
+        }
         default:
           break
       }
