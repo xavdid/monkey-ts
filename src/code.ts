@@ -22,6 +22,7 @@ export enum Opcodes {
   // booleans
   OpTrue,
   OpFalse,
+  OpNull,
   // comparisons
   OpEqual,
   OpNotEqual,
@@ -60,6 +61,7 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpBang, []],
   [Opcodes.OpJumpNotTruthy, [2]],
   [Opcodes.OpJump, [2]],
+  [Opcodes.OpNull, []],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(

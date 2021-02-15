@@ -15,10 +15,10 @@ const testInstructions = (expected: Instructions[], actual: Instructions) => {
   } catch (e) {
     console.log(
       [
-        'expected',
+        'expected:',
         stringifyInstructions(expected.flat()),
         '',
-        'actual',
+        'actual:',
         stringifyInstructions(actual),
       ].join('\n')
     )
@@ -223,14 +223,18 @@ describe('compiler', () => {
           // 0000
           make(Opcodes.OpTrue),
           // 0001
-          make(Opcodes.OpJumpNotTruthy, 7),
+          make(Opcodes.OpJumpNotTruthy, 10),
           // 0004
           make(Opcodes.OpConstant, 0),
           // 0007
-          make(Opcodes.OpPop),
-          // 0008
-          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpJump, 11),
+          // 0010
+          make(Opcodes.OpNull),
           // 0011
+          make(Opcodes.OpPop),
+          // 0012
+          make(Opcodes.OpConstant, 1),
+          // 0015
           make(Opcodes.OpPop),
         ],
       },

@@ -1,18 +1,22 @@
 import { readUint16, Instructions, Opcodes } from './code'
 import { Bytecode } from './compiler'
-import { BaseObject, BooleanObj, IntegerObj } from './object'
+import { BaseObject, BooleanObj, IntegerObj, NullObj } from './object'
 
 const STACK_SIZE = 2048
 
 // reusable, comparable
 const TRUE = new BooleanObj(true)
 const FALSE = new BooleanObj(false)
+const NULL = new NullObj()
 
 const nativeBoolToObj = (input: boolean): BooleanObj => (input ? TRUE : FALSE)
 
 const isTruthy = (obj: BaseObject): boolean => {
   if (obj instanceof BooleanObj) {
     return obj.value
+  }
+  if (obj === NULL) {
+    return false
   }
 
   return true
@@ -121,7 +125,8 @@ export class VM {
 
   executeBangOperator = (): void => {
     // non BooleanObj also return false
-    this.push(this.pop() === FALSE ? TRUE : FALSE)
+    const operand = this.pop()
+    this.push(operand === FALSE || operand === NULL ? TRUE : FALSE)
   }
 
   executeMinusOperator = (): void => {
@@ -163,6 +168,9 @@ export class VM {
           break
         case Opcodes.OpFalse:
           this.push(FALSE)
+          break
+        case Opcodes.OpNull:
+          this.push(NULL)
           break
         case Opcodes.OpEqual:
         case Opcodes.OpNotEqual:

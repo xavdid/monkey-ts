@@ -10,6 +10,8 @@ import { VM } from './vm'
 // also means its global across requires, which might be bad
 const env = new Environment()
 
+const USE_COMPILER = true
+
 const lineToTokens = (
   line: string,
   context: any, // who knows what these are for
@@ -24,27 +26,29 @@ const lineToTokens = (
   // prints a nicely wrapped program:
   // console.log(program.toString(), '\n')
 
-  // run using compiler
-  const comp = new Compiler()
-  comp.compile(program)
+  if (USE_COMPILER) {
+    // run using compiler
+    const comp = new Compiler()
+    comp.compile(program)
 
-  const machine = new VM(comp.bytecode)
-  machine.run()
+    const machine = new VM(comp.bytecode)
+    machine.run()
 
-  const stackTop = machine.lastPoppedStackElement
-  console.log(stackTop?.toString())
-
-  // run using interpreter
-  // actually evaluates everything
-  // const output = evaluate(program, env)
-  // if (output.primitive !== 'null') {
-  //   console.log(output.toString())
-  // }
-
+    const stackTop = machine.lastPoppedStackElement
+    console.log(stackTop?.toString())
+  } else {
+    // run using interpreter
+    // actually evaluates everything
+    const output = evaluate(program, env)
+    if (output.primitive !== 'null') {
+      console.log(output.toString())
+    }
+  }
   callback(null)
 }
 
 export default () => {
+  console.log(`Running using ${USE_COMPILER ? 'compiler' : 'interpreter'}`)
   start({
     prompt: '>> ',
     eval: lineToTokens,

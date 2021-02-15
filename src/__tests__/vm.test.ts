@@ -19,6 +19,8 @@ const testExpectedObject = (
     testIntegerObj(actual, expected)
   } else if (typeof expected === 'boolean') {
     testBooleanObj(actual, expected)
+  } else if (expected == null) {
+    expect(actual.value).toBeNull()
   }
 }
 
@@ -91,6 +93,7 @@ describe('vm', () => {
       { input: '!!true', expected: true },
       { input: '!!false', expected: false },
       { input: '!!5', expected: true },
+      { input: '!(if (false) { 5; })', expected: true },
     ]
     runVmTests(tests)
   })
@@ -105,6 +108,9 @@ describe('vm', () => {
       { input: 'if (1 < 2) { 10 }', expected: 10 },
       { input: 'if (1 < 2) { 10 } else { 20 }', expected: 10 },
       { input: 'if (1 > 2) { 10 } else { 20 }', expected: 20 },
+      { input: 'if (1 > 2) { 10 }', expected: null },
+      { input: 'if (false) { 10 }', expected: null },
+      { input: 'if ((if (false) { 10 })) { 10 } else { 20 }', expected: 20 },
     ]
     runVmTests(tests)
   })

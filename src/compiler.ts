@@ -123,25 +123,24 @@ export class Compiler {
         this.removeLastPop()
       }
 
-      if (!node.alternative) {
-        // if there's no `else`, we can jump to here
-        const afterConsequencePos = this.instructions.length
-        this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
-      } else {
+      // Emit JMP with a bogus value, save the pointer
+      const jumpPos = this.emit(Opcodes.OpJump, 9999)
+
+      const afterConsequencePos = this.instructions.length
+      this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
+
+      if (node.alternative) {
         // if there's an else, we have to jump farther
-        const jumpPos = this.emit(Opcodes.OpJump, 9999)
-
-        const afterConsequencePos = this.instructions.length
-        this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
-
         this.compile(node.alternative)
+
         if (this.isLastInstructionPop) {
           this.removeLastPop()
         }
-
-        const afterAlternativePos = this.instructions.length
-        this.changeOperand(jumpPos, afterAlternativePos)
+      } else {
+        this.emit(Opcodes.OpNull)
       }
+      const afterAlternativePos = this.instructions.length
+      this.changeOperand(jumpPos, afterAlternativePos)
     } else if (node instanceof BlockStatement) {
       node.statements.forEach(this.compile)
     }
