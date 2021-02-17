@@ -1,6 +1,12 @@
 import { readUint16, Instructions, Opcodes } from './code'
 import { Bytecode } from './compiler'
-import { BaseObject, BooleanObj, IntegerObj, NullObj } from './object'
+import {
+  BaseObject,
+  BooleanObj,
+  IntegerObj,
+  NullObj,
+  StringObj,
+} from './object'
 
 const STACK_SIZE = 2048
 
@@ -50,6 +56,10 @@ export class VM {
       return this.executeBinaryIntegerOperation(op, left, right)
     }
 
+    if (left instanceof StringObj && right instanceof StringObj) {
+      return this.executeBinaryStringOperation(op, left, right)
+    }
+
     throw new Error(
       `Unsupported types for binary operation: ${left.primitive} & ${right.primitive}`
     )
@@ -79,6 +89,18 @@ export class VM {
         throw new Error(`unknown integer operator: ${Opcodes[op]}`)
     }
     this.push(new IntegerObj(result))
+  }
+
+  executeBinaryStringOperation = (
+    op: Opcodes,
+    left: StringObj,
+    right: StringObj
+  ) => {
+    if (op !== Opcodes.OpAdd) {
+      throw new Error(`unknown string operator: ${Opcodes[op]}`)
+    }
+
+    this.push(new StringObj(left.value + right.value))
   }
 
   executeComparison = (op: Opcodes): void => {

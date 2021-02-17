@@ -10,9 +10,10 @@ import {
   Node,
   PrefixExpression,
   Program,
+  StringLiteral,
 } from './ast'
 import { Instructions, make, Opcodes, stringifyInstructions } from './code'
-import { BaseObject, IntegerObj } from './object'
+import { BaseObject, IntegerObj, StringObj } from './object'
 import { SymbolTable } from './symbolTable'
 
 class EmittedInstruction {
@@ -116,6 +117,9 @@ export class Compiler {
     } else if (node instanceof IntegerLiteral) {
       const int = new IntegerObj(node.value)
       this.emit(Opcodes.OpConstant, this.addConstant(int))
+    } else if (node instanceof StringLiteral) {
+      const str = new StringObj(node.value)
+      this.emit(Opcodes.OpConstant, this.addConstant(str))
     } else if (node instanceof BooleanLiteral) {
       this.emit(node.value ? Opcodes.OpTrue : Opcodes.OpFalse)
     } else if (node instanceof IfExpression) {

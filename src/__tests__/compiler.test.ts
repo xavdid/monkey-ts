@@ -1,11 +1,11 @@
 import { Instructions, make, Opcodes, stringifyInstructions } from '../code'
 import { Compiler } from '../compiler'
 import { BaseObject } from '../object'
-import { parseProgram, testIntegerObj } from './helpers'
+import { parseProgram, testIntegerObj, testStringObj } from './helpers'
 
 interface CompilerTestCase {
   input: string
-  expectedConstants: any[]
+  expectedConstants: Array<string | number>
   expectedInstructions: Instructions[]
 }
 
@@ -31,6 +31,8 @@ const testConstants = (expected: any[], actual: BaseObject[]) => {
   expected.forEach((constant, index) => {
     if (typeof constant === 'number') {
       testIntegerObj(actual[index], constant)
+    } else if (typeof constant === 'string') {
+      testStringObj(actual[index], constant)
     }
   })
 }
@@ -127,6 +129,7 @@ describe('compiler', () => {
 
     runCompilerTest(tests)
   })
+
   // eslint-disable-next-line jest/expect-expect
   test('boolean expressions', () => {
     const tests: CompilerTestCase[] = [
@@ -213,6 +216,7 @@ describe('compiler', () => {
 
     runCompilerTest(tests)
   })
+
   // eslint-disable-next-line jest/expect-expect
   test('conditionals', () => {
     const tests: CompilerTestCase[] = [
@@ -263,6 +267,7 @@ describe('compiler', () => {
     ]
     runCompilerTest(tests)
   })
+
   // eslint-disable-next-line jest/expect-expect
   test('global let statements', () => {
     const tests: CompilerTestCase[] = [
@@ -295,6 +300,31 @@ describe('compiler', () => {
           make(Opcodes.OpGetGlobal, 0),
           make(Opcodes.OpSetGlobal, 1),
           make(Opcodes.OpGetGlobal, 1),
+          make(Opcodes.OpPop),
+        ],
+      },
+    ]
+    runCompilerTest(tests)
+  })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('string expressions', () => {
+    const tests: CompilerTestCase[] = [
+      {
+        input: '"monkey"',
+        expectedConstants: ['monkey'],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpPop),
+        ],
+      },
+      {
+        input: '"mon" + "key"',
+        expectedConstants: ['mon', 'key'],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpAdd),
           make(Opcodes.OpPop),
         ],
       },

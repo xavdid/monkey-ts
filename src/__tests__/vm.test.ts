@@ -1,7 +1,12 @@
 import { Compiler } from '../compiler'
 import { BaseObject } from '../object'
 import { VM } from '../vm'
-import { parseProgram, testBooleanObj, testIntegerObj } from './helpers'
+import {
+  parseProgram,
+  testBooleanObj,
+  testIntegerObj,
+  testStringObj,
+} from './helpers'
 
 interface VMTest {
   input: string
@@ -23,6 +28,8 @@ const testExpectedObject = (
     testBooleanObj(actual, expected)
   } else if (expected == null) {
     expect(actual.value).toBeNull()
+  } else if (typeof expected === 'string') {
+    testStringObj(actual, expected)
   }
 }
 
@@ -123,6 +130,16 @@ describe('vm', () => {
       { input: 'let one = 1; one', expected: 1 },
       { input: 'let one = 1; let two = 2; one + two', expected: 3 },
       { input: 'let one = 1; let two = one + one; one + two', expected: 3 },
+    ]
+    runVmTests(tests)
+  })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('string expressions', () => {
+    const tests: VMTest[] = [
+      { input: '"monkey"', expected: 'monkey' },
+      { input: '"mon" + "key"', expected: 'monkey' },
+      { input: '"mon" + "key" + "banana"', expected: 'monkeybanana' },
     ]
     runVmTests(tests)
   })
