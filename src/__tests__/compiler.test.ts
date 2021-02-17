@@ -263,4 +263,42 @@ describe('compiler', () => {
     ]
     runCompilerTest(tests)
   })
+  // eslint-disable-next-line jest/expect-expect
+  test('global let statements', () => {
+    const tests: CompilerTestCase[] = [
+      {
+        input: 'let one = 1; let two = 2;',
+        expectedConstants: [1, 2],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpSetGlobal, 0),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpSetGlobal, 1),
+        ],
+      },
+      {
+        input: 'let one = 1; one;',
+        expectedConstants: [1],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpSetGlobal, 0),
+          make(Opcodes.OpGetGlobal, 0),
+          make(Opcodes.OpPop),
+        ],
+      },
+      {
+        input: 'let one = 1; let two = one; two;',
+        expectedConstants: [1],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpSetGlobal, 0),
+          make(Opcodes.OpGetGlobal, 0),
+          make(Opcodes.OpSetGlobal, 1),
+          make(Opcodes.OpGetGlobal, 1),
+          make(Opcodes.OpPop),
+        ],
+      },
+    ]
+    runCompilerTest(tests)
+  })
 })

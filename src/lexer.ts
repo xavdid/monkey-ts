@@ -8,16 +8,12 @@ import {
 } from './utils'
 
 export class Lexer {
-  position: number
-  readPosition: number
-  ch: number // char code
+  position: number = 0
+  readPosition: number = 0
+  ch: number = 0 // char code
 
   constructor(private readonly input: string) {
     this.input = input
-    this.position = 0
-    this.readPosition = 0
-    this.ch = 0
-
     this.readChar()
   }
 

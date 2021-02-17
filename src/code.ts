@@ -34,6 +34,9 @@ export enum Opcodes {
   // conditionals
   OpJumpNotTruthy,
   OpJump,
+  // variables
+  OpGetGlobal,
+  OpSetGlobal,
 }
 
 class Definition {
@@ -62,6 +65,8 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpJumpNotTruthy, [2]],
   [Opcodes.OpJump, [2]],
   [Opcodes.OpNull, []],
+  [Opcodes.OpGetGlobal, [2]],
+  [Opcodes.OpSetGlobal, [2]],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(
@@ -79,7 +84,6 @@ export const lookup = (op: number): Definition => {
   return def
 }
 
-// his is `ReadUint16`
 export const readUint16 = (nums: number[]): number => {
   // takes only the first two items from an index, ignores the rest
   if (nums.length < 2) {
@@ -89,7 +93,7 @@ export const readUint16 = (nums: number[]): number => {
   return parseInt(Buffer.from(nums.slice(0, 2)).toString('hex'), 16)
 }
 
-// this is probably a big performance hit
+// this is called a lot, make it fast
 export const numToHexBytes = (num: number, width: number): number[] => {
   const paddedHex = num.toString(16).padStart(2 * width, '0')
 

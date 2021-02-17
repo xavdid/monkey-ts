@@ -2,15 +2,18 @@ import {
   BlockStatement,
   BooleanLiteral,
   ExpressionStatement,
+  Identifier,
   IfExpression,
   InfixExpression,
   IntegerLiteral,
+  LetStatement,
   Node,
   PrefixExpression,
   Program,
 } from './ast'
 import { Instructions, make, Opcodes, stringifyInstructions } from './code'
 import { BaseObject, IntegerObj } from './object'
+import { SymbolTable } from './symbolTable'
 
 class EmittedInstruction {
   constructor(
@@ -44,6 +47,7 @@ export class Bytecode {
 export class Compiler {
   private instructions: Instructions = []
   private readonly constants: any[] = []
+  private readonly symbolTable = new SymbolTable()
 
   // most recently emitted
   lastInstruction?: EmittedInstruction
@@ -143,6 +147,16 @@ export class Compiler {
       this.changeOperand(jumpPos, afterAlternativePos)
     } else if (node instanceof BlockStatement) {
       node.statements.forEach(this.compile)
+    } else if (node instanceof LetStatement) {
+      this.compile(node.value)
+      const sym = this.symbolTable.define(node.name.value)
+      this.emit(Opcodes.OpSetGlobal, sym.index)
+    } else if (node instanceof Identifier) {
+      const sym = this.symbolTable.resolve(node.value)
+      if (sym === undefined) {
+        throw new Error(`undefined variable: "${node.value}"`)
+      }
+      this.emit(Opcodes.OpGetGlobal, sym.index)
     }
   }
 
