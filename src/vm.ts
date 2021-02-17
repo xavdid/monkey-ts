@@ -28,7 +28,8 @@ export class VM {
   private readonly stack: BaseObject[] = Array(STACK_SIZE)
   // always points to the next value. top of stack is stack[stackPointer - 1]
   private stackPointer: number = 0
-  constructor(bytecode: Bytecode) {
+
+  constructor(bytecode: Bytecode, public readonly globals: BaseObject[] = []) {
     this.instructions = bytecode.instructions // TODO: need to copy?
     this.constants = bytecode.constants // TODO: need to copy?
   }
@@ -139,6 +140,12 @@ export class VM {
     this.push(new IntegerObj(-operand.value))
   }
 
+  /**
+   * read a single 16 bit argument
+   */
+  readArgument = (instructionPointer: number) =>
+    readUint16(this.instructions.slice(instructionPointer + 1))
+
   run = (): void => {
     for (
       let instructionPointer = 0;
@@ -149,9 +156,7 @@ export class VM {
 
       switch (op) {
         case Opcodes.OpConstant: {
-          const constantObjIndex = readUint16(
-            this.instructions.slice(instructionPointer + 1)
-          )
+          const constantObjIndex = this.readArgument(instructionPointer)
           instructionPointer += 2
           this.push(this.constants[constantObjIndex])
           break
@@ -187,23 +192,31 @@ export class VM {
           this.executeMinusOperator()
           break
         case Opcodes.OpJump: {
-          const position = readUint16(
-            this.instructions.slice(instructionPointer + 1)
-          )
+          const position = this.readArgument(instructionPointer)
           // set to 1 earlier so that we end up where we want to be when the loop runs
           instructionPointer = position - 1
           break
         }
         case Opcodes.OpJumpNotTruthy: {
-          const position = readUint16(
-            this.instructions.slice(instructionPointer + 1)
-          )
+          const position = this.readArgument(instructionPointer)
           instructionPointer += 2 // consume the argument no matter what
 
           const condition = this.pop()
           if (!isTruthy(condition)) {
             instructionPointer = position - 1
           }
+          break
+        }
+        case Opcodes.OpSetGlobal: {
+          const globalIndex = this.readArgument(instructionPointer)
+          instructionPointer += 2
+          this.globals[globalIndex] = this.pop()
+          break
+        }
+        case Opcodes.OpGetGlobal: {
+          const globalIndex = this.readArgument(instructionPointer)
+          instructionPointer += 2
+          this.push(this.globals[globalIndex])
           break
         }
         default:

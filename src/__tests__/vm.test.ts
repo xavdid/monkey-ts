@@ -13,7 +13,9 @@ const testExpectedObject = (
   expected: any
 ): void => {
   if (actual === undefined) {
-    throw new Error('actual does not exist')
+    throw new Error(
+      `VM didn't pop an object, should have been ${expected} (${typeof expected})`
+    )
   }
   if (typeof expected === 'number') {
     testIntegerObj(actual, expected)
@@ -103,7 +105,7 @@ describe('vm', () => {
     const tests: VMTest[] = [
       { input: 'if (true) { 10 }', expected: 10 },
       { input: 'if (true) { 10 } else { 20 }', expected: 10 },
-      { input: 'if (false) { 10 } else { 20 } ', expected: 20 },
+      { input: 'if (false) { 10 } else { 20 }', expected: 20 },
       { input: 'if (1) { 10 }', expected: 10 },
       { input: 'if (1 < 2) { 10 }', expected: 10 },
       { input: 'if (1 < 2) { 10 } else { 20 }', expected: 10 },
@@ -111,6 +113,16 @@ describe('vm', () => {
       { input: 'if (1 > 2) { 10 }', expected: null },
       { input: 'if (false) { 10 }', expected: null },
       { input: 'if ((if (false) { 10 })) { 10 } else { 20 }', expected: 20 },
+    ]
+    runVmTests(tests)
+  })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('global let statements', () => {
+    const tests: VMTest[] = [
+      { input: 'let one = 1; one', expected: 1 },
+      { input: 'let one = 1; let two = 2; one + two', expected: 3 },
+      { input: 'let one = 1; let two = one + one; one + two', expected: 3 },
     ]
     runVmTests(tests)
   })

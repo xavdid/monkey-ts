@@ -1,14 +1,21 @@
 import { start } from 'repl' // native node module
+
 import { Lexer } from './lexer'
 import { Parser } from './parser'
 import { evaluate } from './evaluator'
 import { Environment } from './environment'
 import { Compiler } from './compiler'
 import { VM } from './vm'
+import { BaseObject } from './object'
+import { SymbolTable } from './symbolTable'
 
 // needs to be out here so it's reused across lines
 // also means its global across requires, which might be bad
 const env = new Environment()
+
+const constants: BaseObject[] = []
+const globals: BaseObject[] = []
+const symbolTable = new SymbolTable()
 
 const USE_COMPILER = true
 
@@ -28,10 +35,10 @@ const lineToTokens = (
 
   if (USE_COMPILER) {
     // run using compiler
-    const comp = new Compiler()
+    const comp = new Compiler(symbolTable, constants)
     comp.compile(program)
 
-    const machine = new VM(comp.bytecode)
+    const machine = new VM(comp.bytecode, globals)
     machine.run()
 
     const stackTop = machine.lastPoppedStackElement
@@ -48,7 +55,7 @@ const lineToTokens = (
 }
 
 export default () => {
-  console.log(`Running using ${USE_COMPILER ? 'compiler' : 'interpreter'}`)
+  console.log(`Running using ${USE_COMPILER ? 'compiler' : 'interpreter'}\n`)
   start({
     prompt: '>> ',
     eval: lineToTokens,

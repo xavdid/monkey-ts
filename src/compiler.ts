@@ -28,7 +28,7 @@ export class Bytecode {
     // values that are constant at compile time (such as booleans an integers) can be declared and referenced
     // bytecode will point to the index of a constant
     // TODO: allow this to re-use already delcared nubmers?
-    public constants: BaseObject[]
+    public readonly constants: BaseObject[]
   ) {}
 
   toString(): string {
@@ -46,8 +46,11 @@ export class Bytecode {
 
 export class Compiler {
   private instructions: Instructions = []
-  private readonly constants: any[] = []
-  private readonly symbolTable = new SymbolTable()
+
+  constructor(
+    private readonly symbolTable: SymbolTable = new SymbolTable(),
+    private readonly constants: BaseObject[] = []
+  ) {}
 
   // most recently emitted
   lastInstruction?: EmittedInstruction
