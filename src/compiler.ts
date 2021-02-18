@@ -3,6 +3,7 @@ import {
   BlockStatement,
   BooleanLiteral,
   ExpressionStatement,
+  HashLiteral,
   Identifier,
   IfExpression,
   InfixExpression,
@@ -170,6 +171,16 @@ export class Compiler {
         this.compile(element)
       })
       this.emit(Opcodes.OpArray, node.elements.length)
+    } else if (node instanceof HashLiteral) {
+      // if there are int keys, JS will sort them weirdly but at least it'll be consistent
+      const sortedKeys = Array.from(node.pairs.keys()).sort((a, b) =>
+        a.toString() > b.toString() ? 1 : -1
+      )
+      sortedKeys.forEach((key) => {
+        this.compile(key)
+        this.compile(node.pairs.get(key)!)
+      })
+      this.emit(Opcodes.OpHash, node.pairs.size * 2)
     }
   }
 

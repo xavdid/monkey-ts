@@ -1,5 +1,5 @@
 import { Compiler } from '../compiler'
-import { ArrayObj, BaseObject } from '../object'
+import { ArrayObj, BaseObject, IntegerObj, HashObj } from '../object'
 import { VM } from '../vm'
 import {
   parseProgram,
@@ -33,10 +33,24 @@ const testExpectedObject = (
   } else if (Array.isArray(expected)) {
     expect(actual).toBeInstanceOf(ArrayObj)
     const arr = actual as ArrayObj
-    expect((actual as ArrayObj).elements).toHaveLength(expected.length)
+    expect(arr.elements).toHaveLength(expected.length)
     arr.elements.forEach((element, index) => {
       testExpectedObject(element, expected[index])
     })
+  } else if (expected instanceof Map) {
+    expect(actual).toBeInstanceOf(HashObj)
+    const hash = actual as HashObj
+    expect(hash.pairs.size).toEqual(expected.size)
+    for (const [expectedKey, expectedValue] of expected as Map<
+      string,
+      number
+    >) {
+      const pair = hash.pairs.get(expectedKey)! // about to assert that it's defined, so the ! is cool
+      expect(pair).toBeDefined()
+      testExpectedObject(pair.value, expectedValue)
+    }
+  } else {
+    throw new Error(`Unknown object type: ${expected}`)
   }
 }
 
@@ -157,6 +171,28 @@ describe('vm', () => {
       { input: '[]', expected: [] },
       { input: '[1, 2, 3]', expected: [1, 2, 3] },
       { input: '[1 + 2, 3 * 4, 5 + 6]', expected: [3, 12, 11] },
+    ]
+    runVmTests(tests)
+  })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('hash literals', () => {
+    const tests: VMTest[] = [
+      { input: '{}', expected: new Map() },
+      {
+        input: '{1: 2, 2: 3}',
+        expected: new Map<string, number>([
+          [new IntegerObj(1).hashKey(), 2],
+          [new IntegerObj(2).hashKey(), 3],
+        ]),
+      },
+      {
+        input: '{1 + 1: 2 * 2, 3 + 3: 4 * 4}',
+        expected: new Map<string, number>([
+          [new IntegerObj(2).hashKey(), 4],
+          [new IntegerObj(6).hashKey(), 16],
+        ]),
+      },
     ]
     runVmTests(tests)
   })

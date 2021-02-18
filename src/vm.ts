@@ -4,8 +4,11 @@ import {
   ArrayObj,
   BaseObject,
   BooleanObj,
+  HashObj,
+  HashPair,
   IntegerObj,
   NullObj,
+  objIsHashable,
   StringObj,
 } from './object'
 
@@ -167,6 +170,23 @@ export class VM {
     return new ArrayObj(this.stack.slice(startIndex, endIndex))
   }
 
+  buildHash = (startIndex: number, endIndex: number): BaseObject => {
+    const hashedPairs = new Map<string, HashPair>()
+
+    for (let i = startIndex; i < endIndex; i += 2) {
+      const key = this.stack[i]
+      const value = this.stack[i + 1]
+      const pair: HashPair = { key, value }
+      if (objIsHashable(key)) {
+        hashedPairs.set(key.hashKey(), pair)
+      } else {
+        throw new Error(`invalid type for hash key: ${key.primitive}`)
+      }
+    }
+
+    return new HashObj(hashedPairs)
+  }
+
   /**
    * read a single 16 bit argument
    */
@@ -255,6 +275,19 @@ export class VM {
           )
           this.stackPointer -= numElements
           this.push(arr)
+          break
+        }
+        case Opcodes.OpHash: {
+          const numElements = this.readArgument(instructionPointer)
+          instructionPointer += 2
+
+          const hash = this.buildHash(
+            this.stackPointer - numElements,
+            this.stackPointer
+          )
+          this.stackPointer -= numElements
+
+          this.push(hash)
           break
         }
         default:
