@@ -6,6 +6,7 @@ import {
   HashLiteral,
   Identifier,
   IfExpression,
+  IndexExpression,
   InfixExpression,
   IntegerLiteral,
   LetStatement,
@@ -181,6 +182,10 @@ export class Compiler {
         this.compile(node.pairs.get(key)!)
       })
       this.emit(Opcodes.OpHash, node.pairs.size * 2)
+    } else if (node instanceof IndexExpression) {
+      this.compile(node.left)
+      this.compile(node.index)
+      this.emit(Opcodes.OpIndex)
     }
   }
 

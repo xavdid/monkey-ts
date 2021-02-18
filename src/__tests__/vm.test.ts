@@ -196,4 +196,22 @@ describe('vm', () => {
     ]
     runVmTests(tests)
   })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('index expressions', () => {
+    const tests: VMTest[] = [
+      { input: '[1, 2, 3][1]', expected: 2 },
+      { input: '[1, 2, 3][0 + 2]', expected: 3 },
+      { input: '[[1, 1, 1]][0][0]', expected: 1 },
+      { input: '[][0]', expected: null },
+      { input: '[1, 2, 3][99]', expected: null },
+      { input: '[1][-1]', expected: null },
+      { input: '{1: 1, 2: 2}[1]', expected: 1 },
+      { input: '{1: 1, 2: 2}[2]', expected: 2 },
+      { input: '{1: 1}[0]', expected: null },
+      { input: '{}[0]', expected: null },
+      { input: '{"one": 1, "two": 2, "three": 3}["o" + "ne"]', expected: 1 },
+    ]
+    runVmTests(tests)
+  })
 })

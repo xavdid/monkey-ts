@@ -99,12 +99,45 @@ export class VM {
     op: Opcodes,
     left: StringObj,
     right: StringObj
-  ) => {
+  ): void => {
     if (op !== Opcodes.OpAdd) {
       throw new Error(`unknown string operator: ${Opcodes[op]}`)
     }
 
     this.push(new StringObj(left.value + right.value))
+  }
+
+  executeIndexExpression = (left: BaseObject, index: BaseObject): void => {
+    if (left instanceof ArrayObj && index instanceof IntegerObj) {
+      return this.executeArrayIndex(left, index)
+    }
+    if (left instanceof HashObj) {
+      return this.executeHashIndex(left, index)
+    }
+    throw new Error(`index operator not supported for type: ${left.primitive}`)
+  }
+
+  executeArrayIndex = (arr: ArrayObj, index: IntegerObj): void => {
+    const maxIndex = arr.elements.length - 1
+    const i = index.value
+    if (i < 0 || i > maxIndex) {
+      // * do bounds checking?
+      this.push(NULL)
+    } else {
+      this.push(arr.elements[i])
+    }
+  }
+
+  executeHashIndex = (hash: HashObj, index: BaseObject): void => {
+    if (!objIsHashable(index)) {
+      throw new Error(`unusable as hash key: ${index.primitive}`)
+    }
+    const pair = hash.pairs.get(index.hashKey())
+    if (pair === undefined) {
+      this.push(NULL)
+    } else {
+      this.push(pair.value)
+    }
   }
 
   executeComparison = (op: Opcodes): void => {
@@ -288,6 +321,12 @@ export class VM {
           this.stackPointer -= numElements
 
           this.push(hash)
+          break
+        }
+        case Opcodes.OpIndex: {
+          const index = this.pop()
+          const left = this.pop()
+          this.executeIndexExpression(left, index)
           break
         }
         default:

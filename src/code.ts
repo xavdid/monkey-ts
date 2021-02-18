@@ -40,6 +40,7 @@ export enum Opcodes {
   // Data Types
   OpArray,
   OpHash,
+  OpIndex,
 }
 
 class Definition {
@@ -72,6 +73,7 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpSetGlobal, [2]],
   [Opcodes.OpArray, [2]],
   [Opcodes.OpHash, [2]],
+  [Opcodes.OpIndex, []],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(

@@ -415,4 +415,40 @@ describe('compiler', () => {
     ]
     runCompilerTest(tests)
   })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('index expressions', () => {
+    const tests: CompilerTestCase[] = [
+      {
+        input: '[1, 2,3][1 + 1]',
+        expectedConstants: [1, 2, 3, 1, 1],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpConstant, 2),
+          make(Opcodes.OpArray, 3),
+          make(Opcodes.OpConstant, 3),
+          make(Opcodes.OpConstant, 4),
+          make(Opcodes.OpAdd),
+          make(Opcodes.OpIndex),
+          make(Opcodes.OpPop),
+        ],
+      },
+      {
+        input: '{1: 2}[2 - 1]',
+        expectedConstants: [1, 2, 2, 1],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpHash, 2),
+          make(Opcodes.OpConstant, 2),
+          make(Opcodes.OpConstant, 3),
+          make(Opcodes.OpSub),
+          make(Opcodes.OpIndex),
+          make(Opcodes.OpPop),
+        ],
+      },
+    ]
+    runCompilerTest(tests)
+  })
 })
