@@ -1,5 +1,5 @@
 import { Compiler } from '../compiler'
-import { BaseObject } from '../object'
+import { ArrayObj, BaseObject } from '../object'
 import { VM } from '../vm'
 import {
   parseProgram,
@@ -30,6 +30,13 @@ const testExpectedObject = (
     expect(actual.value).toBeNull()
   } else if (typeof expected === 'string') {
     testStringObj(actual, expected)
+  } else if (Array.isArray(expected)) {
+    expect(actual).toBeInstanceOf(ArrayObj)
+    const arr = actual as ArrayObj
+    expect((actual as ArrayObj).elements).toHaveLength(expected.length)
+    arr.elements.forEach((element, index) => {
+      testExpectedObject(element, expected[index])
+    })
   }
 }
 
@@ -140,6 +147,16 @@ describe('vm', () => {
       { input: '"monkey"', expected: 'monkey' },
       { input: '"mon" + "key"', expected: 'monkey' },
       { input: '"mon" + "key" + "banana"', expected: 'monkeybanana' },
+    ]
+    runVmTests(tests)
+  })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('array literals', () => {
+    const tests: VMTest[] = [
+      { input: '[]', expected: [] },
+      { input: '[1, 2, 3]', expected: [1, 2, 3] },
+      { input: '[1 + 2, 3 * 4, 5 + 6]', expected: [3, 12, 11] },
     ]
     runVmTests(tests)
   })

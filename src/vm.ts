@@ -1,6 +1,7 @@
 import { readUint16, Instructions, Opcodes } from './code'
 import { Bytecode } from './compiler'
 import {
+  ArrayObj,
   BaseObject,
   BooleanObj,
   IntegerObj,
@@ -162,6 +163,10 @@ export class VM {
     this.push(new IntegerObj(-operand.value))
   }
 
+  buildArray = (startIndex: number, endIndex: number): BaseObject => {
+    return new ArrayObj(this.stack.slice(startIndex, endIndex))
+  }
+
   /**
    * read a single 16 bit argument
    */
@@ -239,6 +244,17 @@ export class VM {
           const globalIndex = this.readArgument(instructionPointer)
           instructionPointer += 2
           this.push(this.globals[globalIndex])
+          break
+        }
+        case Opcodes.OpArray: {
+          const numElements = this.readArgument(instructionPointer)
+          instructionPointer += 2
+          const arr = this.buildArray(
+            this.stackPointer - numElements,
+            this.stackPointer
+          )
+          this.stackPointer -= numElements
+          this.push(arr)
           break
         }
         default:

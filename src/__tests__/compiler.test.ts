@@ -331,4 +331,45 @@ describe('compiler', () => {
     ]
     runCompilerTest(tests)
   })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('array literals', () => {
+    const tests: CompilerTestCase[] = [
+      {
+        input: '[]',
+        expectedConstants: [],
+        expectedInstructions: [make(Opcodes.OpArray, 0), make(Opcodes.OpPop)],
+      },
+      {
+        input: '[1, 2, 3]',
+        expectedConstants: [1, 2, 3],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpConstant, 2),
+          make(Opcodes.OpArray, 3),
+          make(Opcodes.OpPop),
+        ],
+      },
+
+      {
+        input: '[1 + 2, 3 - 4, 5 * 6]',
+        expectedConstants: [1, 2, 3, 4, 5, 6],
+        expectedInstructions: [
+          make(Opcodes.OpConstant, 0),
+          make(Opcodes.OpConstant, 1),
+          make(Opcodes.OpAdd),
+          make(Opcodes.OpConstant, 2),
+          make(Opcodes.OpConstant, 3),
+          make(Opcodes.OpSub),
+          make(Opcodes.OpConstant, 4),
+          make(Opcodes.OpConstant, 5),
+          make(Opcodes.OpMul),
+          make(Opcodes.OpArray, 3),
+          make(Opcodes.OpPop),
+        ],
+      },
+    ]
+    runCompilerTest(tests)
+  })
 })

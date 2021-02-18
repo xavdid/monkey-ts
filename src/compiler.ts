@@ -1,4 +1,5 @@
 import {
+  ArrayLiteral,
   BlockStatement,
   BooleanLiteral,
   ExpressionStatement,
@@ -164,6 +165,11 @@ export class Compiler {
         throw new Error(`undefined variable: "${node.value}"`)
       }
       this.emit(Opcodes.OpGetGlobal, sym.index)
+    } else if (node instanceof ArrayLiteral) {
+      node.elements.forEach((element) => {
+        this.compile(element)
+      })
+      this.emit(Opcodes.OpArray, node.elements.length)
     }
   }
 
