@@ -1,4 +1,5 @@
 import { Identifier, BlockStatement } from './ast'
+import { Instructions } from './code'
 import { Environment } from './environment'
 
 // tihs could use some cleanup
@@ -220,6 +221,23 @@ export class HashObj extends BaseObject {
     .map(([, { key, value }]) => `${key.toString()}: ${value.toString()}`)
     .join(',\n')}
 }`.trim()
+  }
+}
+
+export class CompiledFunction extends BaseObject {
+  readonly primitive = 'COMPILED_FUNCTION_OBJ'
+  value = null
+
+  constructor(public readonly instructions: Instructions) {
+    super()
+  }
+
+  toString() {
+    return '<Compiled Function>'
+  }
+
+  clone() {
+    return new CompiledFunction([...this.instructions])
   }
 }
 

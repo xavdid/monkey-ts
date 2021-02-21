@@ -64,6 +64,8 @@ export class VM {
       return this.executeBinaryStringOperation(op, left, right)
     }
 
+    // TODO: add arrays together?
+
     throw new Error(
       `Unsupported types for binary operation: ${left.primitive} & ${right.primitive}`
     )
@@ -339,9 +341,8 @@ export class VM {
     if (this.stackPointer === 0) {
       throw new Error('Stack underflow, popped something off an empty stack')
     }
-    const o = this.stack[this.stackPointer - 1]
-    this.stackPointer--
-    return o
+    this.stackPointer -= 1
+    return this.stack[this.stackPointer]
   }
 
   // for tests only

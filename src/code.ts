@@ -31,16 +31,19 @@ export enum Opcodes {
   // prefix expressions
   OpMinus,
   OpBang,
-  // conditionals
+  // control flow
   OpJumpNotTruthy,
   OpJump,
+  OpReturnValue, // return w/ value
+  OpReturn, // return w/o value
   // variables
   OpGetGlobal,
   OpSetGlobal,
-  // Data Types
+  // data structures
   OpArray,
   OpHash,
   OpIndex,
+  OpCall,
 }
 
 class Definition {
@@ -74,6 +77,9 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpArray, [2]],
   [Opcodes.OpHash, [2]],
   [Opcodes.OpIndex, []],
+  [Opcodes.OpCall, []],
+  [Opcodes.OpReturnValue, []],
+  [Opcodes.OpReturn, []],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(

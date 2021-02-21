@@ -3,6 +3,7 @@ import {
   BlockStatement,
   BooleanLiteral,
   ExpressionStatement,
+  FunctionLiteral,
   HashLiteral,
   Identifier,
   IfExpression,
@@ -13,18 +14,28 @@ import {
   Node,
   PrefixExpression,
   Program,
+  ReturnStatement,
   StringLiteral,
 } from './ast'
 import { Instructions, make, Opcodes, stringifyInstructions } from './code'
-import { BaseObject, IntegerObj, StringObj } from './object'
+import { BaseObject, CompiledFunction, IntegerObj, StringObj } from './object'
 import { SymbolTable } from './symbolTable'
 
 class EmittedInstruction {
   constructor(
-    public readonly opcode: Opcodes,
-    public readonly position: number
+    // only optional so I can create bunk ones
+    public readonly opcode?: Opcodes,
+    public readonly position?: number
   ) {}
 }
+
+const blankCompilationScope = () =>
+  new CompilationScope(
+    [],
+    // ? add started values to these so they don't need to be optionals?
+    new EmittedInstruction(),
+    new EmittedInstruction()
+  )
 
 export class Bytecode {
   constructor(
@@ -48,18 +59,26 @@ export class Bytecode {
   }
 }
 
+export class CompilationScope {
+  constructor(
+    public instructions: Instructions,
+    public lastInstruction: EmittedInstruction,
+    public previousInstruction: EmittedInstruction
+  ) {}
+}
+
 export class Compiler {
-  private instructions: Instructions = []
+  // private readonly instructions: Instructions = []
+  // these should be private, but we read them in tests
+  scopeIndex = 0
+  mainScope = blankCompilationScope()
+
+  scopes: CompilationScope[] = [this.mainScope]
 
   constructor(
     private readonly symbolTable: SymbolTable = new SymbolTable(),
     private readonly constants: BaseObject[] = []
   ) {}
-
-  // most recently emitted
-  lastInstruction?: EmittedInstruction
-  // the one before last
-  previousInstruction?: EmittedInstruction
 
   compile = (node: Node): void => {
     if (node instanceof Program) {
@@ -140,7 +159,7 @@ export class Compiler {
       // Emit JMP with a bogus value, save the pointer
       const jumpPos = this.emit(Opcodes.OpJump, 9999)
 
-      const afterConsequencePos = this.instructions.length
+      const afterConsequencePos = this.currentInstructions.length
       this.changeOperand(jumpNotTruthyPos, afterConsequencePos)
 
       if (node.alternative) {
@@ -153,7 +172,7 @@ export class Compiler {
       } else {
         this.emit(Opcodes.OpNull)
       }
-      const afterAlternativePos = this.instructions.length
+      const afterAlternativePos = this.currentInstructions.length
       this.changeOperand(jumpPos, afterAlternativePos)
     } else if (node instanceof BlockStatement) {
       node.statements.forEach(this.compile)
@@ -186,6 +205,21 @@ export class Compiler {
       this.compile(node.left)
       this.compile(node.index)
       this.emit(Opcodes.OpIndex)
+    } else if (node instanceof FunctionLiteral) {
+      this.enterScope()
+      this.compile(node.body)
+
+      const instructions = this.leaveScope()
+      this.emit(
+        Opcodes.OpConstant,
+        this.addConstant(new CompiledFunction(instructions))
+      )
+    } else if (node instanceof ReturnStatement) {
+      // if (node.returnValue) {
+      // TODO: maybe remove this `!`
+      this.compile(node.returnValue!)
+      this.emit(Opcodes.OpReturnValue)
+      // }
     }
   }
 
@@ -199,16 +233,21 @@ export class Compiler {
   }
 
   setLastInstruction = (op: Opcodes, pos: number): void => {
-    const previous = this.lastInstruction
-    const last = new EmittedInstruction(op, pos)
-
-    this.previousInstruction = previous
-    this.lastInstruction = last
+    this.scopes[this.scopeIndex].previousInstruction = this.scopes[
+      this.scopeIndex
+    ].lastInstruction
+    this.scopes[this.scopeIndex].lastInstruction = new EmittedInstruction(
+      op,
+      pos
+    )
   }
 
   addInstruction = (instruction: number[]): number => {
-    const newInstructionPosition = this.instructions.length
-    this.instructions.push(...instruction)
+    const newInstructionPosition = this.currentInstructions.length
+    const updatedInstructions = [...this.currentInstructions, ...instruction]
+
+    this.scopes[this.scopeIndex].instructions = updatedInstructions
+
     return newInstructionPosition
   }
 
@@ -217,19 +256,26 @@ export class Compiler {
     return this.constants.length - 1
   }
 
+  get currentInstructions(): Instructions {
+    return this.scopes[this.scopeIndex].instructions
+  }
+
   get isLastInstructionPop(): boolean {
-    return this.lastInstruction?.opcode === Opcodes.OpPop
+    return this.scopes[this.scopeIndex].lastInstruction.opcode === Opcodes.OpPop
   }
 
   removeLastPop = (): void => {
-    this.instructions = this.instructions.slice(
-      0,
-      this.lastInstruction?.position
-    )
+    const last = this.scopes[this.scopeIndex].lastInstruction
+    const previous = this.scopes[this.scopeIndex].previousInstruction
+
+    const old = this.currentInstructions
+    const newInstructions = old.slice(0, last.position)
+    this.scopes[this.scopeIndex].instructions = newInstructions
+    this.scopes[this.scopeIndex].lastInstruction = previous
   }
 
   replaceInstruction = (position: number, newInstructions: number[]): void => {
-    this.instructions.splice(
+    this.currentInstructions.splice(
       position,
       newInstructions.length,
       ...newInstructions
@@ -237,12 +283,26 @@ export class Compiler {
   }
 
   changeOperand = (opPosition: number, operand: number) => {
-    const newInstruction = make(this.instructions[opPosition], operand)
+    const newInstruction = make(this.currentInstructions[opPosition], operand)
 
     this.replaceInstruction(opPosition, newInstruction)
   }
 
+  enterScope = (): void => {
+    this.scopes.push(blankCompilationScope())
+    this.scopeIndex += 1
+  }
+
+  leaveScope = (): Instructions => {
+    const instructions = this.currentInstructions
+
+    this.scopes.pop()
+    // TODO: don't need to store scope index
+    this.scopeIndex -= 1
+    return instructions
+  }
+
   get bytecode(): Bytecode {
-    return new Bytecode(this.instructions, this.constants)
+    return new Bytecode(this.currentInstructions, this.constants)
   }
 }
