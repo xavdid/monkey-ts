@@ -464,28 +464,111 @@ describe('compiler', () => {
       runCompilerTest(tests)
     })
 
-    // eslint-disable-next-line jest/expect-expect
-    test('functions', () => {
-      const tests: CompilerTestCase[] = [
-        {
-          input: 'fn() { return 5 + 10 }',
-          expectedConstants: [
-            5,
-            10,
-            [
-              make(Opcodes.OpConstant, 0),
-              make(Opcodes.OpConstant, 1),
-              make(Opcodes.OpAdd),
-              make(Opcodes.OpReturnValue),
+    describe('functions', () => {
+      // eslint-disable-next-line jest/expect-expect
+      test('function definitions', () => {
+        const tests: CompilerTestCase[] = [
+          {
+            input: 'fn() { return 5 + 10 }',
+            expectedConstants: [
+              5,
+              10,
+              [
+                make(Opcodes.OpConstant, 0),
+                make(Opcodes.OpConstant, 1),
+                make(Opcodes.OpAdd),
+                make(Opcodes.OpReturnValue),
+              ],
             ],
-          ],
-          expectedInstructions: [
-            make(Opcodes.OpConstant, 2),
-            make(Opcodes.OpPop),
-          ],
-        },
-      ]
-      runCompilerTest(tests)
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input: 'fn() { 5 + 10 }',
+            expectedConstants: [
+              5,
+              10,
+              [
+                make(Opcodes.OpConstant, 0),
+                make(Opcodes.OpConstant, 1),
+                make(Opcodes.OpAdd),
+                make(Opcodes.OpReturnValue),
+              ],
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input: 'fn() { 1; 2 }',
+            expectedConstants: [
+              1,
+              2,
+              [
+                make(Opcodes.OpConstant, 0),
+                make(Opcodes.OpPop),
+                make(Opcodes.OpConstant, 1),
+                make(Opcodes.OpReturnValue),
+              ],
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input: 'fn() { }',
+            expectedConstants: [[make(Opcodes.OpReturn)]],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpPop),
+            ],
+          },
+        ]
+        runCompilerTest(tests)
+      })
+
+      // eslint-disable-next-line jest/expect-expect
+      test('function calls', () => {
+        const tests: CompilerTestCase[] = [
+          {
+            input: 'fn() { 24 }()',
+            expectedConstants: [
+              24,
+              [
+                make(Opcodes.OpConstant, 0), // the literal 24
+                make(Opcodes.OpReturnValue),
+              ],
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 1), // the compiled funciton
+              make(Opcodes.OpCall),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input: 'let noArg = fn() { 24 }; noArg();',
+            expectedConstants: [
+              24,
+              [
+                make(Opcodes.OpConstant, 0), // the literal 24
+                make(Opcodes.OpReturnValue),
+              ],
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 1), // the compiled funciton
+              make(Opcodes.OpSetGlobal, 0),
+              make(Opcodes.OpGetGlobal, 0),
+              make(Opcodes.OpCall),
+              make(Opcodes.OpPop),
+            ],
+          },
+        ]
+        runCompilerTest(tests)
+      })
     })
   })
 

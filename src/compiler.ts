@@ -2,6 +2,7 @@ import {
   ArrayLiteral,
   BlockStatement,
   BooleanLiteral,
+  CallExpression,
   ExpressionStatement,
   FunctionLiteral,
   HashLiteral,
@@ -24,7 +25,7 @@ import { SymbolTable } from './symbolTable'
 class EmittedInstruction {
   constructor(
     // only optional so I can create bunk ones
-    public readonly opcode?: Opcodes,
+    public opcode?: Opcodes,
     public readonly position?: number
   ) {}
 }
@@ -152,7 +153,7 @@ export class Compiler {
 
       this.compile(node.consequence)
 
-      if (this.isLastInstructionPop) {
+      if (this.lastInstructionIs(Opcodes.OpPop)) {
         this.removeLastPop()
       }
 
@@ -166,7 +167,7 @@ export class Compiler {
         // if there's an else, we have to jump farther
         this.compile(node.alternative)
 
-        if (this.isLastInstructionPop) {
+        if (this.lastInstructionIs(Opcodes.OpPop)) {
           this.removeLastPop()
         }
       } else {
@@ -209,6 +210,13 @@ export class Compiler {
       this.enterScope()
       this.compile(node.body)
 
+      if (this.lastInstructionIs(Opcodes.OpPop)) {
+        this.replaceLastPopWithReturn()
+      }
+      if (!this.lastInstructionIs(Opcodes.OpReturnValue)) {
+        this.emit(Opcodes.OpReturn)
+      }
+
       const instructions = this.leaveScope()
       this.emit(
         Opcodes.OpConstant,
@@ -220,6 +228,9 @@ export class Compiler {
       this.compile(node.returnValue!)
       this.emit(Opcodes.OpReturnValue)
       // }
+    } else if (node instanceof CallExpression) {
+      this.compile(node.func)
+      this.emit(Opcodes.OpCall)
     }
   }
 
@@ -260,8 +271,12 @@ export class Compiler {
     return this.scopes[this.scopeIndex].instructions
   }
 
-  get isLastInstructionPop(): boolean {
-    return this.scopes[this.scopeIndex].lastInstruction.opcode === Opcodes.OpPop
+  lastInstructionIs = (op: Opcodes): boolean => {
+    if (this.currentInstructions.length === 0) {
+      return false
+    }
+
+    return this.scopes[this.scopeIndex].lastInstruction.opcode === op
   }
 
   removeLastPop = (): void => {
@@ -272,6 +287,13 @@ export class Compiler {
     const newInstructions = old.slice(0, last.position)
     this.scopes[this.scopeIndex].instructions = newInstructions
     this.scopes[this.scopeIndex].lastInstruction = previous
+  }
+
+  replaceLastPopWithReturn = (): void => {
+    const lastPos = this.scopes[this.scopeIndex].lastInstruction.position
+    this.replaceInstruction(lastPos!, make(Opcodes.OpReturnValue))
+
+    this.scopes[this.scopeIndex].lastInstruction.opcode = Opcodes.OpReturnValue
   }
 
   replaceInstruction = (position: number, newInstructions: number[]): void => {
