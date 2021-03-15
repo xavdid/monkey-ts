@@ -1,9 +1,11 @@
 import { readUint16, Instructions, Opcodes } from './code'
 import { Bytecode } from './compiler'
+import { Frame } from './frame'
 import {
   ArrayObj,
   BaseObject,
   BooleanObj,
+  CompiledFunction,
   HashObj,
   HashPair,
   IntegerObj,
@@ -34,13 +36,24 @@ const isTruthy = (obj: BaseObject): boolean => {
 
 export class VM {
   private readonly constants: BaseObject[]
-  private readonly instructions: Instructions
+
   private readonly stack: BaseObject[] = Array(STACK_SIZE)
   // always points to the next value. top of stack is stack[stackPointer - 1]
-  private stackPointer: number = 0
+  private stackPointer = 0
+
+  // arbitrary "big enough" value
+  private readonly frames: Frame[] = Array(STACK_SIZE / 2)
+  private frameIndex = 1 // main is added in constructor
+
+  private readonly mainFn: CompiledFunction
+  private readonly mainFrame: Frame
 
   constructor(bytecode: Bytecode, public readonly globals: BaseObject[] = []) {
-    this.instructions = bytecode.instructions // TODO: need to copy?
+    this.mainFn = new CompiledFunction(bytecode.instructions)
+    this.mainFrame = new Frame(this.mainFn)
+    this.frames[0] = this.mainFrame
+
+    // this.instructions = bytecode.instructions // TODO: need to copy?
     this.constants = bytecode.constants // TODO: need to copy?
   }
 
@@ -225,21 +238,31 @@ export class VM {
   /**
    * read a single 16 bit argument
    */
-  readArgument = (instructionPointer: number) =>
-    readUint16(this.instructions.slice(instructionPointer + 1))
+  readArgument = (instructions: Instructions, instructionPointer: number) =>
+    readUint16(instructions.slice(instructionPointer + 1))
 
   run = (): void => {
-    for (
-      let instructionPointer = 0;
-      instructionPointer < this.instructions.length;
-      instructionPointer++
+    let instructionPointer: number
+    let instructions: Instructions
+    let op: Opcodes
+
+    while (
+      this.currentFrame.instructionPointer <
+      this.currentFrame.instructions.length - 1
     ) {
-      const op = this.instructions[instructionPointer]
+      this.currentFrame.instructionPointer += 1
+
+      instructionPointer = this.currentFrame.instructionPointer
+      instructions = this.currentFrame.instructions
+      op = instructions[instructionPointer]
 
       switch (op) {
         case Opcodes.OpConstant: {
-          const constantObjIndex = this.readArgument(instructionPointer)
-          instructionPointer += 2
+          const constantObjIndex = this.readArgument(
+            instructions,
+            instructionPointer
+          )
+          this.currentFrame.instructionPointer += 2
           this.push(this.constants[constantObjIndex])
           break
         }
@@ -274,36 +297,45 @@ export class VM {
           this.executeMinusOperator()
           break
         case Opcodes.OpJump: {
-          const position = this.readArgument(instructionPointer)
+          const position = this.readArgument(instructions, instructionPointer)
           // set to 1 earlier so that we end up where we want to be when the loop runs
-          instructionPointer = position - 1
+          this.currentFrame.instructionPointer = position - 1
           break
         }
         case Opcodes.OpJumpNotTruthy: {
-          const position = this.readArgument(instructionPointer)
-          instructionPointer += 2 // consume the argument no matter what
+          const position = this.readArgument(instructions, instructionPointer)
+          this.currentFrame.instructionPointer += 2 // consume the argument no matter what
 
           const condition = this.pop()
           if (!isTruthy(condition)) {
-            instructionPointer = position - 1
+            this.currentFrame.instructionPointer = position - 1
           }
           break
         }
         case Opcodes.OpSetGlobal: {
-          const globalIndex = this.readArgument(instructionPointer)
-          instructionPointer += 2
+          const globalIndex = this.readArgument(
+            instructions,
+            instructionPointer
+          )
+          this.currentFrame.instructionPointer += 2
           this.globals[globalIndex] = this.pop()
           break
         }
         case Opcodes.OpGetGlobal: {
-          const globalIndex = this.readArgument(instructionPointer)
-          instructionPointer += 2
+          const globalIndex = this.readArgument(
+            instructions,
+            instructionPointer
+          )
+          this.currentFrame.instructionPointer += 2
           this.push(this.globals[globalIndex])
           break
         }
         case Opcodes.OpArray: {
-          const numElements = this.readArgument(instructionPointer)
-          instructionPointer += 2
+          const numElements = this.readArgument(
+            instructions,
+            instructionPointer
+          )
+          this.currentFrame.instructionPointer += 2
           const arr = this.buildArray(
             this.stackPointer - numElements,
             this.stackPointer
@@ -313,8 +345,11 @@ export class VM {
           break
         }
         case Opcodes.OpHash: {
-          const numElements = this.readArgument(instructionPointer)
-          instructionPointer += 2
+          const numElements = this.readArgument(
+            instructions,
+            instructionPointer
+          )
+          this.currentFrame.instructionPointer += 2
 
           const hash = this.buildHash(
             this.stackPointer - numElements,
@@ -354,5 +389,22 @@ export class VM {
   logStack = () => {
     console.log('vm stackPointer:', this.stackPointer)
     console.log('vm stack', this.stack)
+  }
+
+  get currentFrame(): Frame {
+    return this.frames[this.frameIndex - 1]
+  }
+
+  pushFrame = (f: Frame): void => {
+    this.frames[this.frameIndex] = f
+    this.frameIndex += 1
+  }
+
+  popFrame = (): Frame => {
+    if (this.frameIndex === 0) {
+      throw new Error('Frame underflow, popped frame off an empty stack')
+    }
+    this.frameIndex -= 1
+    return this.frames[this.frameIndex]
   }
 }
