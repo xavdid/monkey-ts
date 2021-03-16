@@ -366,6 +366,27 @@ export class VM {
           this.executeIndexExpression(left, index)
           break
         }
+        case Opcodes.OpCall: {
+          const func = this.stack[this.stackPointer - 1]
+          if (!(func instanceof CompiledFunction)) {
+            throw new Error('calling non-function')
+          }
+          this.pushFrame(new Frame(func))
+          break
+        }
+        case Opcodes.OpReturnValue: {
+          const returnValue = this.pop()
+          this.popFrame()
+          this.pop()
+          this.push(returnValue)
+          break
+        }
+        case Opcodes.OpReturn: {
+          this.popFrame()
+          this.pop()
+          this.push(NULL)
+          break
+        }
         default:
           break
       }
