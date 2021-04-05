@@ -7,7 +7,7 @@ export const enum SymbolScope {
 export class SymbolItem {
   constructor(
     public readonly name: string,
-    public readonly scope: SymbolScope,
+    public scope: SymbolScope,
     public readonly index: number
   ) {}
 }
@@ -26,11 +26,18 @@ export class SymbolTable {
 
   define = (name: string): SymbolItem => {
     const newSym = new SymbolItem(name, SymbolScope.GLOBAL, this.numDefinitions)
+    if (this.outer) {
+      newSym.scope = SymbolScope.LOCAL
+    }
     this.store.set(name, newSym)
     return newSym
   }
 
   resolve = (name: string): SymbolItem | undefined => {
-    return this.store.get(name)
+    const obj = this.store.get(name)
+    if (!obj && this.outer) {
+      return this.outer.resolve(name)
+    }
+    return obj
   }
 }
