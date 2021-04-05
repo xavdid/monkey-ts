@@ -273,5 +273,18 @@ describe('vm', () => {
       ]
       runVmTests(tests)
     })
+
+    // eslint-disable-next-line jest/expect-expect
+    test('first class functions', () => {
+      const tests: VMTest[] = [
+        {
+          input: `let returnsOne = fn() { 1; };
+          let returnsOneReturner = fn() { returnsOne; };
+          returnsOneReturner()();`,
+          expected: 1,
+        },
+      ]
+      runVmTests(tests)
+    })
   })
 })

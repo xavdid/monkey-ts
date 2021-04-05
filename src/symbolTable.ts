@@ -1,5 +1,6 @@
 export const enum SymbolScope {
   GLOBAL = 'GLOBAL',
+  LOCAL = 'LOCAL',
 }
 
 // Symbol is a soft reserved word
@@ -13,6 +14,11 @@ export class SymbolItem {
 
 export class SymbolTable {
   store: Map<string, SymbolItem> = new Map()
+  outer?: SymbolTable
+
+  constructor(outer?: SymbolTable) {
+    this.outer = outer
+  }
 
   get numDefinitions(): number {
     return this.store.size

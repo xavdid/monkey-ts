@@ -280,43 +280,112 @@ describe('compiler', () => {
       runCompilerTest(tests)
     })
 
-    // eslint-disable-next-line jest/expect-expect
-    test('global let statements', () => {
-      const tests: CompilerTestCase[] = [
-        {
-          input: 'let one = 1; let two = 2;',
-          expectedConstants: [1, 2],
-          expectedInstructions: [
-            make(Opcodes.OpConstant, 0),
-            make(Opcodes.OpSetGlobal, 0),
-            make(Opcodes.OpConstant, 1),
-            make(Opcodes.OpSetGlobal, 1),
-          ],
-        },
-        {
-          input: 'let one = 1; one;',
-          expectedConstants: [1],
-          expectedInstructions: [
-            make(Opcodes.OpConstant, 0),
-            make(Opcodes.OpSetGlobal, 0),
-            make(Opcodes.OpGetGlobal, 0),
-            make(Opcodes.OpPop),
-          ],
-        },
-        {
-          input: 'let one = 1; let two = one; two;',
-          expectedConstants: [1],
-          expectedInstructions: [
-            make(Opcodes.OpConstant, 0),
-            make(Opcodes.OpSetGlobal, 0),
-            make(Opcodes.OpGetGlobal, 0),
-            make(Opcodes.OpSetGlobal, 1),
-            make(Opcodes.OpGetGlobal, 1),
-            make(Opcodes.OpPop),
-          ],
-        },
-      ]
-      runCompilerTest(tests)
+    describe('let statements', () => {
+      // eslint-disable-next-line jest/expect-expect
+      test('global let statements', () => {
+        const tests: CompilerTestCase[] = [
+          {
+            input: 'let one = 1; let two = 2;',
+            expectedConstants: [1, 2],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpSetGlobal, 0),
+              make(Opcodes.OpConstant, 1),
+              make(Opcodes.OpSetGlobal, 1),
+            ],
+          },
+          {
+            input: 'let one = 1; one;',
+            expectedConstants: [1],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpSetGlobal, 0),
+              make(Opcodes.OpGetGlobal, 0),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input: 'let one = 1; let two = one; two;',
+            expectedConstants: [1],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpSetGlobal, 0),
+              make(Opcodes.OpGetGlobal, 0),
+              make(Opcodes.OpSetGlobal, 1),
+              make(Opcodes.OpGetGlobal, 1),
+              make(Opcodes.OpPop),
+            ],
+          },
+        ]
+        runCompilerTest(tests)
+      })
+
+      // eslint-disable-next-line jest/expect-expect
+      test('let statement scopes', () => {
+        const tests: CompilerTestCase[] = [
+          {
+            input: 'let num = 55; fn() { num }',
+            expectedConstants: [
+              55,
+              [make(Opcodes.OpGetGlobal, 0), make(Opcodes.OpReturnValue)],
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpSetGlobal, 0),
+              make(Opcodes.OpConstant, 1),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input: `fn() {
+              let num = 55;
+              num
+            }
+            `,
+            expectedConstants: [
+              55,
+              [
+                make(Opcodes.OpConstant, 0),
+                make(Opcodes.OpSetLocal, 0),
+                make(Opcodes.OpGetLocal, 0),
+                make(Opcodes.OpReturnValue),
+              ],
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 1),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input: `
+            fn() {
+                let a = 55;
+                let b = 77;
+                a + b
+            }
+            `,
+            expectedConstants: [
+              55,
+              77,
+              [
+                make(Opcodes.OpConstant, 0),
+                make(Opcodes.OpSetLocal, 0),
+                make(Opcodes.OpConstant, 1),
+                make(Opcodes.OpSetLocal, 1),
+                make(Opcodes.OpGetLocal, 0),
+                make(Opcodes.OpGetLocal, 1),
+                make(Opcodes.OpAdd),
+                make(Opcodes.OpReturnValue),
+              ],
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpPop),
+            ],
+          },
+        ]
+        runCompilerTest(tests)
+      })
     })
 
     // eslint-disable-next-line jest/expect-expect

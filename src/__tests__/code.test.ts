@@ -42,6 +42,11 @@ describe('code', () => {
         operands: [],
         expected: [Opcodes.OpAdd],
       },
+      {
+        op: Opcodes.OpGetLocal,
+        operands: [255],
+        expected: [Opcodes.OpGetLocal, 255],
+      },
     ]
 
     tests.forEach(({ op, operands, expected }) => {
@@ -53,6 +58,7 @@ describe('code', () => {
     test('basic functionality', () => {
       const tests = [
         { op: Opcodes.OpConstant, operands: [65535], bytesRead: 2 },
+        { op: Opcodes.OpGetLocal, operands: [255], bytesRead: 1 },
       ]
 
       tests.forEach(({ op, operands, bytesRead }) => {
@@ -84,6 +90,16 @@ describe('code', () => {
           ].flat(),
           expected:
             '0000 OpConstant 1\n0003 OpConstant 2\n0006 OpConstant 65535',
+        },
+        {
+          input: [
+            make(Opcodes.OpAdd),
+            make(Opcodes.OpGetLocal, 1),
+            make(Opcodes.OpConstant, 2),
+            make(Opcodes.OpConstant, 65535),
+          ].flat(),
+          expected:
+            '0000 OpAdd\n0001 OpGetLocal 1\n0003 OpConstant 2\n0006 OpConstant 65535',
         },
       ]
 

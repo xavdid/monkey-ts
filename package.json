@@ -28,7 +28,6 @@
   },
   "license": "ISC",
   "jest": {
-    "verbose": true,
     "roots": [
       "<rootDir>/src"
     ],

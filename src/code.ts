@@ -39,6 +39,8 @@ export enum Opcodes {
   // variables
   OpGetGlobal,
   OpSetGlobal,
+  OpGetLocal,
+  OpSetLocal,
   // data structures
   OpArray,
   OpHash,
@@ -74,6 +76,8 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpNull, []],
   [Opcodes.OpGetGlobal, [2]],
   [Opcodes.OpSetGlobal, [2]],
+  [Opcodes.OpGetLocal, [1]],
+  [Opcodes.OpSetLocal, [1]],
   [Opcodes.OpArray, [2]],
   [Opcodes.OpHash, [2]],
   [Opcodes.OpIndex, []],
@@ -106,6 +110,15 @@ export const readUint16 = (nums: number[]): number => {
   return parseInt(Buffer.from(nums.slice(0, 2)).toString('hex'), 16)
 }
 
+export const readUint8 = (nums: number[]): number => {
+  // takes only the first two items from an index, ignores the rest
+  if (nums.length < 1) {
+    throw new Error('unable to read Uint8 from array smaller than 1')
+  }
+
+  return parseInt(Buffer.from([nums[0]]).toString('hex'), 16)
+}
+
 // this is called a lot, make it fast
 export const numToHexBytes = (num: number, width: number): number[] => {
   const paddedHex = num.toString(16).padStart(2 * width, '0')
@@ -127,13 +140,11 @@ export const make = (op: Opcodes, ...operands: number[]): number[] => {
   let res: number[] = []
   operands.forEach((operand, index) => {
     const width = def.operandWidths[index]
-    switch (width) {
-      case 2:
-        res = numToHexBytes(operand, width)
-        break
-      default:
-        throw new Error(`width ${width} not yet implemented in "make"`)
+    // only currently tested with widths 0, 1, and 2. Likely works with wider op groups though
+    if (width > 2) {
+      throw new Error(`width ${width} not yet implemented in "make"`)
     }
+    res = numToHexBytes(operand, width)
   })
 
   return [op, ...res]
@@ -146,9 +157,13 @@ export const readOperands = (
   const operands: number[] = []
   let offset = 0
   def.operandWidths.forEach((width, index) => {
+    // TODO: simplify this
     switch (width) {
       case 2:
         operands[index] = readUint16(instructions.slice(offset))
+        break
+      case 1:
+        operands[index] = readUint8(instructions.slice(offset))
         break
       default:
         throw new Error(`width ${width} not unimplemented in readOperands`)
