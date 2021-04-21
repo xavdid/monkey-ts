@@ -645,17 +645,27 @@ describe('compiler', () => {
     test('entering and exiting scope', () => {
       const compiler = new Compiler()
       expect(compiler.scopeIndex).toEqual(0)
+      const globalSymbolTable = compiler.symbolTable
+
       compiler.emit(Opcodes.OpMul)
 
       compiler.enterScope()
       expect(compiler.scopeIndex).toEqual(1)
 
       compiler.emit(Opcodes.OpSub)
+
       const probsSub = compiler.scopes[compiler.scopeIndex].lastInstruction
       expect(probsSub.opcode).toEqual(Opcodes.OpSub)
 
+      // compiler should enclose
+      expect(compiler.symbolTable.outer).toEqual(globalSymbolTable)
+
       compiler.leaveScope()
       expect(compiler.scopeIndex).toEqual(0)
+
+      // should check that they're identical objects in memory
+      expect(compiler.symbolTable).toBe(globalSymbolTable)
+      expect(compiler.symbolTable.outer).toBeUndefined()
 
       compiler.emit(Opcodes.OpAdd)
       expect(compiler.scopes[compiler.scopeIndex].instructions).toHaveLength(2)

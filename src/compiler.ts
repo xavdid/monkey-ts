@@ -20,7 +20,7 @@ import {
 } from './ast'
 import { Instructions, make, Opcodes, stringifyInstructions } from './code'
 import { BaseObject, CompiledFunction, IntegerObj, StringObj } from './object'
-import { SymbolTable } from './symbolTable'
+import { SymbolScope, SymbolTable } from './symbolTable'
 
 class EmittedInstruction {
   constructor(
@@ -77,7 +77,7 @@ export class Compiler {
   scopes: CompilationScope[] = [this.mainScope]
 
   constructor(
-    private readonly symbolTable: SymbolTable = new SymbolTable(),
+    public symbolTable: SymbolTable = new SymbolTable(),
     private readonly constants: BaseObject[] = []
   ) {}
 
@@ -180,13 +180,21 @@ export class Compiler {
     } else if (node instanceof LetStatement) {
       this.compile(node.value)
       const sym = this.symbolTable.define(node.name.value)
-      this.emit(Opcodes.OpSetGlobal, sym.index)
+      if (sym.scope === SymbolScope.GLOBAL) {
+        this.emit(Opcodes.OpSetGlobal, sym.index)
+      } else {
+        this.emit(Opcodes.OpSetLocal, sym.index)
+      }
     } else if (node instanceof Identifier) {
       const sym = this.symbolTable.resolve(node.value)
       if (sym === undefined) {
         throw new Error(`undefined variable: "${node.value}"`)
       }
-      this.emit(Opcodes.OpGetGlobal, sym.index)
+      if (sym.scope === SymbolScope.GLOBAL) {
+        this.emit(Opcodes.OpGetGlobal, sym.index)
+      } else {
+        this.emit(Opcodes.OpGetLocal, sym.index)
+      }
     } else if (node instanceof ArrayLiteral) {
       node.elements.forEach((element) => {
         this.compile(element)
@@ -313,14 +321,20 @@ export class Compiler {
   enterScope = (): void => {
     this.scopes.push(blankCompilationScope())
     this.scopeIndex += 1
+    this.symbolTable = new SymbolTable(this.symbolTable)
   }
 
   leaveScope = (): Instructions => {
     const instructions = this.currentInstructions
 
     this.scopes.pop()
-    // TODO: don't need to store scope index
+    // TODO: don't need to store scope index? can just read length instead
     this.scopeIndex -= 1
+
+    if (!this.symbolTable.outer) {
+      throw new Error("can't leave root scope")
+    }
+    this.symbolTable = this.symbolTable.outer
     return instructions
   }
 
