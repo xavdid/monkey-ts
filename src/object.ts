@@ -228,7 +228,10 @@ export class CompiledFunction extends BaseObject {
   readonly primitive = 'COMPILED_FUNCTION_OBJ'
   value = null
 
-  constructor(public readonly instructions: Instructions) {
+  constructor(
+    public readonly instructions: Instructions,
+    public numLocals: number = 0
+  ) {
     super()
   }
 
@@ -237,7 +240,7 @@ export class CompiledFunction extends BaseObject {
   }
 
   clone() {
-    return new CompiledFunction([...this.instructions])
+    return new CompiledFunction([...this.instructions], this.numLocals)
   }
 }
 

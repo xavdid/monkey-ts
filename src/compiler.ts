@@ -225,10 +225,11 @@ export class Compiler {
         this.emit(Opcodes.OpReturn)
       }
 
+      const numLocals = this.symbolTable.numDefinitions
       const instructions = this.leaveScope()
       this.emit(
         Opcodes.OpConstant,
-        this.addConstant(new CompiledFunction(instructions))
+        this.addConstant(new CompiledFunction(instructions, numLocals))
       )
     } else if (node instanceof ReturnStatement) {
       // if (node.returnValue) {

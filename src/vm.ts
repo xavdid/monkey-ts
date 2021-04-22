@@ -1,4 +1,4 @@
-import { readUint16, Instructions, Opcodes } from './code'
+import { readUint16, Instructions, Opcodes, readUint8 } from './code'
 import { Bytecode } from './compiler'
 import { Frame } from './frame'
 import {
@@ -50,7 +50,7 @@ export class VM {
 
   constructor(bytecode: Bytecode, public readonly globals: BaseObject[] = []) {
     this.mainFn = new CompiledFunction(bytecode.instructions)
-    this.mainFrame = new Frame(this.mainFn)
+    this.mainFrame = new Frame(this.mainFn, 0)
     this.frames[0] = this.mainFrame
 
     // this.instructions = bytecode.instructions // TODO: need to copy?
@@ -330,6 +330,26 @@ export class VM {
           this.push(this.globals[globalIndex])
           break
         }
+        case Opcodes.OpSetLocal: {
+          const localIndex = readUint8(
+            instructions.slice(instructionPointer + 1)
+          )
+          this.currentFrame.instructionPointer += 1
+          const frame = this.currentFrame
+          this.stack[frame.basePointer + localIndex] = this.pop()
+          break
+        }
+        case Opcodes.OpGetLocal: {
+          const localIndex = readUint8(
+            instructions.slice(instructionPointer + 1)
+          )
+          this.currentFrame.instructionPointer += 1
+
+          const frame = this.currentFrame
+
+          this.push(this.stack[frame.basePointer + localIndex])
+          break
+        }
         case Opcodes.OpArray: {
           const numElements = this.readArgument(
             instructions,
@@ -371,19 +391,21 @@ export class VM {
           if (!(func instanceof CompiledFunction)) {
             throw new Error('calling non-function')
           }
-          this.pushFrame(new Frame(func))
+          const frame = new Frame(func, this.stackPointer)
+          this.pushFrame(frame)
+          this.stackPointer = frame.basePointer + func.numLocals
           break
         }
         case Opcodes.OpReturnValue: {
           const returnValue = this.pop()
-          this.popFrame()
-          this.pop()
+          const frame = this.popFrame()
+          this.stackPointer = frame.basePointer - 1
           this.push(returnValue)
           break
         }
         case Opcodes.OpReturn: {
-          this.popFrame()
-          this.pop()
+          const frame = this.popFrame()
+          this.stackPointer = frame.basePointer - 1
           this.push(NULL)
           break
         }
