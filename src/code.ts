@@ -81,7 +81,7 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpArray, [2]],
   [Opcodes.OpHash, [2]],
   [Opcodes.OpIndex, []],
-  [Opcodes.OpCall, []],
+  [Opcodes.OpCall, [1]],
   [Opcodes.OpReturnValue, []],
   [Opcodes.OpReturn, []],
 ]

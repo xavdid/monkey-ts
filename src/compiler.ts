@@ -216,6 +216,11 @@ export class Compiler {
       this.emit(Opcodes.OpIndex)
     } else if (node instanceof FunctionLiteral) {
       this.enterScope()
+
+      node.parameters.forEach((param) => {
+        this.symbolTable.define(param.value)
+      })
+
       this.compile(node.body)
 
       if (this.lastInstructionIs(Opcodes.OpPop)) {
@@ -239,7 +244,11 @@ export class Compiler {
       // }
     } else if (node instanceof CallExpression) {
       this.compile(node.func)
-      this.emit(Opcodes.OpCall)
+      node.args.forEach((arg) => {
+        this.compile(arg)
+      })
+
+      this.emit(Opcodes.OpCall, node.args.length)
     }
   }
 

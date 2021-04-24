@@ -387,6 +387,7 @@ export class VM {
           break
         }
         case Opcodes.OpCall: {
+          this.currentFrame.instructionPointer += 1 // temp skip arg byte
           const func = this.stack[this.stackPointer - 1]
           if (!(func instanceof CompiledFunction)) {
             throw new Error('calling non-function')

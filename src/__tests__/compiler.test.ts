@@ -614,7 +614,7 @@ describe('compiler', () => {
             ],
             expectedInstructions: [
               make(Opcodes.OpConstant, 1), // the compiled funciton
-              make(Opcodes.OpCall),
+              make(Opcodes.OpCall, 0),
               make(Opcodes.OpPop),
             ],
           },
@@ -631,7 +631,49 @@ describe('compiler', () => {
               make(Opcodes.OpConstant, 1), // the compiled funciton
               make(Opcodes.OpSetGlobal, 0),
               make(Opcodes.OpGetGlobal, 0),
-              make(Opcodes.OpCall),
+              make(Opcodes.OpCall, 0),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input: 'let oneArg = fn(a) { a }; oneArg(24);',
+            expectedConstants: [
+              [make(Opcodes.OpGetLocal, 0), make(Opcodes.OpReturnValue)],
+              24,
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpSetGlobal, 0),
+              make(Opcodes.OpGetGlobal, 0),
+              make(Opcodes.OpConstant, 1),
+              make(Opcodes.OpCall, 1),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input:
+              'let manyArg = fn(a, b, c) { a; b; c; }; manyArg(24, 25, 26);',
+            expectedConstants: [
+              [
+                make(Opcodes.OpGetLocal, 0),
+                make(Opcodes.OpPop),
+                make(Opcodes.OpGetLocal, 1),
+                make(Opcodes.OpPop),
+                make(Opcodes.OpGetLocal, 2),
+                make(Opcodes.OpReturnValue),
+              ],
+              24,
+              25,
+              26,
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpSetGlobal, 0),
+              make(Opcodes.OpGetGlobal, 0),
+              make(Opcodes.OpConstant, 1),
+              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpConstant, 3),
+              make(Opcodes.OpCall, 3),
               make(Opcodes.OpPop),
             ],
           },
