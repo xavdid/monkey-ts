@@ -156,7 +156,7 @@ export class StringObj extends HashableObject {
   }
 }
 
-type BuiltinFunction = (...args: BaseObject[]) => BaseObject
+type BuiltinFunction = (...args: BaseObject[]) => BaseObject | undefined
 
 export class BuiltinFuncObj extends BaseObject {
   readonly primitive = 'BUILTIN'

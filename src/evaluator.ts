@@ -286,7 +286,11 @@ const applyFunction = (func: BaseObject, args: BaseObject[]): BaseObject => {
   }
 
   if (func instanceof BuiltinFuncObj) {
-    return func.func(...args)
+    const result = func.func(...args)
+    if (result === undefined) {
+      return NULL
+    }
+    return result
   }
 
   return new ErrorObj(`not a function: ${func.primitive}`)
