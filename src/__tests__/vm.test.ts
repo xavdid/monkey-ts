@@ -341,5 +341,92 @@ describe('vm', () => {
       ]
       runVmTests(tests)
     })
+
+    // eslint-disable-next-line jest/expect-expect
+    test('functions with arguments and bindings', () => {
+      const tests: VMTest[] = [
+        {
+          input: `let identity = fn(a) { a; }; identity(4)`,
+          expected: 4,
+        },
+        {
+          input: `let sum = fn(a, b) { a + b; }; sum(1, 2);`,
+          expected: 3,
+        },
+        {
+          input: `
+            let sum = fn(a, b) {
+                let c = a + b;
+                c;
+            };
+            sum(1, 2);`,
+          expected: 3,
+        },
+        {
+          input: `
+            let sum = fn(a, b) {
+                let c = a + b;
+                c;
+            };
+            sum(1, 2) + sum(3, 4);`,
+          expected: 10,
+        },
+        {
+          input: `
+            let sum = fn(a, b) {
+                let c = a + b;
+                c;
+            };
+            let outer = fn() {
+                sum(1, 2) + sum(3, 4);
+            };
+            outer();`,
+          expected: 10,
+        },
+        {
+          input: `
+            let globalNum = 10;
+
+            let sum = fn(a, b) {
+                let c = a + b;
+                c + globalNum;
+            };
+
+            let outer = fn() {
+                sum(1, 2) + sum(3, 4) + globalNum;
+            };
+
+            outer() + globalNum;`,
+          expected: 50,
+        },
+      ]
+      runVmTests(tests)
+    })
+
+    test('calling functions with wrong arguments', () => {
+      const tests: VMTest[] = [
+        {
+          input: `fn() { 1; }(1);`,
+          expected: `wrong number of arguments: want=0, got=1`,
+        },
+        {
+          input: `fn(a) { a; }();`,
+          expected: `wrong number of arguments: want=1, got=0`,
+        },
+        {
+          input: `fn(a, b) { a + b; }(1);`,
+          expected: `wrong number of arguments: want=2, got=1`,
+        },
+      ]
+
+      tests.forEach(({ input, expected }) => {
+        const program = parseProgram(input)
+        const comp = new Compiler()
+        comp.compile(program)
+        const vm = new VM(comp.bytecode)
+
+        expect(() => vm.run()).toThrow(expected)
+      })
+    })
   })
 })

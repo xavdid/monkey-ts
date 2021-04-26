@@ -234,7 +234,9 @@ export class Compiler {
       const instructions = this.leaveScope()
       this.emit(
         Opcodes.OpConstant,
-        this.addConstant(new CompiledFunction(instructions, numLocals))
+        this.addConstant(
+          new CompiledFunction(instructions, numLocals, node.parameters.length)
+        )
       )
     } else if (node instanceof ReturnStatement) {
       // if (node.returnValue) {

@@ -230,7 +230,8 @@ export class CompiledFunction extends BaseObject {
 
   constructor(
     public readonly instructions: Instructions,
-    public numLocals: number = 0
+    public readonly numLocals: number = 0,
+    public readonly numParameters: number = 0
   ) {
     super()
   }
@@ -240,7 +241,11 @@ export class CompiledFunction extends BaseObject {
   }
 
   clone() {
-    return new CompiledFunction([...this.instructions], this.numLocals)
+    return new CompiledFunction(
+      [...this.instructions],
+      this.numLocals,
+      this.numParameters
+    )
   }
 }
 

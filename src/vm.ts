@@ -238,8 +238,14 @@ export class VM {
   /**
    * read a single 16 bit argument
    */
-  readArgument = (instructions: Instructions, instructionPointer: number) =>
-    readUint16(instructions.slice(instructionPointer + 1))
+  readArguments = (
+    instructions: Instructions,
+    instructionPointer: number,
+    numBtyes: 1 | 2
+  ) => {
+    const readFunc = numBtyes === 1 ? readUint8 : readUint16
+    return readFunc(instructions.slice(instructionPointer + 1))
+  }
 
   run = (): void => {
     let instructionPointer: number
@@ -258,9 +264,10 @@ export class VM {
 
       switch (op) {
         case Opcodes.OpConstant: {
-          const constantObjIndex = this.readArgument(
+          const constantObjIndex = this.readArguments(
             instructions,
-            instructionPointer
+            instructionPointer,
+            2
           )
           this.currentFrame.instructionPointer += 2
           this.push(this.constants[constantObjIndex])
@@ -297,13 +304,21 @@ export class VM {
           this.executeMinusOperator()
           break
         case Opcodes.OpJump: {
-          const position = this.readArgument(instructions, instructionPointer)
+          const position = this.readArguments(
+            instructions,
+            instructionPointer,
+            2
+          )
           // set to 1 earlier so that we end up where we want to be when the loop runs
           this.currentFrame.instructionPointer = position - 1
           break
         }
         case Opcodes.OpJumpNotTruthy: {
-          const position = this.readArgument(instructions, instructionPointer)
+          const position = this.readArguments(
+            instructions,
+            instructionPointer,
+            2
+          )
           this.currentFrame.instructionPointer += 2 // consume the argument no matter what
 
           const condition = this.pop()
@@ -313,26 +328,30 @@ export class VM {
           break
         }
         case Opcodes.OpSetGlobal: {
-          const globalIndex = this.readArgument(
+          const globalIndex = this.readArguments(
             instructions,
-            instructionPointer
+            instructionPointer,
+            2
           )
           this.currentFrame.instructionPointer += 2
           this.globals[globalIndex] = this.pop()
           break
         }
         case Opcodes.OpGetGlobal: {
-          const globalIndex = this.readArgument(
+          const globalIndex = this.readArguments(
             instructions,
-            instructionPointer
+            instructionPointer,
+            2
           )
           this.currentFrame.instructionPointer += 2
           this.push(this.globals[globalIndex])
           break
         }
         case Opcodes.OpSetLocal: {
-          const localIndex = readUint8(
-            instructions.slice(instructionPointer + 1)
+          const localIndex = this.readArguments(
+            instructions,
+            instructionPointer,
+            1
           )
           this.currentFrame.instructionPointer += 1
           const frame = this.currentFrame
@@ -340,8 +359,10 @@ export class VM {
           break
         }
         case Opcodes.OpGetLocal: {
-          const localIndex = readUint8(
-            instructions.slice(instructionPointer + 1)
+          const localIndex = this.readArguments(
+            instructions,
+            instructionPointer,
+            1
           )
           this.currentFrame.instructionPointer += 1
 
@@ -351,9 +372,10 @@ export class VM {
           break
         }
         case Opcodes.OpArray: {
-          const numElements = this.readArgument(
+          const numElements = this.readArguments(
             instructions,
-            instructionPointer
+            instructionPointer,
+            2
           )
           this.currentFrame.instructionPointer += 2
           const arr = this.buildArray(
@@ -365,9 +387,10 @@ export class VM {
           break
         }
         case Opcodes.OpHash: {
-          const numElements = this.readArgument(
+          const numElements = this.readArguments(
             instructions,
-            instructionPointer
+            instructionPointer,
+            2
           )
           this.currentFrame.instructionPointer += 2
 
@@ -387,14 +410,13 @@ export class VM {
           break
         }
         case Opcodes.OpCall: {
-          this.currentFrame.instructionPointer += 1 // temp skip arg byte
-          const func = this.stack[this.stackPointer - 1]
-          if (!(func instanceof CompiledFunction)) {
-            throw new Error('calling non-function')
-          }
-          const frame = new Frame(func, this.stackPointer)
-          this.pushFrame(frame)
-          this.stackPointer = frame.basePointer + func.numLocals
+          const numArgs = this.readArguments(
+            instructions,
+            instructionPointer,
+            1
+          )
+          this.currentFrame.instructionPointer += 1
+          this.callFunction(numArgs)
           break
         }
         case Opcodes.OpReturnValue: {
@@ -414,6 +436,22 @@ export class VM {
           break
       }
     }
+  }
+
+  callFunction = (numArgs: number): void => {
+    const func = this.stack[this.stackPointer - 1 - numArgs]
+    if (!(func instanceof CompiledFunction)) {
+      throw new Error('calling non-function')
+    }
+
+    if (numArgs !== func.numParameters) {
+      throw new Error(
+        `wrong number of arguments: want=${func.numParameters}, got=${numArgs}`
+      )
+    }
+    const frame = new Frame(func, this.stackPointer - numArgs)
+    this.pushFrame(frame)
+    this.stackPointer = frame.basePointer + func.numLocals
   }
 
   pop = (): BaseObject => {
