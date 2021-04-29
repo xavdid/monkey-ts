@@ -37,7 +37,7 @@ import {
   objIsHashable,
 } from './object'
 import { Environment } from './environment'
-import builtinFuncs from './builtins'
+import { builtinFuncs } from './builtins'
 
 /// ###############################
 

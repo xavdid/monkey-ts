@@ -680,6 +680,43 @@ describe('compiler', () => {
         ]
         runCompilerTest(tests)
       })
+
+      // eslint-disable-next-line jest/expect-expect
+      test('builtins', () => {
+        const tests: CompilerTestCase[] = [
+          {
+            input: 'len([]); push([], 1)',
+            expectedConstants: [1],
+            expectedInstructions: [
+              make(Opcodes.OpGetBuiltin, 0),
+              make(Opcodes.OpArray, 0),
+              make(Opcodes.OpCall, 1),
+              make(Opcodes.OpPop),
+              make(Opcodes.OpGetBuiltin, 5),
+              make(Opcodes.OpArray, 0),
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpCall, 2),
+              make(Opcodes.OpPop),
+            ],
+          },
+          {
+            input: 'fn() { len([]) }',
+            expectedConstants: [
+              [
+                make(Opcodes.OpGetBuiltin, 0),
+                make(Opcodes.OpArray, 0),
+                make(Opcodes.OpCall, 1),
+                make(Opcodes.OpReturnValue),
+              ],
+            ],
+            expectedInstructions: [
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpPop),
+            ],
+          },
+        ]
+        runCompilerTest(tests)
+      })
     })
   })
 

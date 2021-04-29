@@ -100,4 +100,24 @@ describe('Symbol Table', () => {
       )
     })
   })
+
+  it('should resolve builtins', () => {
+    const global = new SymbolTable()
+    const firstLocal = new SymbolTable(global)
+    const secondLocal = new SymbolTable(firstLocal)
+
+    const expected = [
+      new SymbolItem('a', SymbolScope.BUILTIN, 0),
+      new SymbolItem('c', SymbolScope.BUILTIN, 1),
+      new SymbolItem('e', SymbolScope.BUILTIN, 2),
+      new SymbolItem('f', SymbolScope.BUILTIN, 3),
+    ]
+
+    expected.forEach((sym, i) => global.defineBuiltin(i, sym.name))
+    ;[global, firstLocal, secondLocal].forEach((table) => {
+      expected.forEach((sym) => {
+        expect(table.resolve(sym.name)).toEqual(sym)
+      })
+    })
+  })
 })

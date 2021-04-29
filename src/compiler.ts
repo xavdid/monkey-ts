@@ -20,7 +20,8 @@ import {
 } from './ast'
 import { Instructions, make, Opcodes, stringifyInstructions } from './code'
 import { BaseObject, CompiledFunction, IntegerObj, StringObj } from './object'
-import { SymbolScope, SymbolTable } from './symbolTable'
+import { SymbolItem, SymbolScope, SymbolTable } from './symbolTable'
+import { builtins } from './builtins'
 
 class EmittedInstruction {
   constructor(
@@ -79,7 +80,29 @@ export class Compiler {
   constructor(
     public symbolTable: SymbolTable = new SymbolTable(),
     private readonly constants: BaseObject[] = []
-  ) {}
+  ) {
+    builtins.forEach(({ name }, i) => {
+      this.symbolTable.defineBuiltin(i, name)
+    })
+  }
+
+  loadSymbol = (sym: SymbolItem) => {
+    let opcode: Opcodes
+    switch (sym.scope) {
+      case SymbolScope.GLOBAL:
+        opcode = Opcodes.OpGetGlobal
+        break
+      case SymbolScope.LOCAL:
+        opcode = Opcodes.OpGetLocal
+        break
+      case SymbolScope.BUILTIN:
+        opcode = Opcodes.OpGetBuiltin
+        break
+      default:
+        throw new Error(`unrecognized SymbolScope: ${sym.scope}`)
+    }
+    this.emit(opcode, sym.index)
+  }
 
   compile = (node: Node): void => {
     if (node instanceof Program) {
@@ -190,11 +213,7 @@ export class Compiler {
       if (sym === undefined) {
         throw new Error(`undefined variable: "${node.value}"`)
       }
-      if (sym.scope === SymbolScope.GLOBAL) {
-        this.emit(Opcodes.OpGetGlobal, sym.index)
-      } else {
-        this.emit(Opcodes.OpGetLocal, sym.index)
-      }
+      this.loadSymbol(sym)
     } else if (node instanceof ArrayLiteral) {
       node.elements.forEach((element) => {
         this.compile(element)

@@ -41,6 +41,7 @@ export enum Opcodes {
   OpSetGlobal,
   OpGetLocal,
   OpSetLocal,
+  OpGetBuiltin,
   // data structures
   OpArray,
   OpHash,
@@ -78,6 +79,7 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpSetGlobal, [2]],
   [Opcodes.OpGetLocal, [1]],
   [Opcodes.OpSetLocal, [1]],
+  [Opcodes.OpGetBuiltin, [1]],
   [Opcodes.OpArray, [2]],
   [Opcodes.OpHash, [2]],
   [Opcodes.OpIndex, []],

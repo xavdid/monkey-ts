@@ -36,7 +36,7 @@ const generateArrayBuiltinFunc = (
 
 // store these as an array so we can iterate stably
 // not sure why yet
-const builtins: Array<{ name: string; func: BuiltinFuncObj }> = [
+export const builtins: Array<{ name: string; func: BuiltinFuncObj }> = [
   {
     name: 'len',
     func: new BuiltinFuncObj((...args) => {
@@ -107,7 +107,7 @@ const getBuiltinByName = (builtinName: string): BuiltinFuncObj | undefined => {
 }
 
 // don't need the ! if nothing else uses this
-const builtinFuncs: { [x: string]: BuiltinFuncObj } = {
+export const builtinFuncs: { [x: string]: BuiltinFuncObj } = {
   len: getBuiltinByName('len')!,
   first: getBuiltinByName('first')!,
   last: getBuiltinByName('last')!,
@@ -115,5 +115,3 @@ const builtinFuncs: { [x: string]: BuiltinFuncObj } = {
   push: getBuiltinByName('push')!,
   puts: getBuiltinByName('puts')!,
 }
-
-export default builtinFuncs
