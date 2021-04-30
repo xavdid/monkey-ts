@@ -1,5 +1,5 @@
 import { Compiler } from '../compiler'
-import { ArrayObj, BaseObject, IntegerObj, HashObj } from '../object'
+import { ArrayObj, BaseObject, IntegerObj, HashObj, ErrorObj } from '../object'
 import { VM } from '../vm'
 import {
   parseProgram,
@@ -8,25 +8,34 @@ import {
   testStringObj,
 } from './helpers'
 
+type Expectable =
+  | number
+  | boolean
+  | string
+  | Expectable[]
+  | Map<string, Expectable>
+  | Error
+  | null
+
 interface VMTest {
   input: string
-  expected: any
+  expected: Expectable
 }
 
 const testExpectedObject = (
   actual: BaseObject | undefined,
-  expected: any
+  expected: Expectable
 ): void => {
   if (actual === undefined) {
     throw new Error(
-      `VM didn't pop an object, should have been ${expected} (${typeof expected})`
+      `VM didn't pop an object, should have been a ${typeof expected}`
     )
   }
   if (typeof expected === 'number') {
     testIntegerObj(actual, expected)
   } else if (typeof expected === 'boolean') {
     testBooleanObj(actual, expected)
-  } else if (expected == null) {
+  } else if (expected === null) {
     expect(actual.value).toBeNull()
   } else if (typeof expected === 'string') {
     testStringObj(actual, expected)
@@ -49,8 +58,10 @@ const testExpectedObject = (
       expect(pair).toBeDefined()
       testExpectedObject(pair.value, expectedValue)
     }
-  } else {
-    throw new Error(`Unknown object type: ${expected}`)
+  } else if (expected instanceof Error) {
+    expect(actual).toBeInstanceOf(ErrorObj)
+    const err = actual as ErrorObj
+    expect(err.message).toEqual(expected.message)
   }
 }
 
@@ -404,7 +415,7 @@ describe('vm', () => {
     })
 
     test('calling functions with wrong arguments', () => {
-      const tests: VMTest[] = [
+      const tests: Array<{ input: string; expected: string }> = [
         {
           input: `fn() { 1; }(1);`,
           expected: `wrong number of arguments: want=0, got=1`,
@@ -427,6 +438,46 @@ describe('vm', () => {
 
         expect(() => vm.run()).toThrow(expected)
       })
+    })
+
+    // eslint-disable-next-line jest/expect-expect
+    test('running builtin functions', () => {
+      const tests: VMTest[] = [
+        { input: `len("")`, expected: 0 },
+        { input: `len("four")`, expected: 4 },
+        { input: `len("hello world")`, expected: 11 },
+        {
+          input: `len(1)`,
+          expected: new Error('argument to `len` not supported, got INTEGER'),
+        },
+        {
+          input: `len("one", "two")`,
+          expected: new Error('wrong number of arguments. got=2, want=1'),
+        },
+        { input: `len([1, 2, 3])`, expected: 3 },
+        { input: `len([])`, expected: 0 },
+        { input: `puts("hello", "world!")`, expected: null },
+        { input: `first([1, 2, 3])`, expected: 1 },
+        { input: `first([])`, expected: null },
+        {
+          input: `first(1)`,
+          expected: new Error('argument to `first` must be ARRAY, got INTEGER'),
+        },
+        { input: `last([1, 2, 3])`, expected: 3 },
+        { input: `last([])`, expected: null },
+        {
+          input: `last(1)`,
+          expected: new Error('argument to `last` must be ARRAY, got INTEGER'),
+        },
+        { input: `rest([1, 2, 3])`, expected: [2, 3] },
+        { input: `rest([])`, expected: null },
+        { input: `push([], 1)`, expected: [1] },
+        {
+          input: `push(1, 1)`,
+          expected: new Error('argument to `push` must be ARRAY, got INTEGER'),
+        },
+      ]
+      runVmTests(tests)
     })
   })
 })

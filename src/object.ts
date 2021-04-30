@@ -224,7 +224,7 @@ export class HashObj extends BaseObject {
   }
 }
 
-export class CompiledFunction extends BaseObject {
+export class CompiledFunctionObj extends BaseObject {
   readonly primitive = 'COMPILED_FUNCTION_OBJ'
   value = null
 
@@ -241,7 +241,7 @@ export class CompiledFunction extends BaseObject {
   }
 
   clone() {
-    return new CompiledFunction(
+    return new CompiledFunctionObj(
       [...this.instructions],
       this.numLocals,
       this.numParameters

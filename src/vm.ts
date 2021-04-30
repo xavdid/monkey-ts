@@ -1,3 +1,4 @@
+import { builtins } from './builtins'
 import { readUint16, Instructions, Opcodes, readUint8 } from './code'
 import { Bytecode } from './compiler'
 import { Frame } from './frame'
@@ -5,7 +6,8 @@ import {
   ArrayObj,
   BaseObject,
   BooleanObj,
-  CompiledFunction,
+  BuiltinFuncObj,
+  CompiledFunctionObj,
   HashObj,
   HashPair,
   IntegerObj,
@@ -45,11 +47,11 @@ export class VM {
   private readonly frames: Frame[] = Array(STACK_SIZE / 2)
   private frameIndex = 1 // main is added in constructor
 
-  private readonly mainFn: CompiledFunction
+  private readonly mainFn: CompiledFunctionObj
   private readonly mainFrame: Frame
 
   constructor(bytecode: Bytecode, public readonly globals: BaseObject[] = []) {
-    this.mainFn = new CompiledFunction(bytecode.instructions)
+    this.mainFn = new CompiledFunctionObj(bytecode.instructions)
     this.mainFrame = new Frame(this.mainFn, 0)
     this.frames[0] = this.mainFrame
 
@@ -416,7 +418,7 @@ export class VM {
             1
           )
           this.currentFrame.instructionPointer += 1
-          this.callFunction(numArgs)
+          this.executeCall(numArgs)
           break
         }
         case Opcodes.OpReturnValue: {
@@ -432,18 +434,36 @@ export class VM {
           this.push(NULL)
           break
         }
+        case Opcodes.OpGetBuiltin: {
+          const builtinIndex = this.readArguments(
+            instructions,
+            instructionPointer,
+            1
+          )
+          this.currentFrame.instructionPointer += 1
+
+          const { func } = builtins[builtinIndex]
+          this.push(func)
+          break
+        }
         default:
           break
       }
     }
   }
 
-  callFunction = (numArgs: number): void => {
+  executeCall = (numArgs: number): void => {
     const func = this.stack[this.stackPointer - 1 - numArgs]
-    if (!(func instanceof CompiledFunction)) {
-      throw new Error('calling non-function')
+    if (func instanceof CompiledFunctionObj) {
+      this.callFunction(func, numArgs)
+    } else if (func instanceof BuiltinFuncObj) {
+      this.callBuiltin(func, numArgs)
+    } else {
+      throw new Error('calling non-function and non-builtin')
     }
+  }
 
+  callFunction = (func: CompiledFunctionObj, numArgs: number): void => {
     if (numArgs !== func.numParameters) {
       throw new Error(
         `wrong number of arguments: want=${func.numParameters}, got=${numArgs}`
@@ -452,6 +472,17 @@ export class VM {
     const frame = new Frame(func, this.stackPointer - numArgs)
     this.pushFrame(frame)
     this.stackPointer = frame.basePointer + func.numLocals
+  }
+
+  callBuiltin = (builtin: BuiltinFuncObj, numArgs: number): void => {
+    const args = this.stack.slice(
+      this.stackPointer - numArgs,
+      this.stackPointer
+    )
+    const result = builtin.func(...args)
+    this.stackPointer = this.stackPointer - numArgs - 1
+
+    this.push(result ?? NULL)
   }
 
   pop = (): BaseObject => {

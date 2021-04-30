@@ -19,7 +19,12 @@ import {
   StringLiteral,
 } from './ast'
 import { Instructions, make, Opcodes, stringifyInstructions } from './code'
-import { BaseObject, CompiledFunction, IntegerObj, StringObj } from './object'
+import {
+  BaseObject,
+  CompiledFunctionObj,
+  IntegerObj,
+  StringObj,
+} from './object'
 import { SymbolItem, SymbolScope, SymbolTable } from './symbolTable'
 import { builtins } from './builtins'
 
@@ -254,7 +259,11 @@ export class Compiler {
       this.emit(
         Opcodes.OpConstant,
         this.addConstant(
-          new CompiledFunction(instructions, numLocals, node.parameters.length)
+          new CompiledFunctionObj(
+            instructions,
+            numLocals,
+            node.parameters.length
+          )
         )
       )
     } else if (node instanceof ReturnStatement) {

@@ -1,6 +1,6 @@
 import { Instructions, make, Opcodes, stringifyInstructions } from '../code'
 import { Compiler } from '../compiler'
-import { BaseObject, CompiledFunction } from '../object'
+import { BaseObject, CompiledFunctionObj } from '../object'
 import { parseProgram, testIntegerObj, testStringObj } from './helpers'
 
 interface CompilerTestCase {
@@ -39,10 +39,10 @@ const testConstants = (expected: any[], actual: BaseObject[]) => {
     } else if (typeof constant === 'string') {
       testStringObj(actual[index], constant)
     } else if (Array.isArray(constant)) {
-      expect(actual[index]).toBeInstanceOf(CompiledFunction)
+      expect(actual[index]).toBeInstanceOf(CompiledFunctionObj)
       testInstructions(
         constant,
-        (actual[index] as CompiledFunction).instructions
+        (actual[index] as CompiledFunctionObj).instructions
       )
     }
   })

@@ -23,7 +23,7 @@ const generateArrayBuiltinFunc = (
     const [arr, arg, ...ignored] = args
     if (!(arr instanceof ArrayObj)) {
       return new ErrorObj(
-        `argument to "${name}" must be ARRAY, got ${arr.primitive}`
+        `argument to \`${name}\` must be ARRAY, got ${arr.primitive}`
       )
     }
 
@@ -53,7 +53,7 @@ export const builtins: Array<{ name: string; func: BuiltinFuncObj }> = [
         return new IntegerObj(arg.elements.length)
       }
       return new ErrorObj(
-        `argument to "len" not supported, got ${arg.primitive}`
+        `argument to \`len\` not supported, got ${arg.primitive}`
       )
     }),
   },
@@ -61,7 +61,10 @@ export const builtins: Array<{ name: string; func: BuiltinFuncObj }> = [
     name: 'puts',
     func: new BuiltinFuncObj((...args) => {
       args.forEach((arg) => {
-        console.log(arg.toString())
+        if (process.env.NODE_ENV !== 'test') {
+          // don't actually log stuff in tests
+          console.log(arg.toString())
+        }
       })
       // instead of returning our NULL singleton, returning `undefined` lets us use this in multiple places
       return undefined
