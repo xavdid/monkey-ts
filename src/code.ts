@@ -47,6 +47,7 @@ export enum Opcodes {
   OpHash,
   OpIndex,
   OpCall,
+  OpClosure,
 }
 
 class Definition {
@@ -86,6 +87,7 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpCall, [1]],
   [Opcodes.OpReturnValue, []],
   [Opcodes.OpReturn, []],
+  [Opcodes.OpClosure, [2, 1]],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(
@@ -125,7 +127,7 @@ export const readUint8 = (nums: number[]): number => {
 export const numToHexBytes = (num: number, width: number): number[] => {
   const paddedHex = num.toString(16).padStart(2 * width, '0')
 
-  // this looks odd, but it's faster than `[...buffer]` and I'll bet speed matters here
+  // `toJSON` looks odd, but it's faster than `[...buffer]` and I'll bet speed matters here
   // https://stackoverflow.com/a/55127012/1825390
   return Buffer.from(paddedHex, 'hex').toJSON().data
 }
@@ -146,7 +148,7 @@ export const make = (op: Opcodes, ...operands: number[]): number[] => {
     if (width > 2) {
       throw new Error(`width ${width} not yet implemented in "make"`)
     }
-    res = numToHexBytes(operand, width)
+    res = res.concat(...numToHexBytes(operand, width))
   })
 
   return [op, ...res]
@@ -198,12 +200,5 @@ const stringifyOperand = (def: Definition, operands: number[]): string => {
     )
   }
 
-  switch (operandCount) {
-    case 0:
-      return def.name
-    case 1:
-      return `${def.name} ${operands[0]}`
-    default:
-      throw new Error(`Stringify not ipmlemented: ${def.name}`)
-  }
+  return `${def.name}${operands.length > 0 ? ` ${operands.join(' ')}` : ''}`
 }

@@ -249,6 +249,15 @@ export class CompiledFunctionObj extends BaseObject {
   }
 }
 
+export class ClosureObj {
+  readonly primitive = 'CLOSURE'
+
+  constructor(
+    public func: CompiledFunctionObj,
+    public freeVars: BaseObject[]
+  ) {}
+}
+
 // CONSTANTS
 // there's only ever 1 true/false, so we can reuse those objects
 

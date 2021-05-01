@@ -259,16 +259,16 @@ describe('evaulator', () => {
       // eslint-disable-next-line jest/expect-expect
       it('should test builtin functions error handling', () => {
         const tests: Array<[string, string]> = [
-          ['len(1)', 'ERROR: argument to "len" not supported, got INTEGER'],
+          ['len(1)', 'ERROR: argument to `len` not supported, got INTEGER'],
           [
             'len("one", "two")',
             'ERROR: wrong number of arguments. got=2, want=1',
           ],
-          ['first(1)', 'ERROR: argument to "first" must be ARRAY, got INTEGER'],
-          ['last(1)', 'ERROR: argument to "last" must be ARRAY, got INTEGER'],
+          ['first(1)', 'ERROR: argument to `first` must be ARRAY, got INTEGER'],
+          ['last(1)', 'ERROR: argument to `last` must be ARRAY, got INTEGER'],
           [
             'push(1, 1)',
-            'ERROR: argument to "push" must be ARRAY, got INTEGER',
+            'ERROR: argument to `push` must be ARRAY, got INTEGER',
           ],
           [
             '{"name": "Monkey"}[fn(x) { x }]',
