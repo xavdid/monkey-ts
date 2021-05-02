@@ -332,7 +332,7 @@ describe('compiler', () => {
             expectedInstructions: [
               make(Opcodes.OpConstant, 0),
               make(Opcodes.OpSetGlobal, 0),
-              make(Opcodes.OpConstant, 1),
+              make(Opcodes.OpClosure, 1, 0),
               make(Opcodes.OpPop),
             ],
           },
@@ -352,7 +352,7 @@ describe('compiler', () => {
               ],
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 1),
+              make(Opcodes.OpClosure, 1, 0),
               make(Opcodes.OpPop),
             ],
           },
@@ -379,7 +379,7 @@ describe('compiler', () => {
               ],
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpClosure, 2, 0),
               make(Opcodes.OpPop),
             ],
           },
@@ -550,7 +550,7 @@ describe('compiler', () => {
               ],
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpClosure, 2, 0),
               make(Opcodes.OpPop),
             ],
           },
@@ -567,7 +567,7 @@ describe('compiler', () => {
               ],
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpClosure, 2, 0),
               make(Opcodes.OpPop),
             ],
           },
@@ -584,7 +584,7 @@ describe('compiler', () => {
               ],
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpClosure, 2, 0),
               make(Opcodes.OpPop),
             ],
           },
@@ -592,7 +592,7 @@ describe('compiler', () => {
             input: 'fn() { }',
             expectedConstants: [[make(Opcodes.OpReturn)]],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpClosure, 0, 0),
               make(Opcodes.OpPop),
             ],
           },
@@ -613,7 +613,7 @@ describe('compiler', () => {
               ],
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 1), // the compiled funciton
+              make(Opcodes.OpClosure, 1, 0), // the compiled funciton
               make(Opcodes.OpCall, 0),
               make(Opcodes.OpPop),
             ],
@@ -628,7 +628,7 @@ describe('compiler', () => {
               ],
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 1), // the compiled funciton
+              make(Opcodes.OpClosure, 1, 0), // the compiled funciton
               make(Opcodes.OpSetGlobal, 0),
               make(Opcodes.OpGetGlobal, 0),
               make(Opcodes.OpCall, 0),
@@ -642,7 +642,7 @@ describe('compiler', () => {
               24,
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpClosure, 0, 0),
               make(Opcodes.OpSetGlobal, 0),
               make(Opcodes.OpGetGlobal, 0),
               make(Opcodes.OpConstant, 1),
@@ -667,7 +667,7 @@ describe('compiler', () => {
               26,
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpClosure, 0, 0),
               make(Opcodes.OpSetGlobal, 0),
               make(Opcodes.OpGetGlobal, 0),
               make(Opcodes.OpConstant, 1),
@@ -710,7 +710,7 @@ describe('compiler', () => {
               ],
             ],
             expectedInstructions: [
-              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpClosure, 0, 0),
               make(Opcodes.OpPop),
             ],
           },

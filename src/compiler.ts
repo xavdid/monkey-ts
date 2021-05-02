@@ -257,14 +257,15 @@ export class Compiler {
       const numLocals = this.symbolTable.numDefinitions
       const instructions = this.leaveScope()
       this.emit(
-        Opcodes.OpConstant,
+        Opcodes.OpClosure,
         this.addConstant(
           new CompiledFunctionObj(
             instructions,
             numLocals,
             node.parameters.length
           )
-        )
+        ),
+        0
       )
     } else if (node instanceof ReturnStatement) {
       // if (node.returnValue) {

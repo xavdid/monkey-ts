@@ -7,6 +7,7 @@ import {
   BaseObject,
   BooleanObj,
   BuiltinFuncObj,
+  ClosureObj,
   CompiledFunctionObj,
   HashObj,
   HashPair,
@@ -47,13 +48,11 @@ export class VM {
   private readonly frames: Frame[] = Array(STACK_SIZE / 2)
   private frameIndex = 1 // main is added in constructor
 
-  private readonly mainFn: CompiledFunctionObj
-  private readonly mainFrame: Frame
-
   constructor(bytecode: Bytecode, public readonly globals: BaseObject[] = []) {
-    this.mainFn = new CompiledFunctionObj(bytecode.instructions)
-    this.mainFrame = new Frame(this.mainFn, 0)
-    this.frames[0] = this.mainFrame
+    const mainFn = new CompiledFunctionObj(bytecode.instructions)
+    const mainClosure = new ClosureObj(mainFn)
+    const mainFrame = new Frame(mainClosure, 0)
+    this.frames[0] = mainFrame
 
     // this.instructions = bytecode.instructions // TODO: need to copy?
     this.constants = bytecode.constants // TODO: need to copy?
@@ -243,10 +242,13 @@ export class VM {
   readArguments = (
     instructions: Instructions,
     instructionPointer: number,
-    numBtyes: 1 | 2
+    numBtyes: 1 | 2,
+    instructionPointerOffset: number = 1
   ) => {
     const readFunc = numBtyes === 1 ? readUint8 : readUint16
-    return readFunc(instructions.slice(instructionPointer + 1))
+    return readFunc(
+      instructions.slice(instructionPointer + instructionPointerOffset)
+    )
   }
 
   run = (): void => {
@@ -446,6 +448,19 @@ export class VM {
           this.push(func)
           break
         }
+        case Opcodes.OpClosure: {
+          const constIndex = this.readArguments(
+            instructions,
+            instructionPointer,
+            2
+          )
+          // TODO: store and use this; only calling to skip for now
+          this.readArguments(instructions, instructionPointer, 1, 3)
+          this.currentFrame.instructionPointer += 3
+
+          this.pushClosure(constIndex)
+          break
+        }
         default:
           break
       }
@@ -454,8 +469,10 @@ export class VM {
 
   executeCall = (numArgs: number): void => {
     const func = this.stack[this.stackPointer - 1 - numArgs]
-    if (func instanceof CompiledFunctionObj) {
-      this.callFunction(func, numArgs)
+    // TODO
+    // const callerFunc = func instanceof ClosureObj ? this.
+    if (func instanceof ClosureObj) {
+      return this.callClosure(func, numArgs)
     } else if (func instanceof BuiltinFuncObj) {
       this.callBuiltin(func, numArgs)
     } else {
@@ -463,15 +480,16 @@ export class VM {
     }
   }
 
-  callFunction = (func: CompiledFunctionObj, numArgs: number): void => {
-    if (numArgs !== func.numParameters) {
+  callClosure = (closure: ClosureObj, numArgs: number): void => {
+    if (numArgs !== closure.func.numParameters) {
       throw new Error(
-        `wrong number of arguments: want=${func.numParameters}, got=${numArgs}`
+        `wrong number of arguments: want=${closure.func.numParameters}, got=${numArgs}`
       )
     }
-    const frame = new Frame(func, this.stackPointer - numArgs)
+    const frame = new Frame(closure, this.stackPointer - numArgs)
     this.pushFrame(frame)
-    this.stackPointer = frame.basePointer + func.numLocals
+
+    this.stackPointer = frame.basePointer + closure.func.numLocals
   }
 
   callBuiltin = (builtin: BuiltinFuncObj, numArgs: number): void => {
@@ -502,6 +520,16 @@ export class VM {
   logStack = () => {
     console.log('vm stackPointer:', this.stackPointer)
     console.log('vm stack', this.stack)
+  }
+
+  pushClosure = (constIndex: number): void => {
+    const constant = this.constants[constIndex]
+    if (!(constant instanceof CompiledFunctionObj)) {
+      throw new Error(`Not a function: ${constant}`)
+    }
+
+    const closure = new ClosureObj(constant)
+    this.push(closure)
   }
 
   get currentFrame(): Frame {

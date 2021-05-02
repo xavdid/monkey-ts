@@ -1,12 +1,12 @@
 import { Instructions } from './code'
-import { CompiledFunctionObj } from './object'
+import { ClosureObj } from './object'
 
 export class Frame {
   public instructionPointer = -1
 
-  constructor(public fn: CompiledFunctionObj, public basePointer: number) {}
+  constructor(public closure: ClosureObj, public basePointer: number) {}
 
   get instructions(): Instructions {
-    return this.fn.instructions
+    return this.closure.func.instructions
   }
 }

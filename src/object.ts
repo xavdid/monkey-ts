@@ -249,13 +249,24 @@ export class CompiledFunctionObj extends BaseObject {
   }
 }
 
-export class ClosureObj {
+export class ClosureObj extends BaseObject {
   readonly primitive = 'CLOSURE'
+  value = null
 
   constructor(
     public func: CompiledFunctionObj,
-    public freeVars: BaseObject[]
-  ) {}
+    public freeVars: BaseObject[] = []
+  ) {
+    super()
+  }
+
+  toString() {
+    return '<Closure>'
+  }
+
+  clone() {
+    return new ClosureObj(this.func.clone(), [...this.freeVars])
+  }
 }
 
 // CONSTANTS
