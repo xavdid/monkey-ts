@@ -12,6 +12,7 @@ interface CompilerTestCase {
 const testInstructions = (
   expected: Instructions[],
   actual: Instructions,
+  index: number,
   subfunction = false
 ) => {
   try {
@@ -19,7 +20,8 @@ const testInstructions = (
   } catch (e) {
     console.log(
       [
-        subfunction ? '(sub-function)' : '',
+        `failed on test @ index ${index}`,
+        subfunction ? '(sub-function)\n' : '',
         'expected:',
         stringifyInstructions(expected.flat()),
         '',
@@ -31,7 +33,11 @@ const testInstructions = (
   }
 }
 
-const testConstants = (expected: any[], actual: BaseObject[]) => {
+const testConstants = (
+  expected: any[],
+  actual: BaseObject[],
+  testIndex: number
+) => {
   expect(expected).toHaveLength(actual.length)
   expected.forEach((constant, index) => {
     if (typeof constant === 'number') {
@@ -42,14 +48,15 @@ const testConstants = (expected: any[], actual: BaseObject[]) => {
       expect(actual[index]).toBeInstanceOf(CompiledFunctionObj)
       testInstructions(
         constant,
-        (actual[index] as CompiledFunctionObj).instructions
+        (actual[index] as CompiledFunctionObj).instructions,
+        testIndex
       )
     }
   })
 }
 
 const runCompilerTest = (tests: CompilerTestCase[]) => {
-  tests.forEach(({ input, expectedConstants, expectedInstructions }) => {
+  tests.forEach(({ input, expectedConstants, expectedInstructions }, index) => {
     const program = parseProgram(input)
 
     const compiler = new Compiler()
@@ -57,8 +64,8 @@ const runCompilerTest = (tests: CompilerTestCase[]) => {
 
     const bytecode = compiler.bytecode
 
-    testInstructions(expectedInstructions, bytecode.instructions)
-    testConstants(expectedConstants, bytecode.constants)
+    testInstructions(expectedInstructions, bytecode.instructions, index)
+    testConstants(expectedConstants, bytecode.constants, index)
   })
 }
 
@@ -717,6 +724,169 @@ describe('compiler', () => {
         ]
         runCompilerTest(tests)
       })
+    })
+
+    // eslint-disable-next-line jest/expect-expect
+    test('closures', () => {
+      const tests: CompilerTestCase[] = [
+        {
+          input: `
+            fn(a) {
+              fn (b) {
+                a + b
+              }
+            }
+          `,
+          expectedConstants: [
+            [
+              make(Opcodes.OpGetFree, 0),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpAdd),
+              make(Opcodes.OpReturnValue),
+            ],
+            [
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpClosure, 0, 1),
+              make(Opcodes.OpReturnValue),
+            ],
+          ],
+          expectedInstructions: [
+            make(Opcodes.OpClosure, 1, 0),
+            make(Opcodes.OpPop),
+          ],
+        },
+        {
+          input: `
+            fn(a) {
+              fn (b) {
+                fn (c) {
+                  a + b + c
+                }
+              }
+            }
+          `,
+          expectedConstants: [
+            [
+              make(Opcodes.OpGetFree, 0),
+              make(Opcodes.OpGetFree, 1),
+              make(Opcodes.OpAdd),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpAdd),
+              make(Opcodes.OpReturnValue),
+            ],
+            [
+              make(Opcodes.OpGetFree, 0),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpClosure, 0, 2),
+              make(Opcodes.OpReturnValue),
+            ],
+            [
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpClosure, 1, 1),
+              make(Opcodes.OpReturnValue),
+            ],
+          ],
+          expectedInstructions: [
+            make(Opcodes.OpClosure, 2, 0),
+            make(Opcodes.OpPop),
+          ],
+        },
+        {
+          input: `
+            fn(a) {
+              fn (b) {
+                fn (c) {
+                  a + b + c
+                }
+              }
+            }
+          `,
+          expectedConstants: [
+            [
+              make(Opcodes.OpGetFree, 0),
+              make(Opcodes.OpGetFree, 1),
+              make(Opcodes.OpAdd),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpAdd),
+              make(Opcodes.OpReturnValue),
+            ],
+            [
+              make(Opcodes.OpGetFree, 0),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpClosure, 0, 2),
+              make(Opcodes.OpReturnValue),
+            ],
+            [
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpClosure, 1, 1),
+              make(Opcodes.OpReturnValue),
+            ],
+          ],
+          expectedInstructions: [
+            make(Opcodes.OpClosure, 2, 0),
+            make(Opcodes.OpPop),
+          ],
+        },
+        {
+          input: `
+          let global = 55;
+
+          fn() {
+              let a = 66;
+
+              fn() {
+                  let b = 77;
+
+                  fn() {
+                      let c = 88;
+
+                      global + a + b + c;
+                  }
+              }
+          }
+          `,
+          expectedConstants: [
+            55,
+            66,
+            77,
+            88,
+            [
+              make(Opcodes.OpConstant, 3),
+              make(Opcodes.OpSetLocal, 0),
+              make(Opcodes.OpGetGlobal, 0),
+              make(Opcodes.OpGetFree, 0),
+              make(Opcodes.OpAdd),
+              make(Opcodes.OpGetFree, 1),
+              make(Opcodes.OpAdd),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpAdd),
+              make(Opcodes.OpReturnValue),
+            ],
+            [
+              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpSetLocal, 0),
+              make(Opcodes.OpGetFree, 0),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpClosure, 4, 2),
+              make(Opcodes.OpReturnValue),
+            ],
+            [
+              make(Opcodes.OpConstant, 1),
+              make(Opcodes.OpSetLocal, 0),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpClosure, 5, 1),
+              make(Opcodes.OpReturnValue),
+            ],
+          ],
+          expectedInstructions: [
+            make(Opcodes.OpConstant, 0),
+            make(Opcodes.OpSetGlobal, 0),
+            make(Opcodes.OpClosure, 6, 0),
+            make(Opcodes.OpPop),
+          ],
+        },
+      ]
+      runCompilerTest(tests)
     })
   })
 

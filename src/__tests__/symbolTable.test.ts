@@ -120,4 +120,85 @@ describe('Symbol Table', () => {
       })
     })
   })
+
+  it('should resolve free values', () => {
+    const global = new SymbolTable()
+    global.define('a')
+    global.define('b')
+
+    const firstLocal = new SymbolTable(global)
+    firstLocal.define('c')
+    firstLocal.define('d')
+
+    const secondLocal = new SymbolTable(firstLocal)
+    secondLocal.define('e')
+    secondLocal.define('f')
+
+    const tests: Array<{
+      symTable: SymbolTable
+      expectedSymbols: SymbolItem[]
+      expectedFreeSymbols: SymbolItem[]
+    }> = [
+      {
+        symTable: firstLocal,
+        expectedSymbols: [
+          new SymbolItem('a', SymbolScope.GLOBAL, 0),
+          new SymbolItem('b', SymbolScope.GLOBAL, 1),
+          new SymbolItem('c', SymbolScope.LOCAL, 0),
+          new SymbolItem('d', SymbolScope.LOCAL, 1),
+        ],
+        expectedFreeSymbols: [],
+      },
+      {
+        symTable: secondLocal,
+        expectedSymbols: [
+          new SymbolItem('a', SymbolScope.GLOBAL, 0),
+          new SymbolItem('b', SymbolScope.GLOBAL, 1),
+          new SymbolItem('c', SymbolScope.FREE, 0),
+          new SymbolItem('d', SymbolScope.FREE, 1),
+          new SymbolItem('e', SymbolScope.LOCAL, 0),
+          new SymbolItem('f', SymbolScope.LOCAL, 1),
+        ],
+        expectedFreeSymbols: [
+          new SymbolItem('c', SymbolScope.LOCAL, 0),
+          new SymbolItem('d', SymbolScope.LOCAL, 1),
+        ],
+      },
+    ]
+
+    tests.forEach(({ symTable, expectedSymbols, expectedFreeSymbols }) => {
+      expectedSymbols.forEach((sym) => {
+        expect(symTable.resolve(sym.name)).toEqual(sym)
+      })
+      expect(symTable.freeSymbols).toEqual(expectedFreeSymbols)
+    })
+  })
+
+  it('should fail to resolve undefined symbols', () => {
+    const global = new SymbolTable()
+    global.define('a')
+
+    const firstLocal = new SymbolTable(global)
+    firstLocal.define('c')
+
+    const secondLocal = new SymbolTable(firstLocal)
+    secondLocal.define('e')
+    secondLocal.define('f')
+
+    const expected: SymbolItem[] = [
+      new SymbolItem('a', SymbolScope.GLOBAL, 0),
+      new SymbolItem('c', SymbolScope.FREE, 0),
+      new SymbolItem('e', SymbolScope.LOCAL, 0),
+      new SymbolItem('f', SymbolScope.LOCAL, 1),
+    ]
+
+    expected.forEach((sym) => {
+      expect(secondLocal.resolve(sym.name)).toEqual(sym)
+    })
+
+    const expectedUnresolvable: string[] = ['b', 'd']
+    expectedUnresolvable.forEach((name) => {
+      expect(secondLocal.resolve(name)).toBeUndefined()
+    })
+  })
 })

@@ -2,6 +2,7 @@ export const enum SymbolScope {
   GLOBAL = 'GLOBAL',
   LOCAL = 'LOCAL',
   BUILTIN = 'BUILTIN',
+  FREE = 'FREE',
 }
 
 // Symbol is a soft reserved word in JS
@@ -15,12 +16,10 @@ export class SymbolItem {
 
 export class SymbolTable {
   store: Map<string, SymbolItem> = new Map()
-  outer?: SymbolTable
   numDefinitions = 0
+  freeSymbols: SymbolItem[] = []
 
-  constructor(outer?: SymbolTable) {
-    this.outer = outer
-  }
+  constructor(public readonly outer?: SymbolTable) {}
 
   define = (name: string): SymbolItem => {
     const newSym = new SymbolItem(name, SymbolScope.GLOBAL, this.numDefinitions)
@@ -39,10 +38,35 @@ export class SymbolTable {
     return sym
   }
 
+  defineFree = (original: SymbolItem): SymbolItem => {
+    this.freeSymbols.push(original)
+
+    const cloned = new SymbolItem(
+      original.name,
+      SymbolScope.FREE,
+      this.freeSymbols.length - 1
+    )
+
+    this.store.set(original.name, cloned)
+    return cloned
+  }
+
   resolve = (name: string): SymbolItem | undefined => {
     const obj = this.store.get(name)
     if (!obj && this.outer) {
-      return this.outer.resolve(name)
+      const outerObj = this.outer.resolve(name)
+      if (!outerObj) {
+        return
+      }
+      if (
+        outerObj.scope === SymbolScope.GLOBAL ||
+        outerObj.scope === SymbolScope.BUILTIN
+      ) {
+        return outerObj
+      }
+
+      const free = this.defineFree(outerObj)
+      return free
     }
     return obj
   }

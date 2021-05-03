@@ -103,6 +103,9 @@ export class Compiler {
       case SymbolScope.BUILTIN:
         opcode = Opcodes.OpGetBuiltin
         break
+      case SymbolScope.FREE:
+        opcode = Opcodes.OpGetFree
+        break
       default:
         throw new Error(`unrecognized SymbolScope: ${sym.scope}`)
     }
@@ -254,19 +257,21 @@ export class Compiler {
         this.emit(Opcodes.OpReturn)
       }
 
+      const freeSymbols = this.symbolTable.freeSymbols
       const numLocals = this.symbolTable.numDefinitions
       const instructions = this.leaveScope()
-      this.emit(
-        Opcodes.OpClosure,
-        this.addConstant(
-          new CompiledFunctionObj(
-            instructions,
-            numLocals,
-            node.parameters.length
-          )
-        ),
-        0
+
+      freeSymbols.forEach((s) => {
+        this.loadSymbol(s)
+      })
+
+      const compiledFunc = new CompiledFunctionObj(
+        instructions,
+        numLocals,
+        node.parameters.length
       )
+      const fnIndex = this.addConstant(compiledFunc)
+      this.emit(Opcodes.OpClosure, fnIndex, freeSymbols.length)
     } else if (node instanceof ReturnStatement) {
       // if (node.returnValue) {
       // TODO: maybe remove this `!`
@@ -280,6 +285,8 @@ export class Compiler {
       })
 
       this.emit(Opcodes.OpCall, node.args.length)
+    } else {
+      throw new Error(`AST item not implemented in compile: ${node.toString()}`)
     }
   }
 
