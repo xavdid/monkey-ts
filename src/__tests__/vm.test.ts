@@ -66,17 +66,22 @@ const testExpectedObject = (
 }
 
 const runVmTests = (tests: VMTest[]) => {
-  tests.forEach(({ input, expected }) => {
+  tests.forEach(({ input, expected }, index) => {
     const program = parseProgram(input)
     const comp = new Compiler()
-    comp.compile(program)
+    try {
+      comp.compile(program)
+    } catch (e) {
+      console.log(`failed to compiled test @ ${index}`)
+      throw e
+    }
 
     const vm = new VM(comp.bytecode)
-    vm.run()
     try {
+      vm.run()
       testExpectedObject(vm.lastPoppedStackElement, expected)
     } catch (e) {
-      console.log(`failed on input: "${input}"`)
+      console.log(`failed on input @ index ${index}: "${input}"`)
       throw e
     }
   })
@@ -475,6 +480,85 @@ describe('vm', () => {
         {
           input: `push(1, 1)`,
           expected: new Error('argument to `push` must be ARRAY, got INTEGER'),
+        },
+      ]
+      runVmTests(tests)
+    })
+
+    // eslint-disable-next-line jest/expect-expect
+    test('closures', () => {
+      const tests: VMTest[] = [
+        {
+          input: `
+            let newClosure = fn(a) {
+              fn() { a; };
+            };
+            let closure = newClosure(99);
+            closure();
+          `,
+          expected: 99,
+        },
+        {
+          input: `
+            let newAdder = fn(a, b) {
+                fn(c) { a + b + c };
+            };
+            let adder = newAdder(1, 2);
+            adder(8);
+          `,
+          expected: 11,
+        },
+        {
+          input: `
+            let newAdder = fn(a, b) {
+                let c = a + b;
+                fn(d) { c + d };
+            };
+            let adder = newAdder(1, 2);
+            adder(8);
+          `,
+          expected: 11,
+        },
+        {
+          input: `
+            let newAdderOuter = fn(a, b) {
+                let c = a + b;
+                fn(d) {
+                    let e = d + c;
+                    fn(f) { e + f; };
+                };
+            };
+            let newAdderInner = newAdderOuter(1, 2)
+            let adder = newAdderInner(3);
+            adder(8);
+          `,
+          expected: 14,
+        },
+        {
+          input: `
+            let a = 1;
+            let newAdderOuter = fn(b) {
+                fn(c) {
+                    fn(d) { a + b + c + d };
+                };
+            };
+            let newAdderInner = newAdderOuter(2)
+            let adder = newAdderInner(3);
+            adder(8);
+          `,
+          expected: 14,
+        },
+        {
+          input: `
+            let newClosure = fn(a, b) {
+                let one = fn() { a; };
+                let two = fn() { b; };
+                fn() { one() + two(); };
+            };
+            let closure = newClosure(9, 90);
+            closure();
+          `,
+          expected: 99,
         },
       ]
       runVmTests(tests)

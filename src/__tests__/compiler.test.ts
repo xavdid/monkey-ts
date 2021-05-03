@@ -755,6 +755,36 @@ describe('compiler', () => {
             make(Opcodes.OpPop),
           ],
         },
+        // failing test for a broken(?) vm test
+        {
+          input: `
+            let newClosure = fn(a) {
+              fn() { a; };
+            };
+            let closure = newClosure(99);
+            closure()
+          `,
+          expectedConstants: [
+            [make(Opcodes.OpGetFree, 0), make(Opcodes.OpReturnValue)],
+            [
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpClosure, 0, 1),
+              make(Opcodes.OpReturnValue),
+            ],
+            99,
+          ],
+          expectedInstructions: [
+            make(Opcodes.OpClosure, 1, 0),
+            make(Opcodes.OpSetGlobal, 0),
+            make(Opcodes.OpGetGlobal, 0),
+            make(Opcodes.OpConstant, 2),
+            make(Opcodes.OpCall, 1),
+            make(Opcodes.OpSetGlobal, 1),
+            make(Opcodes.OpGetGlobal, 1),
+            make(Opcodes.OpCall, 0),
+            make(Opcodes.OpPop),
+          ],
+        },
         {
           input: `
             fn(a) {

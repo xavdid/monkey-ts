@@ -454,15 +454,31 @@ export class VM {
             instructionPointer,
             2
           )
-          // TODO: store and use this; only calling to skip for now
-          this.readArguments(instructions, instructionPointer, 1, 3)
+          const numFree = this.readArguments(
+            instructions,
+            instructionPointer,
+            1,
+            3
+          )
           this.currentFrame.instructionPointer += 3
 
-          this.pushClosure(constIndex)
+          this.pushClosure(constIndex, numFree)
+          break
+        }
+        case Opcodes.OpGetFree: {
+          const freeIndex = this.readArguments(
+            instructions,
+            instructionPointer,
+            1
+          )
+          this.currentFrame.instructionPointer += 1
+
+          const currentClosure = this.currentFrame.closure
+          this.push(currentClosure.freeVars[freeIndex])
           break
         }
         default:
-          break
+          throw new Error(`not implemented in VM: ${op}`)
       }
     }
   }
@@ -522,14 +538,18 @@ export class VM {
     console.log('vm stack', this.stack)
   }
 
-  pushClosure = (constIndex: number): void => {
-    const constant = this.constants[constIndex]
-    if (!(constant instanceof CompiledFunctionObj)) {
-      throw new Error(`Not a function: ${constant}`)
+  pushClosure = (constIndex: number, numFree: number): void => {
+    const func = this.constants[constIndex]
+    if (!(func instanceof CompiledFunctionObj)) {
+      throw new Error(`Not a function: ${func}`)
     }
 
-    const closure = new ClosureObj(constant)
-    this.push(closure)
+    const freeVars = Array(numFree)
+      .fill(null) // have to fill, otherwise .map doesn't work despite the array being the right size
+      .map((_, index) => this.stack[this.stackPointer - numFree + index])
+    this.stackPointer -= numFree
+
+    this.push(new ClosureObj(func, freeVars))
   }
 
   get currentFrame(): Frame {

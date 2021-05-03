@@ -265,7 +265,10 @@ export class ClosureObj extends BaseObject {
   }
 
   clone() {
-    return new ClosureObj(this.func.clone(), [...this.freeVars])
+    return new ClosureObj(
+      this.func.clone(),
+      this.freeVars.map((o) => o.clone())
+    )
   }
 }
 
