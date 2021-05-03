@@ -12,20 +12,20 @@ export type Instructions = number[]
 // make these Byte objects?
 export enum Opcodes {
   // numbers
-  OpConstant,
+  OpConstant, // 0
   // arithmetic
   OpAdd,
   OpPop,
   OpSub,
   OpMul,
-  OpDiv,
+  OpDiv, // 5
   // booleans
   OpTrue,
   OpFalse,
   OpNull,
   // comparisons
   OpEqual,
-  OpNotEqual,
+  OpNotEqual, // 10
   // don't need a lessThan because we can just reorder the operands
   OpGreaterThan,
   // prefix expressions
@@ -33,22 +33,22 @@ export enum Opcodes {
   OpBang,
   // control flow
   OpJumpNotTruthy,
-  OpJump,
+  OpJump, // 15
   OpReturnValue, // return w/ value
   OpReturn, // return w/o value
   // variables
   OpGetGlobal,
   OpSetGlobal,
-  OpGetLocal,
+  OpGetLocal, // 20
   OpSetLocal,
   OpGetBuiltin,
   OpGetFree,
   // data structures
   OpArray,
-  OpHash,
+  OpHash, // 25
   OpIndex,
   OpCall,
-  OpClosure,
+  OpClosure, // 28
 }
 
 class Definition {
@@ -82,7 +82,7 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpGetLocal, [1]],
   [Opcodes.OpSetLocal, [1]],
   [Opcodes.OpGetBuiltin, [1]],
-  [Opcodes.OpGetBuiltin, [1]],
+  [Opcodes.OpGetFree, [1]],
   [Opcodes.OpArray, [2]],
   [Opcodes.OpHash, [2]],
   [Opcodes.OpIndex, []],
@@ -140,7 +140,7 @@ export const numToHexBytes = (num: number, width: number): number[] => {
 export const make = (op: Opcodes, ...operands: number[]): number[] => {
   const def = definitions.get(op)
   if (!def) {
-    return []
+    throw new Error(`OpCode ${op} not defined`)
   }
 
   let res: number[] = []
