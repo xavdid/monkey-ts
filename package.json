@@ -11,7 +11,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "validate": "yarn test && yarn lint",
-    "repl": "yarn build && node ."
+    "repl": "yarn build && node .",
+    "benchmark:eval": "node lib/benchmark.js eval",
+    "benchmark:vm": "node lib/benchmark.js vm"
   },
   "bin": {
     "monkey": "./lib/index"
