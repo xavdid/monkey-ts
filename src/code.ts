@@ -109,22 +109,25 @@ export const lookup = (op: number): Definition => {
   return def
 }
 
+// these are used all the time, should be v fast
 export const readUint16 = (nums: number[]): number => {
   // takes only the first two items from an index, ignores the rest
   if (nums.length < 2) {
     throw new Error('unable to read Uint16 from array smaller than 2')
   }
 
-  return parseInt(Buffer.from(nums.slice(0, 2)).toString('hex'), 16)
+  return parseInt(`${nums[0].toString(16)}${nums[1].toString(16)}`, 16)
 }
 
+// these are used all the time, should be v fast
 export const readUint8 = (nums: number[]): number => {
   // takes only the first two items from an index, ignores the rest
   if (nums.length < 1) {
     throw new Error('unable to read Uint8 from array smaller than 1')
   }
 
-  return parseInt(Buffer.from([nums[0]]).toString('hex'), 16)
+  // I feel like there should be more to it than this, but assuming we only ever get numbers less than 255, it "just works"
+  return nums[0]
 }
 
 // this is called a lot, make it fast

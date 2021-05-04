@@ -5,7 +5,7 @@ import { Lexer } from './lexer'
 import { Parser } from './parser'
 import { VM } from './vm'
 
-const numLoops = 30
+const numLoops = 35
 
 const input = `
 let fibonacci = fn(x) {

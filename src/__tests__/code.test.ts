@@ -2,6 +2,7 @@ import {
   make,
   Opcodes,
   readUint16,
+  readUint8,
   numToHexBytes,
   lookup,
   readOperands,
@@ -18,6 +19,12 @@ describe('code', () => {
       // the rest of an array is ignored
       expect(readUint16([0, 1, 123, 123, 123, 123])).toEqual(1)
       expect(() => readUint16([1])).toThrow()
+      // uint8
+      expect(readUint8([255, 254])).toEqual(255)
+      expect(readUint8([17])).toEqual(17)
+      expect(readUint8([0, 1])).toEqual(0)
+      expect(readUint8([1, 0])).toEqual(1)
+      expect(() => readUint8([])).toThrow()
     })
     test('bytes to number', () => {
       expect(numToHexBytes(65534, 2)).toEqual([255, 254])
