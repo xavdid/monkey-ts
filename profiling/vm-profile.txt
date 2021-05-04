@@ -1,0 +1,281 @@
+Statistical profiling result from isolate-0x108008000-39276-v8.log, (32844 ticks, 226 unaccounted, 0 excluded).
+
+ [Shared libraries]:
+   ticks  total  nonlib   name
+   1272    3.9%          /usr/lib/system/libsystem_platform.dylib
+    172    0.5%          /usr/lib/system/libsystem_malloc.dylib
+    161    0.5%          /usr/lib/system/libsystem_m.dylib
+     72    0.2%          /usr/lib/system/libsystem_kernel.dylib
+     43    0.1%          /usr/lib/system/libsystem_pthread.dylib
+
+ [JavaScript]:
+   ticks  total  nonlib   name
+   8736   26.6%   28.1%  LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    835    2.5%    2.7%  LazyCompile: *readUint16 /Users/david/projects/monkey-ts/lib/code.js:109:20
+    680    2.1%    2.2%  LazyCompile: *VM.executeBinaryOperation /Users/david/projects/monkey-ts/lib/vm.js:39:39
+    591    1.8%    1.9%  LazyCompile: *VM.executeComparison /Users/david/projects/monkey-ts/lib/vm.js:109:34
+    275    0.8%    0.9%  LazyCompile: *readUint8 /Users/david/projects/monkey-ts/lib/code.js:119:19
+    223    0.7%    0.7%  LazyCompile: *VM.executeCall /Users/david/projects/monkey-ts/lib/vm.js:339:28
+    116    0.4%    0.4%  LazyCompile: *VM.pop /Users/david/projects/monkey-ts/lib/vm.js:367:20
+     97    0.3%    0.3%  LazyCompile: *VM.push /Users/david/projects/monkey-ts/lib/vm.js:32:21
+     61    0.2%    0.2%  LazyCompile: *VM.readArguments /Users/david/projects/monkey-ts/lib/vm.js:175:30
+     55    0.2%    0.2%  LazyCompile: *VM.popFrame /Users/david/projects/monkey-ts/lib/vm.js:393:25
+
+ [C++]:
+   ticks  total  nonlib   name
+  16518   50.3%   53.1%  t __ZN2v88internal12_GLOBAL__N_132InsertCodeIntoOptimizedCodeCacheEPNS0_24OptimizedCompilationInfoE
+    677    2.1%    2.2%  t _small_malloc_should_clear
+    261    0.8%    0.8%  T _task_policy_set
+    248    0.8%    0.8%  t __ZN2v88internal6String7FlattenEPNS0_7IsolateENS0_6HandleIS1_EENS0_14AllocationTypeE
+    241    0.7%    0.8%  t _free_small
+    145    0.4%    0.5%  t _szone_realloc
+    139    0.4%    0.4%  t _tiny_malloc_should_clear
+    105    0.3%    0.3%  t _tiny_malloc_from_free_list
+     72    0.2%    0.2%  t non-virtual thunk to v8::internal::PointersUpdatingVisitor::~PointersUpdatingVisitor()
+     72    0.2%    0.2%  t _nanov2_find_block_and_allocate
+     54    0.2%    0.2%  T ___bsdthread_create
+     41    0.1%    0.1%  T ___gdtoa
+     40    0.1%    0.1%  T _malloc_zone_malloc
+     37    0.1%    0.1%  t ___vfprintf
+     37    0.1%    0.1%  T node::NodePlatform::MonotonicallyIncreasingTime()
+     33    0.1%    0.1%  t _nanov2_allocate
+     32    0.1%    0.1%  t _tiny_free_no_lock
+     28    0.1%    0.1%  t _nanov2_malloc
+     28    0.1%    0.1%  T ___sfp
+     25    0.1%    0.1%  t __cxxabiv1::__array_type_info::~__array_type_info()
+     21    0.1%    0.1%  T node::native_module::NativeModuleEnv::CompileFunction(v8::FunctionCallbackInfo<v8::Value> const&)
+     17    0.1%    0.1%  t ___srefill1
+     15    0.0%    0.0%  t _tiny_free_list_add_ptr
+     15    0.0%    0.0%  T ___ulock_wait
+     14    0.0%    0.0%  t ___vfwscanf
+     13    0.0%    0.0%  t __cxxabiv1::__free_with_fallback(void*)
+     12    0.0%    0.0%  t __cxxabiv1::__function_type_info::~__function_type_info()
+     12    0.0%    0.0%  T _malloc
+     11    0.0%    0.0%  t _free_tiny
+     11    0.0%    0.0%  t __cxxabiv1::__enum_type_info::~__enum_type_info()
+     10    0.0%    0.0%  T _vm_copy
+      9    0.0%    0.0%  t ___srefill0
+      9    0.0%    0.0%  T ___rec_fpipe
+      8    0.0%    0.0%  T _read$NOCANCEL
+      7    0.0%    0.0%  t _tiny_try_realloc_in_place
+      7    0.0%    0.0%  t _rec_rdelete
+      7    0.0%    0.0%  T ___rec_fmap
+      7    0.0%    0.0%  T ___collate_equiv_match
+      6    0.0%    0.0%  T _mach_msg_destroy
+      6    0.0%    0.0%  T _fgetws
+      5    0.0%    0.0%  t std::__1::__shared_ptr_pointer<auto node::options_parser::OptionsParser<node::EnvironmentOptions>::Convert<node::options_parser::OptionsParser<node::DebugOptions>::BaseOptionField, node::DebugOptions>(std::__1::shared_ptr<node::options_parser::OptionsParser<node::DebugOptions>::BaseOptionField>, node::DebugOptions* (node::EnvironmentOptions::*)())::AdaptedField*, std::__1::default_delete<auto node::options_parser::OptionsParser<node::EnvironmentOptions>::Convert<node::options_parser::OptionsParser<node::DebugOptions>::BaseOptionField, node::DebugOptions>(std::__1::shared_ptr<node::options_parser::OptionsParser<node::DebugOptions>::BaseOptionField>, node::DebugOptions* (node::EnvironmentOptions::*)())::AdaptedField*>, std::__1::allocator<auto node::options_parser::OptionsParser<node::EnvironmentOptions>::Convert<node::options_parser::OptionsParser<node::DebugOptions>::BaseOptionField, node::DebugOptions>(std::__1::shared_ptr<node::options_parser::OptionsParser<node::DebugOptions>::BaseOptionField>, node::DebugOptions* (node::EnvironmentOptions::*)())::AdaptedField*> >::__on_zero_shared_weak()
+      5    0.0%    0.0%  t _moreglue
+      5    0.0%    0.0%  t _default_zone_realloc
+      5    0.0%    0.0%  t __cxxabiv1::__shim_type_info::~__shim_type_info()
+      5    0.0%    0.0%  t ___printf_render_quote
+      5    0.0%    0.0%  T node::dtrace_gc_done(v8::Isolate*, v8::GCType, v8::GCCallbackFlags, void*)
+      4    0.0%    0.0%  t (anonymous namespace)::fallback_free(void*)
+      4    0.0%    0.0%  T _scanf
+      4    0.0%    0.0%  T _rewind
+      4    0.0%    0.0%  T _os_packet_set_transport_traffic_realtime
+      4    0.0%    0.0%  T _os_packet_get_transport_traffic_realtime
+      4    0.0%    0.0%  T _malloc_zone_from_ptr
+      4    0.0%    0.0%  T _kdebug_is_enabled
+      4    0.0%    0.0%  T _free
+      4    0.0%    0.0%  T ___rec_iput
+      4    0.0%    0.0%  T ___pthread_init
+      3    0.0%    0.0%  t void std::__1::vector<std::__1::unique_ptr<node::worker::TransferData, std::__1::default_delete<node::worker::TransferData> >, std::__1::allocator<std::__1::unique_ptr<node::worker::TransferData, std::__1::default_delete<node::worker::TransferData> > > >::__emplace_back_slow_path<std::__1::unique_ptr<node::worker::TransferData, std::__1::default_delete<node::worker::TransferData> > >(std::__1::unique_ptr<node::worker::TransferData, std::__1::default_delete<node::worker::TransferData> >&&)
+      3    0.0%    0.0%  t std::__1::__hash_table<unsigned long, std::__1::hash<unsigned long>, std::__1::equal_to<unsigned long>, std::__1::allocator<unsigned long> >::__rehash(unsigned long)
+      3    0.0%    0.0%  t node::fs::Open(v8::FunctionCallbackInfo<v8::Value> const&)
+      3    0.0%    0.0%  t _tiny_free_list_remove_ptr
+      3    0.0%    0.0%  t __pthread_mutex_firstfit_lock_slow
+      3    0.0%    0.0%  t ___printf_is_memory_read_only
+      3    0.0%    0.0%  T ___ungetwc
+      3    0.0%    0.0%  T ___srefill
+      3    0.0%    0.0%  T ___rec_vmap
+      3    0.0%    0.0%  T ___rec_sync
+      3    0.0%    0.0%  T ___rec_open
+      3    0.0%    0.0%  T ___rec_dleaf
+      2    0.0%    0.0%  t non-virtual thunk to node::PerIsolatePlatformData::NonNestableDelayedTasksEnabled() const
+      2    0.0%    0.0%  t dyld3::Loader::mapAndFixupAllImages(Diagnostics&, bool, bool)
+      2    0.0%    0.0%  t _small_malloc_from_free_list
+      2    0.0%    0.0%  t _rack_region_insert
+      2    0.0%    0.0%  t _default_zone_free_definite_size
+      2    0.0%    0.0%  t __vdprintf
+      2    0.0%    0.0%  t __pthread_mutex_firstfit_lock_wait
+      2    0.0%    0.0%  t __pthread_mutex_droplock
+      2    0.0%    0.0%  t __pthread_bsdthread_init
+      2    0.0%    0.0%  t __dispatch_objc_alloc
+      2    0.0%    0.0%  t ___printf_render_str
+      2    0.0%    0.0%  T _tempnam
+      2    0.0%    0.0%  T _sprintf_l
+      2    0.0%    0.0%  T _semaphore_create
+      2    0.0%    0.0%  T _pthread_setschedparam
+      2    0.0%    0.0%  T _pthread_attr_setschedparam
+      2    0.0%    0.0%  T _fileno
+      2    0.0%    0.0%  T __pthread_workqueue_should_narrow
+      2    0.0%    0.0%  T ___rec_vpipe
+      2    0.0%    0.0%  T ___rec_search
+      2    0.0%    0.0%  T ___rec_get
+      1    0.0%    0.0%  t node::fs::Read(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  t node::fs::FStat(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  t _szone_good_size
+      1    0.0%    0.0%  t _szone_free
+      1    0.0%    0.0%  t _nanov2_pointer_size
+      1    0.0%    0.0%  t _nanov2_free_to_block
+      1    0.0%    0.0%  t __vasprintf
+      1    0.0%    0.0%  t __pthread_tsd_cleanup
+      1    0.0%    0.0%  t __pthread_set_main_qos
+      1    0.0%    0.0%  t __platform_memchr$VARIANT$Base
+      1    0.0%    0.0%  t __dispatch_dispose
+      1    0.0%    0.0%  t ___pthread_once_handler
+      1    0.0%    0.0%  t __ZN2v88internal15ItemParallelJob7AddItemEPNS1_4ItemE
+      1    0.0%    0.0%  T node::options_parser::GetOptions(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  T node::contextify::ContextifyContext::CompileFunction(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  T node::TTYWrap::New(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  T node::NodePlatform::CallOnWorkerThread(std::__1::unique_ptr<v8::Task, std::__1::default_delete<v8::Task> >)
+      1    0.0%    0.0%  T _vdprintf_l
+      1    0.0%    0.0%  T _swscanf
+      1    0.0%    0.0%  T _sscanf
+      1    0.0%    0.0%  T _remove
+      1    0.0%    0.0%  T _realloc
+      1    0.0%    0.0%  T _os_packet_set_transport_retransmit
+      1    0.0%    0.0%  T _mach_voucher_extract_attr_recipe
+      1    0.0%    0.0%  T __sseek
+      1    0.0%    0.0%  T __pthread_clear_qos_tsd
+      1    0.0%    0.0%  T __kernelrpc_thread_policy_set
+      1    0.0%    0.0%  T ___swrite
+      1    0.0%    0.0%  T ___srget
+      1    0.0%    0.0%  T ___rec_fd
+      1    0.0%    0.0%  T __ZN2v88internal9Accessors23ArgumentsIteratorGetterENS_5LocalINS_4NameEEERKNS_20PropertyCallbackInfoINS_5ValueEEE
+
+ [Summary]:
+   ticks  total  nonlib   name
+  11669   35.5%   37.5%  JavaScript
+  19229   58.5%   61.8%  C++
+   1778    5.4%    5.7%  GC
+   1720    5.2%          Shared libraries
+    226    0.7%          Unaccounted
+
+ [C++ entry points]:
+   ticks    cpp   total   name
+  19134   99.9%   58.3%  t __ZN2v88internal12_GLOBAL__N_132InsertCodeIntoOptimizedCodeCacheEPNS0_24OptimizedCompilationInfoE
+     28    0.1%    0.1%  T __ZN2v88internal21Builtin_HandleApiCallEiPmPNS0_7IsolateE
+
+ [Bottom up (heavy) profile]:
+  Note: percentage shows a share of a particular caller in the total
+  amount of its parent calls.
+  Callers occupying less than 1.0% are not shown.
+
+   ticks parent  name
+  16518   50.3%  t __ZN2v88internal12_GLOBAL__N_132InsertCodeIntoOptimizedCodeCacheEPNS0_24OptimizedCompilationInfoE
+   7416   44.9%    t __ZN2v88internal12_GLOBAL__N_132InsertCodeIntoOptimizedCodeCacheEPNS0_24OptimizedCompilationInfoE
+   4690   63.2%      LazyCompile: *readUint16 /Users/david/projects/monkey-ts/lib/code.js:109:20
+   4484   95.6%        LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+   4484  100.0%          Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+   4484  100.0%            LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+    206    4.4%        LazyCompile: *VM.readArguments /Users/david/projects/monkey-ts/lib/vm.js:175:30
+    206  100.0%          LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    206  100.0%            Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+   1557   21.0%      LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+   1557  100.0%        Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+   1557  100.0%          LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+   1557  100.0%            LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+   1114   15.0%      t __ZN2v88internal12_GLOBAL__N_132InsertCodeIntoOptimizedCodeCacheEPNS0_24OptimizedCompilationInfoE
+    930   83.5%        LazyCompile: *readUint16 /Users/david/projects/monkey-ts/lib/code.js:109:20
+    729   78.4%          LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    729  100.0%            Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    201   21.6%          LazyCompile: *VM.readArguments /Users/david/projects/monkey-ts/lib/vm.js:175:30
+    201  100.0%            LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    175   15.7%        LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    175  100.0%          Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    175  100.0%            LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+   4480   27.1%    LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+   4480  100.0%      Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+   4480  100.0%        LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+   4480  100.0%          LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+   4480  100.0%            LazyCompile: ~Module.load internal/modules/cjs/loader.js:916:33
+   2642   16.0%    LazyCompile: *readUint16 /Users/david/projects/monkey-ts/lib/code.js:109:20
+   2507   94.9%      LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+   2507  100.0%        Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+   2507  100.0%          LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+   2507  100.0%            LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+    135    5.1%      LazyCompile: *VM.readArguments /Users/david/projects/monkey-ts/lib/vm.js:175:30
+    135  100.0%        LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    135  100.0%          Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    135  100.0%            LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+    955    5.8%    Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    955  100.0%      LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+    955  100.0%        LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+    955  100.0%          LazyCompile: ~Module.load internal/modules/cjs/loader.js:916:33
+    955  100.0%            LazyCompile: ~Module._load internal/modules/cjs/loader.js:704:24
+
+   8736   26.6%  LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+   8736  100.0%    Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+   8736  100.0%      LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+   8736  100.0%        LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+   8736  100.0%          LazyCompile: ~Module.load internal/modules/cjs/loader.js:916:33
+   8736  100.0%            LazyCompile: ~Module._load internal/modules/cjs/loader.js:704:24
+
+   1272    3.9%  /usr/lib/system/libsystem_platform.dylib
+   1176   92.5%    t __ZN2v88internal12_GLOBAL__N_132InsertCodeIntoOptimizedCodeCacheEPNS0_24OptimizedCompilationInfoE
+   1176  100.0%      t __ZN2v88internal12_GLOBAL__N_132InsertCodeIntoOptimizedCodeCacheEPNS0_24OptimizedCompilationInfoE
+   1010   85.9%        LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+   1010  100.0%          Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+   1010  100.0%            LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+    142   12.1%        LazyCompile: *readUint16 /Users/david/projects/monkey-ts/lib/code.js:109:20
+    121   85.2%          LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    121  100.0%            Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+     21   14.8%          LazyCompile: *VM.readArguments /Users/david/projects/monkey-ts/lib/vm.js:175:30
+     21  100.0%            LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+     24    2.0%        LazyCompile: *VM.readArguments /Users/david/projects/monkey-ts/lib/vm.js:175:30
+     23   95.8%          LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+     23  100.0%            Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+      1    4.2%          LazyCompile: ~VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+      1  100.0%            Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+
+    835    2.5%  LazyCompile: *readUint16 /Users/david/projects/monkey-ts/lib/code.js:109:20
+    646   77.4%    LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    646  100.0%      Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    646  100.0%        LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+    646  100.0%          LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+    646  100.0%            LazyCompile: ~Module.load internal/modules/cjs/loader.js:916:33
+    164   19.6%    Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    164  100.0%      LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+    164  100.0%        LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+    164  100.0%          LazyCompile: ~Module.load internal/modules/cjs/loader.js:916:33
+    164  100.0%            LazyCompile: ~Module._load internal/modules/cjs/loader.js:704:24
+     25    3.0%    LazyCompile: *VM.readArguments /Users/david/projects/monkey-ts/lib/vm.js:175:30
+     25  100.0%      LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+     25  100.0%        Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+     25  100.0%          LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+     25  100.0%            LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+
+    680    2.1%  LazyCompile: *VM.executeBinaryOperation /Users/david/projects/monkey-ts/lib/vm.js:39:39
+    533   78.4%    LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    533  100.0%      Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    533  100.0%        LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+    533  100.0%          LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+    533  100.0%            LazyCompile: ~Module.load internal/modules/cjs/loader.js:916:33
+    147   21.6%    Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    147  100.0%      LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+    147  100.0%        LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+    147  100.0%          LazyCompile: ~Module.load internal/modules/cjs/loader.js:916:33
+    147  100.0%            LazyCompile: ~Module._load internal/modules/cjs/loader.js:704:24
+
+    677    2.1%  t _small_malloc_should_clear
+    662   97.8%    t __ZN2v88internal12_GLOBAL__N_132InsertCodeIntoOptimizedCodeCacheEPNS0_24OptimizedCompilationInfoE
+    662  100.0%      t __ZN2v88internal12_GLOBAL__N_132InsertCodeIntoOptimizedCodeCacheEPNS0_24OptimizedCompilationInfoE
+    662  100.0%        LazyCompile: *readUint16 /Users/david/projects/monkey-ts/lib/code.js:109:20
+    529   79.9%          LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    529  100.0%            Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    133   20.1%          LazyCompile: *VM.readArguments /Users/david/projects/monkey-ts/lib/vm.js:175:30
+    133  100.0%            LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+
+    591    1.8%  LazyCompile: *VM.executeComparison /Users/david/projects/monkey-ts/lib/vm.js:109:34
+    569   96.3%    LazyCompile: *VM.run /Users/david/projects/monkey-ts/lib/vm.js:179:20
+    569  100.0%      Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+    569  100.0%        LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+    569  100.0%          LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+    569  100.0%            LazyCompile: ~Module.load internal/modules/cjs/loader.js:916:33
+     22    3.7%    Eval: ~<anonymous> /Users/david/projects/monkey-ts/lib/benchmark.js:1:1
+     22  100.0%      LazyCompile: ~Module._compile internal/modules/cjs/loader.js:1017:37
+     22  100.0%        LazyCompile: ~Module._extensions..js internal/modules/cjs/loader.js:1072:37
+     22  100.0%          LazyCompile: ~Module.load internal/modules/cjs/loader.js:916:33
+     22  100.0%            LazyCompile: ~Module._load internal/modules/cjs/loader.js:704:24
+
