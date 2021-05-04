@@ -189,13 +189,16 @@ export class FunctionLiteral extends BaseNode implements Expression {
   constructor(
     public token: Token, // "fn"
     public parameters: Identifier[],
-    public body: BlockStatement
+    public body: BlockStatement,
+    public name: string = ''
   ) {
     super()
   }
 
   toString = () =>
-    `${this.tokenLiteral()}(${this.parameters.join(', ')})(${this.body})`
+    `${this.tokenLiteral()}${
+      this.name ? `<${this.name}>` : ''
+    }(${this.parameters.join(', ')})(${this.body})`
 
   clone = () =>
     new FunctionLiteral(

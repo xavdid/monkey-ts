@@ -164,6 +164,9 @@ export class Parser {
     this.nextToken()
 
     const value = this.parseExpression(PRECEDENCE_LEVELS.LOWEST)
+    if (value instanceof FunctionLiteral) {
+      value.name = name.value
+    }
 
     if (this.peekTokenIs(TOKENS.SEMICOLON)) {
       this.nextToken()

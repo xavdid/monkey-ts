@@ -429,6 +429,20 @@ describe('parser', () => {
       testInfixExpression(bodyExp.expression as InfixExpression, 'x', '+', 'y')
     })
 
+    it('should parse function literals with names', () => {
+      const p = new Parser(new Lexer('let myFunction = fn() { };'))
+      const program = p.parseProgram()
+
+      expect(program.statements).toHaveLength(1)
+      const letStatement = program.statements[0] as LetStatement
+      expect(letStatement).toBeInstanceOf(LetStatement)
+
+      const literal = letStatement.value as FunctionLiteral
+      expect(literal).toBeInstanceOf(FunctionLiteral)
+
+      expect(literal.name).toEqual('myFunction')
+    })
+
     it('should parse function parameters', () => {
       const tests = [
         {

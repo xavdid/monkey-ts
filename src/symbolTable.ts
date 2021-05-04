@@ -3,6 +3,7 @@ export const enum SymbolScope {
   LOCAL = 'LOCAL',
   BUILTIN = 'BUILTIN',
   FREE = 'FREE',
+  FUNCTION = 'FUNCTION',
 }
 
 // Symbol is a soft reserved word in JS
@@ -49,6 +50,12 @@ export class SymbolTable {
 
     this.store.set(original.name, cloned)
     return cloned
+  }
+
+  defineFunctionName = (name: string): SymbolItem => {
+    const sym = new SymbolItem(name, SymbolScope.FUNCTION, 0)
+    this.store.set(name, sym)
+    return sym
   }
 
   resolve = (name: string): SymbolItem | undefined => {

@@ -48,7 +48,8 @@ export enum Opcodes {
   OpHash, // 25
   OpIndex,
   OpCall,
-  OpClosure, // 28
+  OpClosure,
+  OpCurrentClosure, // 29
 }
 
 class Definition {
@@ -90,6 +91,7 @@ const _definitions: Array<[Opcodes, number[]]> = [
   [Opcodes.OpReturnValue, []],
   [Opcodes.OpReturn, []],
   [Opcodes.OpClosure, [2, 1]],
+  [Opcodes.OpCurrentClosure, []],
 ]
 
 export const definitions = new Map<Opcodes, Definition>(

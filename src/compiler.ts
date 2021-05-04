@@ -106,6 +106,9 @@ export class Compiler {
       case SymbolScope.FREE:
         opcode = Opcodes.OpGetFree
         break
+      case SymbolScope.FUNCTION:
+        opcode = Opcodes.OpCurrentClosure
+        break
       default:
         throw new Error(`unrecognized SymbolScope: ${sym.scope}`)
     }
@@ -209,8 +212,8 @@ export class Compiler {
     } else if (node instanceof BlockStatement) {
       node.statements.forEach(this.compile)
     } else if (node instanceof LetStatement) {
-      this.compile(node.value)
       const sym = this.symbolTable.define(node.name.value)
+      this.compile(node.value)
       if (sym.scope === SymbolScope.GLOBAL) {
         this.emit(Opcodes.OpSetGlobal, sym.index)
       } else {
@@ -243,6 +246,10 @@ export class Compiler {
       this.emit(Opcodes.OpIndex)
     } else if (node instanceof FunctionLiteral) {
       this.enterScope()
+
+      if (node.name) {
+        this.symbolTable.defineFunctionName(node.name)
+      }
 
       node.parameters.forEach((param) => {
         this.symbolTable.define(param.value)

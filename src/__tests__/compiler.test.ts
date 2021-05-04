@@ -918,6 +918,72 @@ describe('compiler', () => {
       ]
       runCompilerTest(tests)
     })
+
+    // eslint-disable-next-line jest/expect-expect
+    test('function definitions', () => {
+      const tests: CompilerTestCase[] = [
+        {
+          input: 'let countDown = fn(x) { countDown(x - 1); }; countDown(1);',
+          expectedConstants: [
+            1,
+            [
+              make(Opcodes.OpCurrentClosure),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpSub),
+              make(Opcodes.OpCall, 1),
+              make(Opcodes.OpReturnValue),
+            ],
+            1,
+          ],
+          expectedInstructions: [
+            make(Opcodes.OpClosure, 1, 0),
+            make(Opcodes.OpSetGlobal, 0),
+            make(Opcodes.OpGetGlobal, 0),
+            make(Opcodes.OpConstant, 2),
+            make(Opcodes.OpCall, 1),
+            make(Opcodes.OpPop),
+          ],
+        },
+        {
+          input: `
+            let wrapper = fn() {
+                let countDown = fn(x) { countDown(x - 1); };
+                countDown(1);
+            };
+            wrapper();
+          `,
+          expectedConstants: [
+            1,
+            [
+              make(Opcodes.OpCurrentClosure),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpConstant, 0),
+              make(Opcodes.OpSub),
+              make(Opcodes.OpCall, 1),
+              make(Opcodes.OpReturnValue),
+            ],
+            1,
+            [
+              make(Opcodes.OpClosure, 1, 0),
+              make(Opcodes.OpSetLocal, 0),
+              make(Opcodes.OpGetLocal, 0),
+              make(Opcodes.OpConstant, 2),
+              make(Opcodes.OpCall, 1),
+              make(Opcodes.OpReturnValue),
+            ],
+          ],
+          expectedInstructions: [
+            make(Opcodes.OpClosure, 3, 0),
+            make(Opcodes.OpSetGlobal, 0),
+            make(Opcodes.OpGetGlobal, 0),
+            make(Opcodes.OpCall, 0),
+            make(Opcodes.OpPop),
+          ],
+        },
+      ]
+      runCompilerTest(tests)
+    })
   })
 
   describe('compiler scopes', () => {

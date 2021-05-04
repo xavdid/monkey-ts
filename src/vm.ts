@@ -477,6 +477,11 @@ export class VM {
           this.push(currentClosure.freeVars[freeIndex])
           break
         }
+        case Opcodes.OpCurrentClosure: {
+          const currentClosure = this.currentFrame.closure
+          this.push(currentClosure)
+          break
+        }
         default:
           throw new Error(`not implemented in VM: ${op}`)
       }

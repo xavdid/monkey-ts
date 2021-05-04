@@ -201,4 +201,21 @@ describe('Symbol Table', () => {
       expect(secondLocal.resolve(name)).toBeUndefined()
     })
   })
+
+  it('should resolve function names', () => {
+    const global = new SymbolTable()
+    global.defineFunctionName('a')
+
+    const expected = new SymbolItem('a', SymbolScope.FUNCTION, 0)
+    expect(global.resolve(expected.name)).toEqual(expected)
+  })
+
+  it('should allow shadowing function names', () => {
+    const global = new SymbolTable()
+    global.defineFunctionName('a')
+    global.define('a')
+
+    const expected = new SymbolItem('a', SymbolScope.GLOBAL, 0)
+    expect(global.resolve(expected.name)).toEqual(expected)
+  })
 })

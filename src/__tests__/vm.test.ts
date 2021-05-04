@@ -72,7 +72,7 @@ const runVmTests = (tests: VMTest[]) => {
     try {
       comp.compile(program)
     } catch (e) {
-      console.log(`failed to compiled test @ ${index}`)
+      console.log(`failed to compile test @ ${index}`)
       throw e
     }
 
@@ -494,8 +494,7 @@ describe('vm', () => {
               fn() { a; };
             };
             let closure = newClosure(99);
-            closure();
-          `,
+            closure();`,
           expected: 99,
         },
         {
@@ -504,8 +503,7 @@ describe('vm', () => {
                 fn(c) { a + b + c };
             };
             let adder = newAdder(1, 2);
-            adder(8);
-          `,
+            adder(8);`,
           expected: 11,
         },
         {
@@ -515,8 +513,7 @@ describe('vm', () => {
                 fn(d) { c + d };
             };
             let adder = newAdder(1, 2);
-            adder(8);
-          `,
+            adder(8);`,
           expected: 11,
         },
         {
@@ -530,8 +527,7 @@ describe('vm', () => {
             };
             let newAdderInner = newAdderOuter(1, 2)
             let adder = newAdderInner(3);
-            adder(8);
-          `,
+            adder(8);`,
           expected: 14,
         },
         {
@@ -544,8 +540,7 @@ describe('vm', () => {
             };
             let newAdderInner = newAdderOuter(2)
             let adder = newAdderInner(3);
-            adder(8);
-          `,
+            adder(8);`,
           expected: 14,
         },
         {
@@ -556,9 +551,73 @@ describe('vm', () => {
                 fn() { one() + two(); };
             };
             let closure = newClosure(9, 90);
-            closure();
-          `,
+            closure();`,
           expected: 99,
+        },
+      ]
+      runVmTests(tests)
+    })
+
+    // eslint-disable-next-line jest/expect-expect
+    test('recursion', () => {
+      const tests: VMTest[] = [
+        {
+          input: `
+            let countdown = fn(x) {
+              if (x == 0) {
+                return 0;
+              } else {
+                countdown (x - 1);
+              }
+            }
+            countdown(1);`,
+          expected: 0,
+        },
+        {
+          input: `
+            let countDown = fn(x) {
+                if (x == 0) {
+                    return 0;
+                } else {
+                    countDown(x - 1);
+                }
+            };
+            let wrapper = fn() {
+                countDown(1);
+            };
+            wrapper();`,
+          expected: 0,
+        },
+        {
+          input: `
+            let wrapper = fn() {
+                let countDown = fn(x) {
+                    if (x == 0) {
+                        return 0;
+                    } else {
+                        countDown(x - 1);
+                    }
+                };
+                countDown(1);
+            };
+            wrapper();`,
+          expected: 0,
+        },
+        {
+          input: `
+            let fibonacci = fn(x) {
+              if (x == 0) {
+                  return 0;
+              } else {
+                  if (x == 1) {
+                      return 1;
+                  } else {
+                      fibonacci(x - 1) + fibonacci(x - 2);
+                  }
+              }
+          };
+          fibonacci(15);`,
+          expected: 610,
         },
       ]
       runVmTests(tests)
